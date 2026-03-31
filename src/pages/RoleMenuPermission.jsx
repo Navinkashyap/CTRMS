@@ -34,9 +34,9 @@ import {
   ListTodo,
   CheckCircle2,
   Building2,
-  ContactRobot,
+  Contact,
   Briefcase,
-  FileInvoice,
+  Receipt,
   TrendingUp,
   LineChart
 } from 'lucide-react';
@@ -81,9 +81,9 @@ const menus = [
   { name: 'Available Tasks', icon: <ListTodo className="w-4 h-4" /> },
   { name: 'Assigned Tasks', icon: <CheckCircle2 className="w-4 h-4" /> },
   { name: 'Clients', icon: <Building2 className="w-4 h-4" /> },
-  { name: 'Contacts', icon: <ContactRobot className="w-4 h-4" /> },
+  { name: 'Contacts', icon: <Contact className="w-4 h-4" /> },
   { name: 'Projects', icon: <Briefcase className="w-4 h-4" /> },
-  { name: 'Invoice', icon: <FileInvoice className="w-4 h-4" /> },
+  { name: 'Invoice', icon: <Receipt className="w-4 h-4" /> },
   { name: 'Report', icon: <TrendingUp className="w-4 h-4" /> },
 ];
 
