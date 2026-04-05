@@ -44,7 +44,7 @@ import {
 const roles = [
   'Super Admin', 'Admin', 'Project Head', 'Accountant', 'Project Manager', 
   'Project Executive', 'Sales Head', 'Sales Manager', 'Sales Executive', 
-  'Accountant', 'Vendor Manager', 'Vendor'
+  'Vendor Manager', 'Vendor'
 ];
 
 const menus = [
@@ -93,7 +93,6 @@ export default function RoleMenuPermission() {
   const [isSaving, setIsSaving] = useState(false);
 
   const togglePermission = (role, menuName, roleIndex) => {
-    // Using index because 'Accountant' appears twice
     const key = `${role}-${menuName}-${roleIndex}`;
     setPermissions(prev => ({
       ...prev,
@@ -140,7 +139,7 @@ export default function RoleMenuPermission() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <button className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
+            <button type="button" className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
               <Filter className="w-5 h-5" />
             </button>
           </div>
@@ -177,8 +176,9 @@ export default function RoleMenuPermission() {
                     {roles.map((role, rIdx) => {
                       const isChecked = permissions[`${role}-${menu.name}-${rIdx}`];
                       return (
-                        <td key={`${role}-${rIdx}`} className={`px-4 py-5 text-center ${!menu.indent && 'bg-amber-50/30 group-hover:bg-amber-100/40 transition-colors'}`}>
+                        <td key={`${role}-${rIdx}`} className={`px-4 py-5 text-center ${!menu.indent ? 'bg-amber-50/30 group-hover:bg-amber-100/40 transition-colors' : ''}`}>
                           <button 
+                            type="button"
                             onClick={() => togglePermission(role, menu.name, rIdx)}
                             className={`inline-flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300 ${
                               isChecked 
@@ -222,6 +222,7 @@ export default function RoleMenuPermission() {
         {/* Action Button */}
         <div className="flex justify-end pr-4">
           <button 
+            type="button"
             onClick={handleUpdate}
             disabled={isSaving}
             className={`flex items-center gap-3 px-10 py-4 rounded-3xl font-black text-[15px] shadow-2xl transition-all active:scale-95 ${

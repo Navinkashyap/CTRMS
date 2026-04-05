@@ -11,8 +11,7 @@ const Layout = () => {
   return (
     <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
       {/* Sidebar */}
-      {sidebarOpen && <Sidebar />}
-
+      <Sidebar isCollapsed={!sidebarOpen} />
       {/* Right column */}
       <div
         style={{

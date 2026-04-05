@@ -18,6 +18,11 @@ import RoleAction from "./pages/RoleAction";
 import Action from "./pages/Action";
 import MangerRole from "./pages/MangerRole";
 import RoleMenuPermission from "./pages/RoleMenuPermission";
+import ClientList from "./pages/ClientList";
+import ContactList from "./pages/ContactList";
+import ProjectsList from "./pages/ProjectsList";
+import InvoiceList from "./pages/InvoiceList";
+import UsersList from "./pages/UsersList";
 
 // Generic placeholder for other pages
 const PagePlaceholder = ({ title, icon }) => (
@@ -100,14 +105,14 @@ const App = () => {
           <Route path="roles/role-action-mapping" element={<RoleAction />} />
           <Route path="menus" element={<PagePlaceholder title="Menu Configuration" icon="fa-bars-staggered" />} />
           <Route path="menus/role-menu-permission" element={<RoleMenuPermission />} />
-          <Route path="users" element={<PagePlaceholder title="User Management" icon="fa-user-group" />} />
+          <Route path="users" element={<UsersList />} />
           <Route path="vendors" element={<PagePlaceholder title="Vendors Directory" icon="fa-store" />} />
           <Route path="vendors/manage-vendors" element={<PagePlaceholder title="Manage Vendors" icon="fa-truck-ramp-box" />} />
           <Route path="vendors/evaluation" element={<PagePlaceholder title="Vendor Evaluation" icon="fa-star-half-stroke" />} />
-          <Route path="clients" element={<PagePlaceholder title="Client Relations" icon="fa-building" />} />
-          <Route path="contacts" element={<PagePlaceholder title="Contact Book" icon="fa-address-book" />} />
-          <Route path="projects" element={<PagePlaceholder title="Active Projects" icon="fa-layer-group" />} />
-          <Route path="invoice" element={<PagePlaceholder title="Invoices & Billing" icon="fa-file-invoice-dollar" />} />
+          <Route path="clients" element={<ClientList />} />
+          <Route path="contacts" element={<ContactList />} />
+          <Route path="projects" element={<ProjectsList />} />
+          <Route path="invoice" element={<InvoiceList />} />
           <Route path="report" element={<PagePlaceholder title="Analytics & Reports" icon="fa-chart-pie" />} />
           <Route path="logout" element={<PagePlaceholder title="Sign Out" icon="fa-arrow-right-from-bracket" />} />
           <Route path="*" element={<PagePlaceholder title="Page Not Found" icon="fa-circle-exclamation" />} />
