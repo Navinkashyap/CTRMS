@@ -7,6 +7,7 @@ import {
   Shield,
   Menu as MenuIcon,
   Users,
+  User,
   Store,
   Building2,
   BookUser,
@@ -24,6 +25,16 @@ import {
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/", sub: [] },
+
+  {
+    label: "Add Admin",
+    icon: User,
+    to: null,
+    sub: [
+      { label: "Add Admin", to: "/add-admin" },
+    ],
+  },
+
   {
     label: "Master",
     icon: Database,

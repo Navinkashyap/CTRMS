@@ -23,6 +23,10 @@ import ContactList from "./pages/ContactList";
 import ProjectsList from "./pages/ProjectsList";
 import InvoiceList from "./pages/InvoiceList";
 import UsersList from "./pages/UsersList";
+import VendorList from "./pages/VendorList";
+import Evaluation from "./pages/Evaluation";
+import AddAdmin from "./pages/AddAdmin";
+import AddClient from "./pages/AddClient";
 
 // Generic placeholder for other pages
 const PagePlaceholder = ({ title, icon }) => (
@@ -83,6 +87,7 @@ const App = () => {
         <Route path="/" element={<Layout />}>
 
           <Route index element={<Dashboard />} />
+          <Route path="add-admin" element={<AddAdmin />} />
           <Route path="master" element={<PagePlaceholder title="Master Data" icon="fa-cart-shopping" />} />
           <Route path="master/country" element={<Country />} />
           <Route path="master/state" element={<State />} />
@@ -106,10 +111,11 @@ const App = () => {
           <Route path="menus" element={<PagePlaceholder title="Menu Configuration" icon="fa-bars-staggered" />} />
           <Route path="menus/role-menu-permission" element={<RoleMenuPermission />} />
           <Route path="users" element={<UsersList />} />
-          <Route path="vendors" element={<PagePlaceholder title="Vendors Directory" icon="fa-store" />} />
-          <Route path="vendors/manage-vendors" element={<PagePlaceholder title="Manage Vendors" icon="fa-truck-ramp-box" />} />
-          <Route path="vendors/evaluation" element={<PagePlaceholder title="Vendor Evaluation" icon="fa-star-half-stroke" />} />
+          <Route path="vendors" element={<VendorList />} />
+          <Route path="vendors/manage-vendors" element={<VendorList />} />
+          <Route path="vendors/evaluation" element={<Evaluation />} />
           <Route path="clients" element={<ClientList />} />
+          <Route path="clients/add-client" element={<AddClient />} />
           <Route path="contacts" element={<ContactList />} />
           <Route path="projects" element={<ProjectsList />} />
           <Route path="invoice" element={<InvoiceList />} />
