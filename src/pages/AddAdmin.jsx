@@ -15,6 +15,7 @@ export default function AddAdmin() {
     });
 
     const [notification, setNotification] = useState(null);
+    const [editingAdmin, setEditingAdmin] = useState(null);
 
     const showNotification = (msg) => {
         setNotification(msg);
@@ -28,14 +29,25 @@ export default function AddAdmin() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const newAdmin = {
-            id: admins.length + 1,
-            ...formData,
-            status: 'Active'
-        };
-        setAdmins([newAdmin, ...admins]);
-        showNotification(`Admin ${formData.name} added successfully!`);
+        if (editingAdmin) {
+            setAdmins(admins.map(a => a.id === editingAdmin.id ? { ...formData, id: a.id, status: a.status } : a));
+            showNotification(`Admin ${formData.name} updated successfully!`);
+            setEditingAdmin(null);
+        } else {
+            const newAdmin = {
+                id: admins.length + 1,
+                ...formData,
+                status: 'Active'
+            };
+            setAdmins([newAdmin, ...admins]);
+            showNotification(`Admin ${formData.name} added successfully!`);
+        }
         setFormData({ name: '', phone: '', email: '' });
+    };
+
+    const handleEdit = (admin) => {
+        setEditingAdmin(admin);
+        setFormData({ name: admin.name, phone: admin.phone, email: admin.email });
     };
 
     const handleDelete = (id) => {
@@ -44,8 +56,8 @@ export default function AddAdmin() {
     };
 
     return (
-        <div className="min-h-screen bg-[#f8fafc] p-6 lg:p-10 font-sans text-slate-900">
-            <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in duration-700 slide-in-from-bottom-2">
+    <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
+      <div className="max-w-[1200px] mx-auto space-y-8">
                 
                 {/* Modern Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -71,7 +83,9 @@ export default function AddAdmin() {
                             </div>
 
                             <form onSubmit={handleSubmit} className="relative z-10 space-y-6">
-                                <h2 className="text-xl font-black text-slate-800 tracking-tight mb-4">Add New Admin</h2>
+                                <h2 className="text-xl font-black text-slate-800 tracking-tight mb-4">
+                                    {editingAdmin ? 'Edit Administrator' : 'Add New Admin'}
+                                </h2>
                                 
                                 <div className="space-y-4">
                                     <div className="space-y-2 group">
@@ -116,8 +130,17 @@ export default function AddAdmin() {
 
                                 <button type="submit" className="w-full bg-gradient-to-r from-slate-900 to-indigo-900 hover:from-slate-800 hover:to-indigo-800 text-white py-4 rounded-2xl text-[15px] font-black transition-all shadow-xl active:scale-[0.98] flex items-center justify-center gap-2 group">
                                     <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
-                                    Create Account
+                                    {editingAdmin ? 'Update Settings' : 'Create Account'}
                                 </button>
+                                {editingAdmin && (
+                                    <button 
+                                        type="button"
+                                        onClick={() => { setEditingAdmin(null); setFormData({ name: '', phone: '', email: '' }); }}
+                                        className="w-full py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                                    >
+                                        Cancel Edit
+                                    </button>
+                                )}
                             </form>
                         </div>
                     </div>
@@ -176,7 +199,10 @@ export default function AddAdmin() {
                                                 </td>
                                                 <td className="px-6 py-5 text-center">
                                                     <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button className="w-9 h-9 inline-flex items-center justify-center rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-white hover:shadow-sm active:scale-90 transition-all outline-none border border-transparent hover:border-indigo-100">
+                                                        <button 
+                                                            onClick={() => handleEdit(admin)}
+                                                            className="w-9 h-9 inline-flex items-center justify-center rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-white hover:shadow-sm active:scale-90 transition-all outline-none border border-transparent hover:border-indigo-100"
+                                                        >
                                                             <SquarePen className="w-4 h-4" />
                                                         </button>
                                                         <button 

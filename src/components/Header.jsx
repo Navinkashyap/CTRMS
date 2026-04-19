@@ -1,7 +1,9 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { X, User, Phone, Mail, Calendar, MapPin, CheckCircle2, ChevronDown } from 'lucide-react';
 
-const Header = ({ onToggleSidebar }) => {
+const Header = ({ onToggleSidebar, onToggleMobileMenu }) => {
+  const navigate = useNavigate();
   const [dropOpen, setDropOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -35,130 +37,62 @@ const Header = ({ onToggleSidebar }) => {
 
   return (
     <>
-      <header
-        style={{
-          height: 52,
-          background: "#fff",
-          borderBottom: "1px solid #e5e7eb",
-          display: "flex",
-          alignItems: "center",
-          padding: "0 20px",
-          gap: 12,
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-        }}
-      >
+      <header className="h-[64px] bg-white/70 backdrop-blur-xl border-b border-white flex items-center px-4 md:px-8 gap-4 sticky top-0 z-50 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)]">
         {/* Hamburger */}
         <button
-          onClick={onToggleSidebar}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            fontSize: 18,
-            color: "#374151",
-            padding: "4px 6px",
-            display: "flex",
-            alignItems: "center",
+          onClick={() => {
+            if (window.innerWidth < 1024) {
+              onToggleMobileMenu();
+            } else {
+              onToggleSidebar();
+            }
           }}
+          className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-white rounded-xl transition-all shadow-sm border border-transparent hover:border-slate-200 outline-none flex items-center justify-center"
           aria-label="Toggle sidebar"
         >
-          <i className="fa-solid fa-bars" />
+          <i className="fa-solid fa-bars text-lg" />
         </button>
 
-        <div style={{ flex: 1 }} />
+        <div className="flex-1" />
 
         {/* User profile */}
-        <div
-          style={{ position: "relative" }}
-          onMouseLeave={() => setDropOpen(false)}
-        >
+        <div className="relative" onMouseLeave={() => setDropOpen(false)}>
           <button
             onClick={() => setDropOpen((p) => !p)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: "4px 8px",
-              borderRadius: 6,
-            }}
+            className="flex items-center gap-3 p-1.5 pr-4 rounded-full hover:bg-white transition-all border border-transparent hover:border-slate-200 hover:shadow-sm outline-none"
           >
             {/* Avatar placeholder */}
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: "50%",
-                background: "linear-gradient(135deg,#7c9dff,#3c5fc0)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#fff",
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white text-[13px] font-extrabold shadow-inner ring-2 ring-white">
               PK
             </div>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#4a6fd4" }}>
+            <span className="text-sm font-bold text-slate-800 tracking-tight hidden sm:block">
               Piyush Kumar
             </span>
-            <i
-              className="fa-solid fa-angle-down"
-              style={{ fontSize: 11, color: "#4a6fd4" }}
-            />
+            <i className={`fa-solid fa-angle-down text-[10px] text-slate-400 transition-transform duration-300 ${dropOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {dropOpen && (
-            <div
-              style={{
-                position: "absolute",
-                right: 0,
-                top: 44,
-                background: "#fff",
-                border: "1px solid #e5e7eb",
-                borderRadius: 8,
-                minWidth: 160,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                zIndex: 200,
-              }}
-            >
-              {["Profile", "Settings", "Logout"].map((item) => (
-                <button
-                  key={item}
-                  onClick={() => {
-                    if (item === "Profile") {
-                      setIsProfileModalOpen(true);
+            <div className="absolute right-0 top-[calc(100%+8px)] bg-white/90 backdrop-blur-2xl border border-white rounded-2xl min-w-[200px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-[200] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 origin-top-right">
+              <div className="p-2 flex flex-col gap-1">
+                {["Profile", "Settings", "Logout"].map((item) => (
+                  <button
+                    key={item}
+                    onClick={() => {
                       setDropOpen(false);
-                    }
-                  }}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    textAlign: "left",
-                    padding: "10px 14px",
-                    fontSize: 13,
-                    color: "#374151",
-                    background: "none",
-                    border: "none",
-                    borderBottom: "1px solid #f3f4f6",
-                    cursor: "pointer",
-                    textDecoration: "none",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = "#f0f4ff")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = "transparent")
-                  }
-                >
-                  {item}
-                </button>
-              ))}
+                      if (item === "Profile") {
+                        setIsProfileModalOpen(true);
+                      } else if (item === "Settings") {
+                        navigate("/menus");
+                      } else if (item === "Logout") {
+                        navigate("/logout");
+                      }
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-[14px] font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/50 rounded-xl transition-all outline-none"
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>

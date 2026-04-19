@@ -105,8 +105,8 @@ export default function Country() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-6 lg:p-10 font-sans text-slate-900">
-      <div className="max-w-[1200px] mx-auto space-y-8 animate-in fade-in duration-700 slide-in-from-bottom-2">
+    <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
+      <div className="max-w-[1200px] mx-auto space-y-8">
         
         {/* Modern Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -133,9 +133,6 @@ export default function Country() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <button className="inline-flex items-center justify-center w-11 h-11 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
-              <Filter className="w-5 h-5" />
-            </button>
             <button 
               onClick={handleAddClick}
               className="inline-flex items-center gap-2 bg-[#1e293b] hover:bg-slate-800 text-white px-5 py-2.5 rounded-2xl transition-all shadow-md font-bold active:scale-[0.98]"
@@ -157,9 +154,7 @@ export default function Country() {
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Country Code</th>
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Short Name</th>
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-32">Status</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-24 text-center">
-                    <MoreHorizontal className="w-4 h-4 mx-auto" />
-                  </th>
+                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-24 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -199,9 +194,10 @@ export default function Country() {
                     <td className="px-6 py-5 text-center">
                       <button 
                         onClick={() => handleEditClick(country)}
-                        className="w-10 h-10 inline-flex items-center justify-center rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 active:scale-95 transition-all outline-none"
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white hover:scale-105 transition-all shadow-sm font-bold text-xs mx-auto"
                       >
-                        <SquarePen className="w-5 h-5" />
+                        <SquarePen className="w-4 h-4" />
+                        Edit
                       </button>
                     </td>
                   </tr>
@@ -211,10 +207,6 @@ export default function Country() {
           </div>
           <div className="px-8 py-5 flex items-center justify-between border-t border-slate-50 text-xs font-bold text-slate-400 tracking-wider uppercase">
             <span>Showing {filteredCountries.length} of {countries.length} entries</span>
-            <div className="flex items-center gap-2">
-              <button className="p-2 hover:text-slate-600 transition-colors disabled:opacity-30" disabled><ChevronLeft className="w-4 h-4" /></button>
-              <button className="p-2 hover:text-slate-600 transition-colors disabled:opacity-30" disabled><ChevronRight className="w-4 h-4" /></button>
-            </div>
           </div>
         </div>
       </div>

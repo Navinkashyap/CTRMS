@@ -14,7 +14,7 @@ import {
   Layers,
   FileText,
   PieChart,
-  LogOut,
+
   Search,
   ChevronRight,
   Settings,
@@ -97,12 +97,7 @@ const navItems = [
     sub: [],
   },
   { label: "Report", icon: PieChart, to: "/report", sub: [] },
-  {
-    label: "Logout",
-    icon: LogOut,
-    to: "/logout",
-    sub: [],
-  },
+
 ];
 
 // --- Helpers ---
@@ -139,58 +134,64 @@ const Sidebar = ({ isCollapsed = false }) => {
   const logoutItem = useMemo(() => navItems.find((item) => item.to === "/logout"), []);
 
   return (
-    <aside className={`relative min-h-screen flex flex-col flex-shrink-0 border-r border-slate-800 bg-slate-950 text-slate-300 selection:bg-indigo-500/30 transition-all duration-300 ease-in-out ${isCollapsed ? "w-[72px]" : "w-[260px]"}`}>
+    <aside className={`sticky top-0 h-screen flex flex-col flex-shrink-0 border-r border-white/5 bg-slate-950/90 backdrop-blur-2xl text-slate-300 selection:bg-indigo-500/30 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isCollapsed ? "w-[80px]" : "w-[280px]"} shadow-[4px_0_24px_-12px_rgba(0,0,0,0.5)]`}>
+
+      {/* Dynamic Background Noise/Glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.05),transparent_50%)] pointer-events-none" />
 
       {/* Top Header / Logo Area */}
-      <div className={`relative z-10 py-4 border-b border-slate-800/60 flex items-center justify-center ${isCollapsed ? "px-0" : "px-4"}`}>
+      <div className={`relative z-10 py-6 flex items-center justify-center ${isCollapsed ? "px-0" : "px-6"}`}>
         <NavLink
           to="/"
           end
-          className={`block rounded-2xl border border-slate-700 bg-slate-900 shadow-[0_12px_28px_-16px_rgba(0,0,0,0.8)] transition-all duration-300 ${isCollapsed ? "p-1 w-11 h-11" : "p-1.5 w-full h-12"}`}
+          className={`group block overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl transition-all duration-500 hover:border-indigo-500/50 hover:shadow-indigo-500/20 active:scale-95 ${isCollapsed ? "p-1 w-12 h-12" : "p-1.5 w-full h-14"}`}
           aria-label="Go to Dashboard"
         >
           <img
             src={brandLogo}
             alt="Perfectrans logo"
-            className="w-full h-full object-contain rounded-lg bg-[#d8d8da]"
+            className="w-full h-full object-contain rounded-xl bg-[#e2e2e4] group-hover:scale-110 transition-transform duration-700 ease-out"
           />
         </NavLink>
       </div>
 
       {/* Main Navigation */}
-      <nav className="relative z-10 flex-1 px-3 pt-5 pb-4 overflow-y-auto overflow-x-hidden sidebar-scrollbar">
+      <nav className="relative z-10 flex-1 px-4 pt-2 pb-6 overflow-y-auto overflow-x-hidden sidebar-scrollbar custom-scrollbar">
 
-        {/* Search Bar Fake Input */}
-        {isCollapsed ? (
-          <button
-            type="button"
-            className="w-full mb-6 flex justify-center py-2.5 rounded-lg border border-transparent hover:bg-slate-900/50 text-slate-500 hover:text-slate-200 transition-all duration-200 group"
-            title="Search modules"
-          >
-            <Search size={18} className="text-slate-500 group-hover:text-slate-400" />
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="w-full mb-6 flex items-center gap-2.5 px-3 py-2 rounded-lg border border-slate-800 bg-slate-900/50 text-slate-400 hover:text-slate-200 hover:border-slate-700 transition-all duration-200 group"
-          >
-            <Search size={16} className="text-slate-500 group-hover:text-slate-400" />
-            <span className="text-[13px] font-medium">Search modules...</span>
-            <div className="ml-auto flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400">
-              <Command size={10} />
-              <span>K</span>
+        {/* Premium Search Bar */}
+        <div className="relative mb-8 px-1">
+          {isCollapsed ? (
+            <button
+              type="button"
+              className="w-full flex justify-center py-3 rounded-xl bg-white/5 border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all duration-300 group"
+              title="Search modules"
+            >
+              <Search size={20} className="transition-transform group-hover:rotate-12" />
+            </button>
+          ) : (
+            <div className="relative group">
+              <input
+                type="text"
+                placeholder="Search modules..."
+                className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/5 rounded-xl text-sm font-medium text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:bg-white/10 focus:border-indigo-500/30 transition-all duration-300"
+              />
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-40 group-focus-within:opacity-100 transition-opacity">
+                <Command size={10} className="text-slate-400" />
+                <span className="text-[10px] font-bold text-slate-400">K</span>
+              </div>
             </div>
-          </button>
-        )}
+          )}
+        </div>
 
         {!isCollapsed && (
-          <div className="text-[10px] font-bold tracking-[0.15em] text-slate-500 uppercase mb-3 px-3">
-            Main Menu
+          <div className="text-[10px] font-black tracking-[0.2em] text-slate-600 uppercase mb-4 px-4 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/50 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+            Main Architecture
           </div>
         )}
 
-
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {menuItems.map(({ label, icon: Icon, to, sub }) => {
             const hasSub = sub.length > 0;
             const childIsActive = hasSub
@@ -211,63 +212,56 @@ const Sidebar = ({ isCollapsed = false }) => {
                     aria-expanded={isOpen}
                     aria-controls={submenuId}
                     title={isCollapsed ? label : undefined}
-                    className={`group relative w-full flex items-center ${isCollapsed ? "justify-center gap-0 py-3 px-0" : "gap-3 px-3 py-2.5"} rounded-lg text-[14px] font-medium transition-all duration-200 outline-none
+                    className={`group relative w-full flex items-center ${isCollapsed ? "justify-center gap-0 py-3.5 px-0" : "gap-3.5 px-4 py-3"} rounded-xl text-[14px] font-semibold transition-all duration-300 outline-none
                       ${isActiveParent
-                        ? "text-indigo-400 bg-indigo-500/[0.08]"
-                        : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
+                        ? "text-white bg-indigo-600/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
+                        : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
                       }`}
                   >
                     {isActiveParent && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-indigo-500" />
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-indigo-500 shadow-[2px_0_12px_rgba(99,102,241,0.8)]" />
                     )}
                     {React.createElement(Icon, {
-                      size: 18,
-                      className: isActiveParent
-                        ? "text-indigo-400"
-                        : "text-slate-500 group-hover:text-slate-400",
+                      size: 20,
+                      className: `transition-all duration-300 ${isActiveParent ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300 group-hover:scale-110"}`,
                     })}
                     {!isCollapsed && (
                       <>
-                        <span className="flex-1 text-left">{label}</span>
+                        <span className="flex-1 text-left tracking-wide">{label}</span>
                         <ChevronRight
-                          size={14}
-                          className={`transition-transform duration-300 ${isOpen ? "rotate-90 text-indigo-400" : "text-slate-500"}`}
+                          size={16}
+                          className={`transition-all duration-500 ${isOpen ? "rotate-90 text-indigo-400" : "text-slate-600 group-hover:text-slate-400"}`}
                         />
                       </>
                     )}
                   </button>
 
-                  {/* Smooth animated submenu wrapper */}
                   {!isCollapsed && (
                     <div
                       id={submenuId}
-                      className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-                        }`}
+                      className={`grid transition-[grid-template-rows,opacity] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
                     >
                       <div className="overflow-hidden">
-                        <div className="relative ml-6 pl-3 py-1 mt-1 space-y-1 border-l border-slate-800/80">
+                        <div className="relative ml-8 pl-4 py-2 mt-1 space-y-1 border-l-2 border-slate-800/50">
                           {sub.map((subItem) => (
                             <NavLink
                               key={subItem.label}
                               to={subItem.to}
                               end
                               className={({ isActive }) =>
-                                `group flex items-center gap-3 py-2 px-3 rounded-md text-[13px] font-medium transition-all duration-200 outline-none
+                                `group flex items-center gap-3.5 py-2.5 px-4 rounded-lg text-[13px] font-medium transition-all duration-300 outline-none
                                   ${isActive
-                                  ? "text-white bg-slate-800/80"
-                                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+                                  ? "text-white bg-indigo-500/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+                                  : "text-slate-500 hover:text-slate-200 hover:bg-white/5"
                                 }`
                               }
                             >
                               {({ isActive }) => (
                                 <>
-                                  {/* Tree branch connector */}
-                                  <div className="w-3 h-px bg-slate-800/80 group-hover:bg-slate-600 transition-colors" />
                                   <span
-                                    className={`h-1.5 w-1.5 rounded-full transition-colors ${isActive ? "bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.6)]" : "bg-slate-600"
-                                      }`}
+                                    className={`shrink-0 h-1.5 w-1.5 rounded-full transition-all duration-500 ${isActive ? "bg-indigo-400 scale-125 shadow-[0_0_10px_rgba(99,102,241,0.8)]" : "bg-slate-700 group-hover:bg-slate-500 group-hover:scale-110"}`}
                                   />
-                                  <span>{subItem.label}</span>
+                                  <span className="tracking-tight">{subItem.label}</span>
                                 </>
                               )}
                             </NavLink>
@@ -277,27 +271,26 @@ const Sidebar = ({ isCollapsed = false }) => {
                     </div>
                   )}
 
-                  {/* Floating submenu when collapsed */}
                   {isCollapsed && (
-                    <div className="absolute left-full top-0 invisible opacity-0 -translate-x-2 group-hover/parent:translate-x-0 group-hover/parent:visible group-hover/parent:opacity-100 transition-all duration-200 min-w-[200px] z-[100] bg-slate-900 border border-slate-800 rounded-lg shadow-2xl p-2 ml-2 pointer-events-none group-hover/parent:pointer-events-auto">
-                      <div className="text-[11px] font-bold tracking-wider text-slate-400 uppercase mb-2 px-3 pt-2 pb-1 border-b border-slate-800/60">
+                    <div className="absolute left-full top-0 invisible opacity-0 -translate-x-4 group-hover/parent:translate-x-0 group-hover/parent:visible group-hover/parent:opacity-100 transition-all duration-500 min-w-[220px] z-[100] bg-[#0c111d] border border-white/5 rounded-2xl shadow-[24px_0_48px_-12px_rgba(0,0,0,0.6)] p-3 ml-4 pointer-events-none group-hover/parent:pointer-events-auto backdrop-blur-3xl">
+                      <div className="text-[11px] font-black tracking-[0.2em] text-indigo-400/80 uppercase mb-3 px-4 pt-2 pb-2 border-b border-white/5">
                         {label}
                       </div>
-                      <div className="space-y-0.5">
+                      <div className="space-y-1">
                         {sub.map((subItem) => (
                           <NavLink
                             key={subItem.label}
                             to={subItem.to}
                             end
                             className={({ isActive }) =>
-                              `group flex items-center px-3 py-2 rounded-md text-[13px] font-medium transition-colors outline-none
+                              `group flex items-center px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-300 outline-none
                                 ${isActive
-                                ? "text-white bg-indigo-500/10"
-                                : "text-slate-400 hover:text-white hover:bg-slate-800"
+                                ? "text-white bg-indigo-600/20"
+                                : "text-slate-400 hover:text-white hover:bg-white/10"
                               }`
                             }
                           >
-                            <span>{subItem.label}</span>
+                            <span className="truncate">{subItem.label}</span>
                           </NavLink>
                         ))}
                       </div>
@@ -313,27 +306,26 @@ const Sidebar = ({ isCollapsed = false }) => {
                 key={label}
                 to={to}
                 end={to === "/"}
+                style={({ isActive }) => ({ transitionDelay: '50ms' })}
                 title={isCollapsed ? label : undefined}
                 className={({ isActive }) =>
-                  `group relative flex items-center ${isCollapsed ? "justify-center gap-0 py-3 px-0" : "gap-3 px-3 py-2.5"} rounded-lg text-[14px] font-medium transition-all duration-200 outline-none
+                  `group relative flex items-center ${isCollapsed ? "justify-center gap-0 py-3.5 px-0" : "gap-3.5 px-4 py-3"} rounded-xl text-[14px] font-semibold transition-all duration-300 outline-none
                     ${isActive
-                    ? "text-indigo-400 bg-indigo-500/[0.08]"
-                    : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
+                    ? "text-white bg-indigo-600/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] font-bold"
+                    : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
                     {isActive && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-indigo-500" />
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-indigo-500 shadow-[2px_0_12px_rgba(99,102,241,0.8)]" />
                     )}
                     {React.createElement(Icon, {
-                      size: 18,
-                      className: isActive
-                        ? "text-indigo-400"
-                        : "text-slate-500 group-hover:text-slate-400",
+                      size: 20,
+                      className: `transition-all duration-300 ${isActive ? "text-indigo-400 scale-110" : "text-slate-500 group-hover:text-slate-300 group-hover:scale-110 group-hover:rotate-3"}`,
                     })}
-                    {!isCollapsed && <span>{label}</span>}
+                    {!isCollapsed && <span className="tracking-wide">{label}</span>}
                   </>
                 )}
               </NavLink>
@@ -342,47 +334,36 @@ const Sidebar = ({ isCollapsed = false }) => {
         </div>
       </nav>
 
-      {/* Footer Area */}
-      <div className={`relative z-10 pb-4 pt-4 border-t border-slate-800/60 space-y-2 bg-slate-950 ${isCollapsed ? "flex flex-col items-center px-2" : "px-3"}`}>
-        {logoutItem && (
-          <NavLink
-            to={logoutItem.to}
-            title={isCollapsed ? logoutItem.label : undefined}
-            className={({ isActive }) =>
-              `flex items-center ${isCollapsed ? "justify-center w-full py-3 px-0" : "gap-3 px-3 py-2.5"} rounded-lg text-[14px] font-medium transition-all duration-200 outline-none
-                ${isActive
-                ? "bg-red-500/10 text-red-400"
-                : "text-slate-400 hover:bg-red-500/10 hover:text-red-400"
-              }`
-            }
-          >
-            <LogOut size={18} className="text-inherit" />
-            {!isCollapsed && <span>{logoutItem.label}</span>}
-          </NavLink>
-        )}
+      {/* Premium Footer Area */}
+      <div className={`relative z-10 pb-8 pt-6 border-t border-white/5 space-y-4 bg-transparent ${isCollapsed ? "flex flex-col items-center px-2" : "px-4"}`}>
 
-        {/* User Profile */}
-        <div className={`mt-2 rounded-lg border border-slate-800 bg-slate-900/50 flex items-center hover:bg-slate-900 transition-colors group cursor-pointer ${isCollapsed ? "p-1.5 justify-center" : "p-2 gap-3"}`}>
-          <div className="relative shrink-0">
+
+        {/* User Card */}
+        <div className={`mt-2 rounded-2xl border border-white/5 bg-white/[0.03] backdrop-blur-xl flex items-center hover:bg-white/[0.08] hover:border-white/10 transition-all duration-500 group cursor-pointer ${isCollapsed ? "p-2 justify-center" : "p-3 gap-4 shadow-xl shadow-black/20"}`}>
+          <div className="relative shrink-0 scale-90 group-hover:scale-100 transition-transform duration-500">
+            <div className="absolute inset-0 bg-indigo-500/20 blur-lg rounded-full animate-pulse" />
             <img
               src="https://api.dicebear.com/7.x/notionists/svg?seed=Jane&backgroundColor=transparent"
               alt="User"
-              className="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 p-0.5"
+              className="relative w-11 h-8 rounded-2xl bg-slate-800 border border-white/10 p-0.5 object-cover"
             />
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-slate-900" />
+            <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-4 border-slate-900 shadow-lg" />
           </div>
           {!isCollapsed && (
             <>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-slate-200 truncate group-hover:text-white transition-colors">Jane Doe</p>
-                <p className="text-[11px] text-slate-500 truncate">Administrator</p>
+                <p className="text-[14px] font-bold text-slate-100 truncate tracking-tight">Jane Doe</p>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Shield size={10} className="text-indigo-400 group-hover:animate-bounce" />
+                  <p className="text-[11px] text-slate-500 truncate font-semibold uppercase tracking-tighter">Chief Admin</p>
+                </div>
               </div>
               <button
                 type="button"
-                className="h-7 w-7 flex items-center justify-center rounded-md text-slate-500 hover:text-slate-300 hover:bg-slate-800 transition-colors"
-                aria-label="Open settings"
+                className="h-9 w-9 flex items-center justify-center rounded-xl text-slate-500 hover:text-white hover:bg-indigo-600 transition-all duration-300 shadow-sm"
+                aria-label="Account Settings"
               >
-                <Settings size={14} />
+                <Settings size={18} className="group-hover:rotate-90 transition-transform duration-700" />
               </button>
             </>
           )}
@@ -390,10 +371,16 @@ const Sidebar = ({ isCollapsed = false }) => {
       </div>
 
       <style>{`
-        .sidebar-scrollbar::-webkit-scrollbar { width: 2px; }
+        .sidebar-scrollbar::-webkit-scrollbar { width: 4px; }
         .sidebar-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .sidebar-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 10px; }
-        .sidebar-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+        .sidebar-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 20px; transition: all 0.5s; }
+        .sidebar-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.4); }
+        
+        @keyframes float {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-5px); }
+          100% { transform: translateY(0px); }
+        }
       `}</style>
     </aside>
   );

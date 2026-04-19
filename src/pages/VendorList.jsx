@@ -6,7 +6,9 @@ import {
   Edit3, 
   ChevronDown,
   ArrowUpDown,
-  Star
+  Star,
+  Plus,
+  Search
 } from 'lucide-react';
 
 const initialVendors = [
@@ -34,6 +36,7 @@ const StarRating = ({ rating }) => {
 export default function VendorList() {
   const [vendors, setVendors] = useState(initialVendors);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingVendor, setEditingVendor] = useState(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -73,19 +76,30 @@ export default function VendorList() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const newVendor = {
-      id: Date.now(),
-      code: Math.floor(Math.random() * 10000).toString(),
-      name: `${formData.firstName} ${formData.lastName}`,
-      email: formData.email,
-      country: formData.country || 'N/A',
-      motherTongue: 'N/A',
-      ptft: formData.availability === 'Full Time' ? 'FT' : 'PT',
-      serviceQuality: 0,
-      taskQuality: 0,
-      timelyDelivery: 0
-    };
-    setVendors(prev => [...prev, newVendor]);
+    if (editingVendor) {
+      setVendors(vendors.map(v => v.id === editingVendor.id ? { 
+        ...v, 
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        country: formData.country,
+        ptft: formData.availability === 'Full Time' ? 'FT' : 'PT'
+      } : v));
+      setEditingVendor(null);
+    } else {
+      const newVendor = {
+        id: Date.now(),
+        code: Math.floor(Math.random() * 10000).toString(),
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email,
+        country: formData.country || 'N/A',
+        motherTongue: 'N/A',
+        ptft: formData.availability === 'Full Time' ? 'FT' : 'PT',
+        serviceQuality: 0,
+        taskQuality: 0,
+        timelyDelivery: 0
+      };
+      setVendors(prev => [...prev, newVendor]);
+    }
     setIsModalOpen(false);
     // Reset form
     setFormData({
@@ -95,6 +109,22 @@ export default function VendorList() {
     });
   };
 
+  const handleEdit = (vendor) => {
+    const [first, ...last] = vendor.name.split(' ');
+    setEditingVendor(vendor);
+    setFormData({
+      firstName: first,
+      lastName: last.join(' '),
+      email: vendor.email,
+      country: vendor.country,
+      availability: vendor.ptft === 'FT' ? 'Full Time' : 'Part Time',
+      isActive: true,
+      // Placeholder for others
+      mobile: '', dob: '', gender: '', state: '', city: '', zipCode: '', address: ''
+    });
+    setIsModalOpen(true);
+  };
+
   const filteredVendors = vendors.filter(vendor => 
     Object.keys(filters).every(key => 
       vendor[key].toString().toLowerCase().includes(filters[key].toLowerCase())
@@ -102,24 +132,19 @@ export default function VendorList() {
   );
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-800">
-      <div className="max-w-full mx-auto p-4 space-y-4">
+    <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
+      <div className="max-w-[1400px] mx-auto space-y-8 p-4">
         
         {/* Header Section */}
-        <div className="flex items-center justify-between border-b pb-2">
-          <h1 className="text-xl font-bold text-slate-700">Vendor List</h1>
-          <div className="flex items-center gap-3 text-blue-600">
-            <button className="p-1 hover:bg-slate-100 rounded transition-colors">
-              <Filter className="w-5 h-5" />
-            </button>
-            <button className="p-1 hover:bg-slate-100 rounded transition-colors">
-              <Settings className="w-5 h-5" />
-            </button>
+        <div className="flex items-center justify-between border-b pb-4">
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight italic uppercase">Vendor Directory</h1>
+          <div className="flex items-center gap-3">
             <button 
-              onClick={() => setIsModalOpen(true)}
-              className="p-1 hover:bg-slate-100 rounded transition-colors"
+              onClick={() => { setEditingVendor(null); setIsModalOpen(true); }}
+              className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:translate-y-[-2px] transition-all active:scale-95"
             >
-              <UserPlus className="w-5 h-5" />
+              <Plus className="w-4 h-4" />
+              Add Vendor
             </button>
           </div>
         </div>
@@ -275,7 +300,10 @@ export default function VendorList() {
                       <StarRating rating={vendor.timelyDelivery} />
                     </td>
                     <td className="p-3 text-center">
-                      <button className="p-1.5 bg-white border border-slate-200 text-emerald-600 rounded hover:bg-emerald-50 transition-colors shadow-sm">
+                      <button 
+                        onClick={() => handleEdit(vendor)}
+                        className="p-2 bg-white border border-slate-200 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm group-hover:scale-110"
+                      >
                         <Edit3 className="w-4 h-4" />
                       </button>
                     </td>

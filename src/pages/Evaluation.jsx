@@ -32,7 +32,7 @@ export default function Evaluation() {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-800 p-6 md:p-10">
+    <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-slate-100 p-8">
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">

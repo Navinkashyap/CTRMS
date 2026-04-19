@@ -41,8 +41,18 @@ const allColumns = [
 export default function UsersList() {
   const [users, setUsers] = useState(initialUsers);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
   const [visibleColumns, setVisibleColumns] = useState(['name', 'email', 'role', 'mobile', 'status']);
   const [tempVisibleColumns, setTempVisibleColumns] = useState(visibleColumns);
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    role: 'Admin',
+    mobile: '',
+    status: 'Active'
+  });
   
   const [filters, setFilters] = useState({
     name: '',
@@ -61,6 +71,28 @@ export default function UsersList() {
     return matchesName && matchesEmail && matchesRole && matchesMobile && matchesStatus;
   });
 
+  const handleAdd = () => {
+    setEditingUser(null);
+    setFormData({ name: '', email: '', role: 'Admin', mobile: '', status: 'Active' });
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (user) => {
+    setEditingUser(user);
+    setFormData({ ...user });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (editingUser) {
+      setUsers(users.map(u => u.id === editingUser.id ? { ...formData, id: u.id } : u));
+    } else {
+      setUsers([...users, { ...formData, id: Date.now() }]);
+    }
+    setIsModalOpen(false);
+  };
+
   const toggleColumnSelection = (colId) => {
     setTempVisibleColumns(prev => 
       prev.includes(colId) ? prev.filter(id => id !== colId) : [...prev, colId]
@@ -73,8 +105,8 @@ export default function UsersList() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-6 lg:p-10 font-sans text-slate-900">
-      <div className="max-w-[1400px] mx-auto space-y-8 animate-in fade-in duration-700 slide-in-from-bottom-2">
+    <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
+      <div className="max-w-[1400px] mx-auto space-y-8">
         
         {/* Premium Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/60 shadow-sm">
@@ -99,6 +131,7 @@ export default function UsersList() {
               <Settings className="w-5 h-5" />
             </button>
             <button 
+              onClick={handleAdd}
               className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:translate-y-[-2px] transition-all active:scale-95"
             >
               <UserPlus className="w-4 h-4" />
@@ -245,7 +278,10 @@ export default function UsersList() {
                     </td>
                     <td className="px-6 py-5 text-center">
                       <div className="flex items-center justify-center">
-                        <button className="p-2.5 bg-slate-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white hover:scale-110 transition-all shadow-sm border border-slate-100">
+                        <button 
+                          onClick={() => handleEdit(user)}
+                          className="p-2.5 bg-slate-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white hover:scale-110 transition-all shadow-sm border border-slate-100"
+                        >
                           <Edit3 className="w-4 h-4" />
                         </button>
                       </div>
@@ -307,6 +343,105 @@ export default function UsersList() {
                 Apply
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add/Edit Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsModalOpen(false)} />
+          
+          <div className="relative bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white">
+            <div className="p-8 border-b border-slate-50 bg-slate-50/30">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight italic uppercase">
+                  {editingUser ? 'Edit User' : 'New User'}
+                </h2>
+                <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
+              <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">User Profile Management</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-8 space-y-5">
+              <div className="space-y-1 text-left">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
+                <input 
+                  type="text"
+                  required
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-1 text-left">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
+                <input 
+                  type="email"
+                  required
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-left">
+                <div className="space-y-1 text-left">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Role</label>
+                  <select 
+                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                    value={formData.role}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  >
+                    <option>Admin</option>
+                    <option>Project Manager</option>
+                    <option>Accountant</option>
+                    <option>Vendor Manager</option>
+                    <option>Super Admin</option>
+                  </select>
+                </div>
+                <div className="space-y-1 text-left">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status</label>
+                  <select 
+                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  >
+                    <option>Active</option>
+                    <option>Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1 text-left">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mobile No</label>
+                <input 
+                  type="text"
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                  value={formData.mobile}
+                  onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                />
+              </div>
+
+              <div className="pt-6 flex gap-4">
+                <button 
+                  type="button" 
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95 border border-slate-200"
+                >
+                  Discard
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:shadow-indigo-200 hover:translate-y-[-2px] transition-all active:scale-95"
+                >
+                  Confirm
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
