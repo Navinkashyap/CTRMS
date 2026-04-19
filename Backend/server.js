@@ -14,7 +14,7 @@ const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
 
 app.use(
   cors({
-    origin: CLIENT_ORIGIN,
+    origin: "*",
   })
 );
 app.use(express.json());
