@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: ctrms-backend
+    env: node
+    rootDir: Backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGODB_URI
+        value: "mongodb+srv://piyush_db_user:navin123@cluster0.iapkvik.mongodb.net/?appName=Cluster0"
+      - key: MONGODB_DB_NAME
+        value: "sadminperfectras"
+      - key: CLIENT_ORIGIN
+        value: "*"
