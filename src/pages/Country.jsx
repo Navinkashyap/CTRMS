@@ -51,8 +51,8 @@ export default function Country() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredCountries = useMemo(() => {
-    return countries.filter(c => 
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    return countries.filter(c =>
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.shortName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.code.includes(searchQuery)
     );
@@ -78,7 +78,7 @@ export default function Country() {
   const handleCountryNameChange = (e) => {
     const selectedName = e.target.value;
     const foundCountry = availableCountriesList.find(c => c.name.toLowerCase() === selectedName.toLowerCase());
-    
+
     if (foundCountry) {
       setFormData({
         ...formData,
@@ -107,7 +107,7 @@ export default function Country() {
   return (
     <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
       <div className="max-w-[1200px] mx-auto space-y-8">
-        
+
         {/* Modern Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1">
@@ -121,19 +121,19 @@ export default function Country() {
               </span>
             </p>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <div className="relative group w-full md:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-              <input 
-                type="text" 
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-blue-500 transition-colors" />
+              <input
+                type="text"
                 placeholder="Search countries..."
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm placeholder:text-slate-400"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm placeholder:text-slate-600"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <button 
+            <button
               onClick={handleAddClick}
               className="inline-flex items-center gap-2 bg-[#1e293b] hover:bg-slate-800 text-white px-5 py-2.5 rounded-2xl transition-all shadow-md font-bold active:scale-[0.98]"
             >
@@ -166,12 +166,12 @@ export default function Country() {
                       </span>
                     </td>
                     <td className="px-6 py-5">
-                       <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-slate-50 text-slate-400 group-hover:bg-white group-hover:text-blue-600 transition-all border border-transparent group-hover:border-blue-100 shadow-sm">
-                            <Globe className="w-4 h-4" />
-                          </div>
-                          <span className="font-bold text-slate-800 group-hover:text-blue-700 transition-colors tracking-tight">{country.name}</span>
-                       </div>
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-slate-50 text-slate-600 group-hover:bg-white group-hover:text-blue-600 transition-all border border-transparent group-hover:border-blue-100 shadow-sm">
+                          <Globe className="w-4 h-4" />
+                        </div>
+                        <span className="font-bold text-slate-800 group-hover:text-blue-700 transition-colors tracking-tight">{country.name}</span>
+                      </div>
                     </td>
                     <td className="px-6 py-5 font-mono text-xs font-bold text-slate-500 uppercase">
                       {country.code}
@@ -182,17 +182,16 @@ export default function Country() {
                       </span>
                     </td>
                     <td className="px-6 py-5">
-                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide border ${
-                        country.status === 'Active' 
-                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
-                        : 'bg-slate-50 text-slate-500 border-slate-200'
-                      }`}>
+                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide border ${country.status === 'Active'
+                          ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                          : 'bg-slate-50 text-slate-500 border-slate-200'
+                        }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${country.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-400'} animate-pulse`} />
                         {country.status}
                       </div>
                     </td>
                     <td className="px-6 py-5 text-center">
-                      <button 
+                      <button
                         onClick={() => handleEditClick(country)}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white hover:scale-105 transition-all shadow-sm font-bold text-xs mx-auto"
                       >
@@ -205,7 +204,7 @@ export default function Country() {
               </tbody>
             </table>
           </div>
-          <div className="px-8 py-5 flex items-center justify-between border-t border-slate-50 text-xs font-bold text-slate-400 tracking-wider uppercase">
+          <div className="px-8 py-5 flex items-center justify-between border-t border-slate-50 text-xs font-bold text-slate-600 tracking-wider uppercase">
             <span>Showing {filteredCountries.length} of {countries.length} entries</span>
           </div>
         </div>
@@ -223,20 +222,20 @@ export default function Country() {
                   </h2>
                   <p className="text-slate-500 text-sm font-medium">Register global trading regions.</p>
                 </div>
-                <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-all flex items-center justify-center">
+                <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all flex items-center justify-center">
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              
+
               <form onSubmit={handleSave} className="p-0 space-y-6">
                 <div className="grid grid-cols-1 gap-6">
                   <div className="space-y-2 group">
-                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest pl-1">Country Name</label>
-                    <input 
-                      required autoFocus type="text" 
+                    <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">Country Name</label>
+                    <input
+                      required autoFocus type="text"
                       list="country-suggestions"
                       className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
-                      value={formData.name} onChange={handleCountryNameChange} 
+                      value={formData.name} onChange={handleCountryNameChange}
                       placeholder="Select or type a country..."
                     />
                     <datalist id="country-suggestions">
@@ -247,33 +246,33 @@ export default function Country() {
                   </div>
                   <div className="grid grid-cols-2 gap-6">
                     <div className="space-y-2">
-                       <label className="text-xs font-black text-slate-400 uppercase tracking-widest pl-1">Country Code</label>
-                       <input 
-                          required type="text" 
-                          className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold font-mono"
-                          value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})}
-                          placeholder="e.g. +1"
-                       />
+                      <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">Country Code</label>
+                      <input
+                        required type="text"
+                        className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold font-mono"
+                        value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                        placeholder="e.g. +1"
+                      />
                     </div>
                     <div className="space-y-2">
-                       <label className="text-xs font-black text-slate-400 uppercase tracking-widest pl-1">Short Name</label>
-                       <input 
-                          required type="text" maxLength={3}
-                          className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold uppercase"
-                          value={formData.shortName} onChange={(e) => setFormData({...formData, shortName: e.target.value.toUpperCase()})}
-                          placeholder="e.g. CAN"
-                       />
+                      <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">Short Name</label>
+                      <input
+                        required type="text" maxLength={3}
+                        className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold uppercase"
+                        value={formData.shortName} onChange={(e) => setFormData({ ...formData, shortName: e.target.value.toUpperCase() })}
+                        placeholder="e.g. CAN"
+                      />
                     </div>
                   </div>
-                  <div className="space-y-2 font-black text-slate-400 uppercase tracking-widest text-[11px]">
-                     <label className="pl-1">Select Status</label>
-                     <select 
-                        className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold appearance-none cursor-pointer"
-                        value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})}
-                      >
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
-                      </select>
+                  <div className="space-y-2 font-black text-slate-600 uppercase tracking-widest text-[11px]">
+                    <label className="pl-1">Select Status</label>
+                    <select
+                      className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold appearance-none cursor-pointer"
+                      value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
                   </div>
                 </div>
                 <button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 rounded-2xl text-[15px] font-black transition-all shadow-lg active:scale-[0.98]">

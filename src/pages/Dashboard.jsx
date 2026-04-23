@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Users, 
-  DollarSign, 
-  Activity, 
-  Calendar, 
+import {
+  TrendingUp,
+  TrendingDown,
+  Users,
+  DollarSign,
+  Activity,
+  Calendar,
   Download,
   Plus,
   FileText,
@@ -80,7 +80,7 @@ const Dashboard = () => {
   return (
     <div className="font-sans text-slate-900 pb-10 min-h-screen bg-transparent">
       <div className="max-w-[1600px] mx-auto space-y-4 md:space-y-8 animate-in fade-in duration-1000 p-4 md:p-8">
-        
+
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1">
@@ -95,7 +95,7 @@ const Dashboard = () => {
 
           <div className="flex items-center gap-3">
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setShowDateDropdown(!showDateDropdown)}
                 className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-2xl font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm active:scale-95"
               >
@@ -103,7 +103,7 @@ const Dashboard = () => {
                 {dateRange}
                 <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${showDateDropdown ? 'rotate-180' : ''}`} />
               </button>
-              
+
               {showDateDropdown && (
                 <div className="absolute right-0 top-[calc(100%+8px)] bg-white/90 backdrop-blur-2xl border border-white rounded-2xl min-w-[180px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="p-2 flex flex-col gap-1">
@@ -111,9 +111,8 @@ const Dashboard = () => {
                       <button
                         key={range}
                         onClick={() => { setDateRange(range); setShowDateDropdown(false); }}
-                        className={`w-full text-left px-4 py-2.5 text-[13px] font-bold rounded-xl transition-all ${
-                          dateRange === range ? 'text-indigo-600 bg-indigo-50' : 'text-slate-600 hover:bg-slate-50'
-                        }`}
+                        className={`w-full text-left px-4 py-2.5 text-[13px] font-bold rounded-xl transition-all ${dateRange === range ? 'text-indigo-600 bg-indigo-50' : 'text-slate-600 hover:bg-slate-50'
+                          }`}
                       >
                         {range}
                       </button>
@@ -122,8 +121,8 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
-            
-            <button 
+
+            <button
               onClick={handleExport}
               className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 hover:translate-y-[-2px] transition-all shadow-xl shadow-indigo-200 active:scale-95"
             >
@@ -136,23 +135,21 @@ const Dashboard = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, i) => (
-            <div 
-              key={i} 
+            <div
+              key={i}
               onClick={() => setActiveMetric(stat.label)}
-              className={`group relative bg-white/60 backdrop-blur-xl rounded-[2.5rem] p-6 border transition-all duration-500 cursor-pointer overflow-hidden ${
-                activeMetric === stat.label 
-                ? 'border-indigo-400 ring-2 ring-indigo-500/10 shadow-indigo-200/40 shadow-2xl translate-y-[-4px]' 
-                : 'border-white shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-indigo-100 hover:translate-y-[-4px]'
-              }`}
+              className={`group relative bg-white/60 backdrop-blur-xl rounded-[2.5rem] p-6 border transition-all duration-500 cursor-pointer overflow-hidden ${activeMetric === stat.label
+                  ? 'border-indigo-400 ring-2 ring-indigo-500/10 shadow-indigo-200/40 shadow-2xl translate-y-[-4px]'
+                  : 'border-white shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-indigo-100 hover:translate-y-[-4px]'
+                }`}
             >
-               {/* Animated Background Glow */}
-               <div className={`absolute -right-4 -bottom-4 w-24 h-24 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-10 blur-2xl transition-opacity duration-700`} />
-              
+              {/* Animated Background Glow */}
+              <div className={`absolute -right-4 -bottom-4 w-24 h-24 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-10 blur-2xl transition-opacity duration-700`} />
+
               <div className="relative z-10">
                 <div className="flex justify-between items-start mb-6">
-                  <div className={`p-3.5 rounded-2xl bg-gradient-to-br ${stat.gradient} text-white shadow-lg ${
-                    activeMetric === stat.label ? 'scale-110 shadow-indigo-200' : 'shadow-slate-100 group-hover:scale-110'
-                  } transition-transform duration-500`}>
+                  <div className={`p-3.5 rounded-2xl bg-gradient-to-br ${stat.gradient} text-white shadow-lg ${activeMetric === stat.label ? 'scale-110 shadow-indigo-200' : 'shadow-slate-100 group-hover:scale-110'
+                    } transition-transform duration-500`}>
                     <stat.icon className="w-5 h-5" />
                   </div>
                   <span className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-xl ${stat.isUp ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
@@ -160,7 +157,7 @@ const Dashboard = () => {
                     {stat.trend}
                   </span>
                 </div>
-                <h3 className="text-slate-400 text-[11px] font-black uppercase tracking-[0.2em] mb-1 pl-1">{stat.label}</h3>
+                <h3 className="text-slate-600 text-[11px] font-black uppercase tracking-[0.2em] mb-1 pl-1">{stat.label}</h3>
                 <div className="flex items-end justify-between px-1">
                   <p className="text-3xl font-black text-slate-800 tracking-tight">{stat.value}</p>
                   <div className={`transition-all duration-500 translate-x-2 group-hover:translate-x-0 ${activeMetric === stat.label ? 'opacity-100 translate-x-0 scale-110' : 'opacity-0 group-hover:opacity-100'}`}>
@@ -176,9 +173,9 @@ const Dashboard = () => {
           {/* Main Chart Section */}
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-white/80 backdrop-blur-2xl rounded-[2.5rem] sm:rounded-[3rem] border border-white shadow-2xl shadow-slate-200/60 p-6 sm:p-10 relative overflow-hidden group">
-               {/* Premium Header Decoration */}
+              {/* Premium Header Decoration */}
               <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-indigo-500 via-blue-500 to-purple-600" />
-              
+
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 relative z-10 gap-6">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
@@ -191,11 +188,10 @@ const Dashboard = () => {
                 </div>
                 <div className="flex bg-slate-100/50 backdrop-blur-sm p-1.5 rounded-2xl border border-slate-200/50">
                   {['7D', '30D', '12M'].map((t) => (
-                    <button key={t} className={`px-5 py-2 text-[11px] font-black rounded-xl transition-all ${
-                      (t === '7D' && dateRange === 'Last 7 Days') || (t === '30D' && dateRange === 'Last 30 Days') || (t === '12M' && dateRange === 'Last 12 Months')
-                      ? 'bg-white text-indigo-600 shadow-md transform scale-[1.05]' 
-                      : 'text-slate-400 hover:text-slate-900'
-                    }`}>
+                    <button key={t} className={`px-5 py-2 text-[11px] font-black rounded-xl transition-all ${(t === '7D' && dateRange === 'Last 7 Days') || (t === '30D' && dateRange === 'Last 30 Days') || (t === '12M' && dateRange === 'Last 12 Months')
+                        ? 'bg-white text-indigo-600 shadow-md transform scale-[1.05]'
+                        : 'text-slate-600 hover:text-slate-900'
+                      }`}>
                       {t}
                     </button>
                   ))}
@@ -206,7 +202,7 @@ const Dashboard = () => {
                 <div className="absolute inset-0 flex flex-col justify-between pt-4 pb-12">
                   {[...Array(5)].map((_, i) => (
                     <div key={i} className="w-full border-b border-slate-100/80 border-dashed relative">
-                      <span className="absolute -left-2 -top-2.5 bg-white/40 backdrop-blur-sm px-2 text-[10px] font-black text-slate-400 uppercase">
+                      <span className="absolute -left-2 -top-2.5 bg-white/40 backdrop-blur-sm px-2 text-[10px] font-black text-slate-600 uppercase">
                         {5000 - i * 1000}
                       </span>
                     </div>
@@ -224,7 +220,7 @@ const Dashboard = () => {
                       <feComposite in="SourceGraphic" in2="blur" operator="over" />
                     </filter>
                   </defs>
-                  
+
                   <path
                     fill="url(#chartGradient)"
                     d={chartPaths[activeMetric]}
@@ -241,7 +237,7 @@ const Dashboard = () => {
                     strokeDasharray="1000"
                     strokeDashoffset="0"
                   />
-                  
+
                   {[
                     { x: 100, y: 150, val: "2,4k" },
                     { x: 400, y: 80, val: "4.8k" },
@@ -250,7 +246,7 @@ const Dashboard = () => {
                     <g key={i} className="group/dot cursor-pointer">
                       <circle cx={pt.x} cy={pt.y} r="8" fill="#fff" stroke="#6366f1" strokeWidth="4" className="shadow-2xl" />
                       <circle cx={pt.x} cy={pt.y} r="14" fill="#6366f1" className="opacity-0 group-hover/dot:opacity-20 transition-all duration-300 transform group-hover/dot:scale-125" />
-                      
+
                       {/* Tooltip on hover */}
                       <g className="opacity-0 group-hover/dot:opacity-100 transition-opacity duration-300 pointer-events-none">
                         <rect x={pt.x - 30} y={pt.y - 45} width="60" height="30" rx="10" fill="#1e293b" />
@@ -260,7 +256,7 @@ const Dashboard = () => {
                   ))}
                 </svg>
 
-                <div className="absolute bottom-0 left-8 right-0 flex justify-between text-[11px] font-black text-slate-400 uppercase tracking-widest px-4 translate-y-2">
+                <div className="absolute bottom-0 left-8 right-0 flex justify-between text-[11px] font-black text-slate-600 uppercase tracking-widest px-4 translate-y-2">
                   {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(m => <span key={m}>{m}</span>)}
                 </div>
               </div>
@@ -269,8 +265,8 @@ const Dashboard = () => {
             {/* Quick Actions Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               {quickActions.map((action, i) => (
-                <button 
-                  key={i} 
+                <button
+                  key={i}
                   onClick={() => action.path ? navigate(action.path) : alert(`${action.name} functionality coming soon.`)}
                   className="group flex flex-col items-center justify-center p-8 bg-white/60 backdrop-blur-xl border border-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 hover:border-indigo-100 hover:shadow-2xl hover:shadow-indigo-50 hover:translate-y-[-4px] transition-all duration-300 outline-none"
                 >
@@ -289,7 +285,7 @@ const Dashboard = () => {
             <div className="bg-[#1a1c31] rounded-[3rem] p-10 text-white relative overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.3)] min-h-[300px] flex flex-col justify-center border border-white/5">
               <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl group-hover:bg-indigo-500/30 transition-colors duration-1000" />
               <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl" />
-              
+
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-10">
                   <h3 className="font-black text-xl italic tracking-tight">System Core</h3>
@@ -305,7 +301,7 @@ const Dashboard = () => {
                     { label: "Memory Usage", value: "62%", color: "bg-purple-500", glow: "shadow-purple-500/20" },
                   ].map((item, i) => (
                     <div key={i} className="group/item">
-                      <div className="flex justify-between text-[11px] font-black mb-3 uppercase tracking-widest text-slate-400 group-hover/item:text-slate-300 transition-colors">
+                      <div className="flex justify-between text-[11px] font-black mb-3 uppercase tracking-widest text-slate-600 group-hover/item:text-slate-300 transition-colors">
                         <span>{item.label}</span>
                         <span className="text-white">{item.value}</span>
                       </div>
@@ -322,7 +318,7 @@ const Dashboard = () => {
             <div className="bg-white/80 backdrop-blur-2xl rounded-[3rem] border border-white shadow-2xl shadow-slate-200/60 p-8 sm:p-10 relative">
               <div className="flex items-center justify-between mb-10">
                 <h3 className="text-2xl font-black text-slate-900 tracking-tight italic">Pulse Feed</h3>
-                <button 
+                <button
                   onClick={() => navigate("/report")}
                   className="text-indigo-600 text-[10px] font-black uppercase tracking-[0.2em] px-4 py-2 bg-indigo-50 rounded-xl hover:bg-slate-900 hover:text-white transition-all outline-none"
                 >
@@ -341,7 +337,7 @@ const Dashboard = () => {
                       <p className="text-sm font-bold text-slate-500 mt-1 leading-relaxed opacity-80">{item.desc}</p>
                       <div className="flex items-center gap-3 mt-4">
                         <div className="h-[1px] w-4 bg-slate-200 group-hover:w-8 transition-all" />
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
                           {item.time}
                           <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
                         </p>
@@ -354,7 +350,7 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-      
+
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }

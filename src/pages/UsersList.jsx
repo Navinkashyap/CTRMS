@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { 
-  Users, 
-  Search, 
-  Settings, 
-  UserPlus, 
-  Edit3, 
+import {
+  Users,
+  Search,
+  Settings,
+  UserPlus,
+  Edit3,
   ChevronDown,
   LayoutGrid,
   X
@@ -45,7 +45,7 @@ export default function UsersList() {
   const [editingUser, setEditingUser] = useState(null);
   const [visibleColumns, setVisibleColumns] = useState(['name', 'email', 'role', 'mobile', 'status']);
   const [tempVisibleColumns, setTempVisibleColumns] = useState(visibleColumns);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -53,7 +53,7 @@ export default function UsersList() {
     mobile: '',
     status: 'Active'
   });
-  
+
   const [filters, setFilters] = useState({
     name: '',
     email: '',
@@ -94,7 +94,7 @@ export default function UsersList() {
   };
 
   const toggleColumnSelection = (colId) => {
-    setTempVisibleColumns(prev => 
+    setTempVisibleColumns(prev =>
       prev.includes(colId) ? prev.filter(id => id !== colId) : [...prev, colId]
     );
   };
@@ -107,7 +107,7 @@ export default function UsersList() {
   return (
     <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
       <div className="max-w-[1400px] mx-auto space-y-8">
-        
+
         {/* Premium Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/60 shadow-sm">
           <div className="space-y-1">
@@ -119,9 +119,9 @@ export default function UsersList() {
               Manage and monitor your team member access and permissions.
             </p>
           </div>
-          
+
           <div className="flex flex-wrap items-center gap-4 ml-auto md:ml-0">
-            <button 
+            <button
               onClick={() => {
                 setTempVisibleColumns(visibleColumns);
                 setIsSettingsModalOpen(true);
@@ -130,7 +130,7 @@ export default function UsersList() {
             >
               <Settings className="w-5 h-5" />
             </button>
-            <button 
+            <button
               onClick={handleAdd}
               className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:translate-y-[-2px] transition-all active:scale-95"
             >
@@ -147,22 +147,22 @@ export default function UsersList() {
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100">
                   <th className="px-6 py-5 font-black text-slate-700 uppercase tracking-wider text-[11px] border-r border-slate-100 w-16 text-center">#</th>
-                  
+
                   {visibleColumns.includes('id') && <th className="px-6 py-5 border-r border-slate-100 font-black text-slate-700 uppercase tracking-wider text-[11px]">User id</th>}
-                  
+
                   <th className="px-6 py-5 border-r border-slate-100 min-w-[200px]">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Full Name</span>
-                        <LayoutGrid className="w-3.5 h-3.5 text-slate-400 rotate-45" />
+                        <LayoutGrid className="w-3.5 h-3.5 text-slate-600 rotate-45" />
                       </div>
                       <div className="relative group">
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
                           placeholder=""
                           className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
                           value={filters.name}
-                          onChange={(e) => setFilters({...filters, name: e.target.value})}
+                          onChange={(e) => setFilters({ ...filters, name: e.target.value })}
                         />
                       </div>
                     </div>
@@ -171,15 +171,15 @@ export default function UsersList() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Email</span>
-                        <LayoutGrid className="w-3.5 h-3.5 text-slate-400 rotate-45" />
+                        <LayoutGrid className="w-3.5 h-3.5 text-slate-600 rotate-45" />
                       </div>
                       <div className="relative group">
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
                           placeholder=""
                           className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
                           value={filters.email}
-                          onChange={(e) => setFilters({...filters, email: e.target.value})}
+                          onChange={(e) => setFilters({ ...filters, email: e.target.value })}
                         />
                       </div>
                     </div>
@@ -188,13 +188,13 @@ export default function UsersList() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Role</span>
-                        <LayoutGrid className="w-3.5 h-3.5 text-slate-400 rotate-45" />
+                        <LayoutGrid className="w-3.5 h-3.5 text-slate-600 rotate-45" />
                       </div>
                       <div className="relative">
-                        <select 
+                        <select
                           className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm cursor-pointer appearance-none"
                           value={filters.role}
-                          onChange={(e) => setFilters({...filters, role: e.target.value})}
+                          onChange={(e) => setFilters({ ...filters, role: e.target.value })}
                         >
                           <option>All</option>
                           <option>Admin</option>
@@ -203,7 +203,7 @@ export default function UsersList() {
                           <option>Vendor Manager</option>
                           <option>Super Admin</option>
                         </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
                       </div>
                     </div>
                   </th>
@@ -211,15 +211,15 @@ export default function UsersList() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Mobile No</span>
-                        <LayoutGrid className="w-3.5 h-3.5 text-slate-400 rotate-45" />
+                        <LayoutGrid className="w-3.5 h-3.5 text-slate-600 rotate-45" />
                       </div>
                       <div className="relative group">
-                        <input 
-                          type="text" 
+                        <input
+                          type="text"
                           placeholder=""
                           className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm"
                           value={filters.mobile}
-                          onChange={(e) => setFilters({...filters, mobile: e.target.value})}
+                          onChange={(e) => setFilters({ ...filters, mobile: e.target.value })}
                         />
                       </div>
                     </div>
@@ -228,16 +228,16 @@ export default function UsersList() {
                     <div className="space-y-3">
                       <span className="font-black text-slate-700 uppercase tracking-wider text-[11px] block text-left">Status</span>
                       <div className="relative">
-                        <select 
+                        <select
                           className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm cursor-pointer appearance-none"
                           value={filters.status}
-                          onChange={(e) => setFilters({...filters, status: e.target.value})}
+                          onChange={(e) => setFilters({ ...filters, status: e.target.value })}
                         >
                           <option>All</option>
                           <option>Active</option>
                           <option>Inactive</option>
                         </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
                       </div>
                     </div>
                   </th>
@@ -248,13 +248,13 @@ export default function UsersList() {
                 {filteredUsers.map((user, idx) => (
                   <tr key={user.id} className="group hover:bg-indigo-50/20 transition-all duration-200">
                     <td className="px-6 py-5 text-center border-r border-slate-50">
-                      <span className="font-bold text-slate-400 group-hover:text-slate-900 transition-colors">
+                      <span className="font-bold text-slate-600 group-hover:text-slate-900 transition-colors">
                         {idx + 1}
                       </span>
                     </td>
-                    
+
                     {visibleColumns.includes('id') && <td className="px-6 py-5 border-r border-slate-50 font-bold">{user.id}</td>}
-                    
+
                     <td className="px-6 py-5 border-r border-slate-50">
                       <span className="font-extrabold text-slate-900 group-hover:text-indigo-700 transition-colors">
                         {user.name}
@@ -270,15 +270,14 @@ export default function UsersList() {
                       {user.mobile}
                     </td>
                     <td className="px-6 py-5 border-r border-slate-50 text-left">
-                      <button className={`px-5 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all hover:scale-105 active:scale-95 ${
-                        user.status === 'Active' ? 'bg-[#3b5998] text-white shadow-md shadow-blue-500/20' : 'bg-slate-200 text-slate-500'
-                      }`}>
+                      <button className={`px-5 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all hover:scale-105 active:scale-95 ${user.status === 'Active' ? 'bg-[#3b5998] text-white shadow-md shadow-blue-500/20' : 'bg-slate-200 text-slate-500'
+                        }`}>
                         {user.status}
                       </button>
                     </td>
                     <td className="px-6 py-5 text-center">
                       <div className="flex items-center justify-center">
-                        <button 
+                        <button
                           onClick={() => handleEdit(user)}
                           className="p-2.5 bg-slate-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white hover:scale-110 transition-all shadow-sm border border-slate-100"
                         >
@@ -294,8 +293,8 @@ export default function UsersList() {
 
           {/* Table Footer */}
           <div className="px-10 py-6 bg-slate-100/30 border-t border-slate-100">
-            <p className="text-[11px] font-bold text-slate-400 mt-2 text-left">
-               Showing <span className="text-slate-900 font-black">{filteredUsers.length}</span> Users in Directory
+            <p className="text-[11px] font-bold text-slate-600 mt-2 text-left">
+              Showing <span className="text-slate-900 font-black">{filteredUsers.length}</span> Users in Directory
             </p>
           </div>
         </div>
@@ -305,11 +304,11 @@ export default function UsersList() {
       {isSettingsModalOpen && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsSettingsModalOpen(false)} />
-          
+
           <div className="relative bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white">
             <div className="bg-[#1a1c31] px-6 py-4 flex items-center justify-between">
               <h2 className="text-white text-lg font-bold tracking-tight">Choose Columns</h2>
-              <button onClick={() => setIsSettingsModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+              <button onClick={() => setIsSettingsModalOpen(false)} className="text-slate-600 hover:text-white transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -319,7 +318,7 @@ export default function UsersList() {
                 {allColumns.map(col => (
                   <label key={col.id} className="flex items-center gap-3 px-6 py-3 hover:bg-slate-50 cursor-pointer transition-colors group">
                     <div className="relative flex items-center">
-                      <input 
+                      <input
                         type="checkbox"
                         className="peer h-5 w-5 appearance-none rounded border-2 border-slate-200 checked:bg-blue-600 checked:border-blue-600 transition-all cursor-pointer"
                         checked={tempVisibleColumns.includes(col.id)}
@@ -336,7 +335,7 @@ export default function UsersList() {
             </div>
 
             <div className="p-6 pt-2 border-t border-slate-100 flex justify-end">
-              <button 
+              <button
                 onClick={applyColumnSettings}
                 className="w-full py-3 bg-[#3382c4] hover:bg-[#286ba3] text-white rounded-xl font-bold text-base transition-all active:scale-95 shadow-lg shadow-blue-500/10"
               >
@@ -351,7 +350,7 @@ export default function UsersList() {
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsModalOpen(false)} />
-          
+
           <div className="relative bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white">
             <div className="p-8 border-b border-slate-50 bg-slate-50/30">
               <div className="flex items-center justify-between mb-2">
@@ -359,16 +358,16 @@ export default function UsersList() {
                   {editingUser ? 'Edit User' : 'New User'}
                 </h2>
                 <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-                  <X className="w-5 h-5 text-slate-400" />
+                  <X className="w-5 h-5 text-slate-600" />
                 </button>
               </div>
-              <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">User Profile Management</p>
+              <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.2em]">User Profile Management</p>
             </div>
 
             <form onSubmit={handleSubmit} className="p-8 space-y-5">
               <div className="space-y-1 text-left">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Name</label>
-                <input 
+                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Full Name</label>
+                <input
                   type="text"
                   required
                   className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
@@ -378,8 +377,8 @@ export default function UsersList() {
               </div>
 
               <div className="space-y-1 text-left">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
-                <input 
+                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Email</label>
+                <input
                   type="email"
                   required
                   className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
@@ -390,8 +389,8 @@ export default function UsersList() {
 
               <div className="grid grid-cols-2 gap-4 text-left">
                 <div className="space-y-1 text-left">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Role</label>
-                  <select 
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Role</label>
+                  <select
                     className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
@@ -404,8 +403,8 @@ export default function UsersList() {
                   </select>
                 </div>
                 <div className="space-y-1 text-left">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status</label>
-                  <select 
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Status</label>
+                  <select
                     className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
@@ -417,8 +416,8 @@ export default function UsersList() {
               </div>
 
               <div className="space-y-1 text-left">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mobile No</label>
-                <input 
+                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Mobile No</label>
+                <input
                   type="text"
                   className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
                   value={formData.mobile}
@@ -427,14 +426,14 @@ export default function UsersList() {
               </div>
 
               <div className="pt-6 flex gap-4">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setIsModalOpen(false)}
                   className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95 border border-slate-200"
                 >
                   Discard
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:shadow-indigo-200 hover:translate-y-[-2px] transition-all active:scale-95"
                 >

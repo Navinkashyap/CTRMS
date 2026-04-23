@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { 
-  Search, 
-  ChevronDown 
+import {
+  Search,
+  ChevronDown
 } from 'lucide-react';
 
 export default function Evaluation() {
@@ -36,19 +36,19 @@ export default function Evaluation() {
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-slate-100 p-8">
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-            
+
             {/* Vendor Search */}
             <div className="space-y-2">
               <label className="text-[14px] font-bold text-slate-700">
                 Vendor <span className="text-red-500">*</span>
               </label>
               <div className="relative group">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   name="vendor"
                   required
                   placeholder="Search Vendor By Name OR"
-                  className="w-full h-12 px-4 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-400"
+                  className="w-full h-12 px-4 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-600"
                   value={formData.vendor}
                   onChange={handleFormChange}
                 />
@@ -61,7 +61,7 @@ export default function Evaluation() {
                 Project Code <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <select 
+                <select
                   name="projectCode"
                   required
                   className="w-full h-12 px-4 bg-white border border-slate-200 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-600"
@@ -72,7 +72,7 @@ export default function Evaluation() {
                   <option value="PRJ001">PRJ001</option>
                   <option value="PRJ002">PRJ002</option>
                 </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
               </div>
             </div>
 
@@ -82,7 +82,7 @@ export default function Evaluation() {
                 Source Lang <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <select 
+                <select
                   name="sourceLang"
                   required
                   className="w-full h-12 px-4 bg-white border border-slate-200 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-600"
@@ -93,7 +93,7 @@ export default function Evaluation() {
                   <option value="English">English</option>
                   <option value="Spanish">Spanish</option>
                 </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
               </div>
             </div>
 
@@ -103,7 +103,7 @@ export default function Evaluation() {
                 Target Lang <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <select 
+                <select
                   name="targetLang"
                   required
                   className="w-full h-12 px-4 bg-white border border-slate-200 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-600"
@@ -114,7 +114,7 @@ export default function Evaluation() {
                   <option value="Hindi">Hindi</option>
                   <option value="French">French</option>
                 </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
               </div>
             </div>
 
@@ -124,7 +124,7 @@ export default function Evaluation() {
                 Service <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <select 
+                <select
                   name="service"
                   required
                   className="w-full h-12 px-4 bg-white border border-slate-200 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-600"
@@ -135,7 +135,7 @@ export default function Evaluation() {
                   <option value="Translation">Translation</option>
                   <option value="Proofreading">Proofreading</option>
                 </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
               </div>
             </div>
 
@@ -145,7 +145,7 @@ export default function Evaluation() {
                 Task Quality <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <select 
+                <select
                   name="taskQuality"
                   required
                   className="w-full h-12 px-4 bg-white border border-slate-200 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-600"
@@ -158,7 +158,7 @@ export default function Evaluation() {
                   <option value="Average">Average</option>
                   <option value="Poor">Poor</option>
                 </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
               </div>
             </div>
 
@@ -168,7 +168,7 @@ export default function Evaluation() {
                 Service Quality <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <select 
+                <select
                   name="serviceQuality"
                   required
                   className="w-full h-12 px-4 bg-white border border-slate-200 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-600"
@@ -181,7 +181,7 @@ export default function Evaluation() {
                   <option value="Average">Average</option>
                   <option value="Poor">Poor</option>
                 </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
               </div>
             </div>
 
@@ -191,7 +191,7 @@ export default function Evaluation() {
                 Deadline <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <select 
+                <select
                   name="deadline"
                   required
                   className="w-full h-12 px-4 bg-white border border-slate-200 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-600"
@@ -202,7 +202,7 @@ export default function Evaluation() {
                   <option value="On Time">On Time</option>
                   <option value="Delayed">Delayed</option>
                 </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
               </div>
             </div>
 
@@ -211,11 +211,11 @@ export default function Evaluation() {
           {/* Remark */}
           <div className="space-y-2">
             <label className="text-[14px] font-bold text-slate-700">Remark</label>
-            <textarea 
+            <textarea
               name="remark"
               placeholder="Enter Remark"
               rows={5}
-              className="w-full px-4 py-4 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-none placeholder:text-slate-400"
+              className="w-full px-4 py-4 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-none placeholder:text-slate-600"
               value={formData.remark}
               onChange={handleFormChange}
             />
@@ -223,7 +223,7 @@ export default function Evaluation() {
 
           {/* Submit Button */}
           <div className="pt-4">
-            <button 
+            <button
               type="submit"
               className="px-10 py-3 bg-[#405ba0] hover:bg-[#354c86] text-white font-bold rounded-lg transition-colors shadow-md active:scale-95"
             >

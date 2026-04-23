@@ -20,8 +20,8 @@ export default function Tools() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredTools = useMemo(() => {
-    return tools.filter(t => 
-      t.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    return tools.filter(t =>
+      t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.parentTool.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [tools, searchQuery]);
@@ -39,10 +39,10 @@ export default function Tools() {
 
   const handleEditClick = (tool) => {
     setEditingTool(tool);
-    setFormData({ 
-      name: tool.name, 
-      parentTool: tool.parentTool, 
-      status: tool.status 
+    setFormData({
+      name: tool.name,
+      parentTool: tool.parentTool,
+      status: tool.status
     });
     setIsModalOpen(true);
   };
@@ -63,7 +63,7 @@ export default function Tools() {
   return (
     <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
       <div className="max-w-[1200px] mx-auto space-y-8">
-        
+
         {/* Modern Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1">
@@ -77,14 +77,14 @@ export default function Tools() {
               </span>
             </p>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <div className="relative group w-full md:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-              <input 
-                type="text" 
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-blue-500 transition-colors" />
+              <input
+                type="text"
                 placeholder="Search tools..."
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm placeholder:text-slate-400"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm placeholder:text-slate-600"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -92,7 +92,7 @@ export default function Tools() {
             <button className="inline-flex items-center justify-center w-11 h-11 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
               <Filter className="w-5 h-5" />
             </button>
-            <button 
+            <button
               onClick={handleAddClick}
               className="inline-flex items-center gap-2 bg-[#1e293b] hover:bg-slate-800 text-white px-5 py-2.5 rounded-2xl transition-all shadow-md font-bold active:scale-[0.98]"
             >
@@ -126,12 +126,12 @@ export default function Tools() {
                       </span>
                     </td>
                     <td className="px-6 py-5">
-                       <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-slate-50 text-slate-400 group-hover:bg-white group-hover:text-blue-600 transition-all border border-transparent group-hover:border-blue-100 shadow-sm">
-                            <Wrench className="w-4 h-4" />
-                          </div>
-                          <span className="font-bold text-slate-800 group-hover:text-blue-700 transition-colors tracking-tight">{tool.name}</span>
-                       </div>
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-slate-50 text-slate-600 group-hover:bg-white group-hover:text-blue-600 transition-all border border-transparent group-hover:border-blue-100 shadow-sm">
+                          <Wrench className="w-4 h-4" />
+                        </div>
+                        <span className="font-bold text-slate-800 group-hover:text-blue-700 transition-colors tracking-tight">{tool.name}</span>
+                      </div>
                     </td>
                     <td className="px-6 py-5 font-semibold text-slate-500">
                       {tool.parentTool === 'N/A' ? (
@@ -143,19 +143,18 @@ export default function Tools() {
                       )}
                     </td>
                     <td className="px-6 py-5">
-                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide border ${
-                        tool.status === 'Active' 
-                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
-                        : 'bg-rose-50 text-rose-600 border-rose-100'
-                      }`}>
+                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide border ${tool.status === 'Active'
+                          ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                          : 'bg-rose-50 text-rose-600 border-rose-100'
+                        }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${tool.status === 'Active' ? 'bg-emerald-500' : 'bg-rose-500'} animate-pulse`} />
                         {tool.status}
                       </div>
                     </td>
                     <td className="px-6 py-5 text-center">
-                      <button 
+                      <button
                         onClick={() => handleEditClick(tool)}
-                        className="w-10 h-10 inline-flex items-center justify-center rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 active:scale-95 transition-all outline-none"
+                        className="w-10 h-10 inline-flex items-center justify-center rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:scale-95 transition-all outline-none"
                       >
                         <SquarePen className="w-5 h-5" />
                       </button>
@@ -165,7 +164,7 @@ export default function Tools() {
               </tbody>
             </table>
           </div>
-          <div className="px-8 py-5 flex items-center justify-between border-t border-slate-50 text-xs font-bold text-slate-400 tracking-wider uppercase">
+          <div className="px-8 py-5 flex items-center justify-between border-t border-slate-50 text-xs font-bold text-slate-600 tracking-wider uppercase">
             <span>Showing {filteredTools.length} of {tools.length} entries</span>
             <div className="flex items-center gap-2">
               <button className="p-2 hover:text-slate-600 transition-colors disabled:opacity-30" disabled><ChevronLeft className="w-4 h-4" /></button>
@@ -187,47 +186,47 @@ export default function Tools() {
                   </h2>
                   <p className="text-slate-500 text-sm font-medium">Define tool types and their relationships.</p>
                 </div>
-                <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-900 transition-all flex items-center justify-center">
+                <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all flex items-center justify-center">
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              
+
               <form onSubmit={handleSave} className="space-y-6">
                 <div className="grid grid-cols-1 gap-6">
                   <div className="space-y-2 group">
-                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest pl-1">Tool Type Name</label>
-                    <input 
-                      required autoFocus type="text" 
+                    <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">Tool Type Name</label>
+                    <input
+                      required autoFocus type="text"
                       className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
-                      value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} 
+                      value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="e.g. Memsource"
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2 font-black text-slate-400 uppercase tracking-widest text-[11px]">
-                       <label className="pl-1">Select Status</label>
-                       <select 
-                          className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold appearance-none cursor-pointer"
-                          value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})}
-                        >
-                          <option value="Active">Active</option>
-                          <option value="Inactive">Inactive</option>
-                        </select>
+                    <div className="space-y-2 font-black text-slate-600 uppercase tracking-widest text-[11px]">
+                      <label className="pl-1">Select Status</label>
+                      <select
+                        className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold appearance-none cursor-pointer"
+                        value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                      >
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                      </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest pl-1">Parent Tool</label>
+                      <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">Parent Tool</label>
                       <div className="relative">
-                        <select 
+                        <select
                           className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold appearance-none cursor-pointer"
-                          value={formData.parentTool} onChange={(e) => setFormData({...formData, parentTool: e.target.value})}
+                          value={formData.parentTool} onChange={(e) => setFormData({ ...formData, parentTool: e.target.value })}
                         >
                           <option value="Root">Root</option>
                           <option value="SDL Trados">SDL Trados</option>
                           <option value="Memsource">Memsource</option>
                           <option value="N/A">N/A</option>
                         </select>
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600">
                           <ChevronRight className="w-4 h-4 rotate-90" />
                         </div>
                       </div>

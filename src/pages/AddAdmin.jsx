@@ -56,9 +56,9 @@ export default function AddAdmin() {
     };
 
     return (
-    <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
-      <div className="max-w-[1200px] mx-auto space-y-8">
-                
+        <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
+            <div className="max-w-[1200px] mx-auto space-y-8">
+
                 {/* Modern Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="space-y-1">
@@ -86,13 +86,13 @@ export default function AddAdmin() {
                                 <h2 className="text-xl font-black text-slate-800 tracking-tight mb-4">
                                     {editingAdmin ? 'Edit Administrator' : 'Add New Admin'}
                                 </h2>
-                                
+
                                 <div className="space-y-4">
                                     <div className="space-y-2 group">
-                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest pl-1">Full Name</label>
+                                        <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">Full Name</label>
                                         <div className="relative">
-                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                                            <input 
+                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600 group-focus-within:text-blue-500 transition-colors" />
+                                            <input
                                                 required type="text" name="name"
                                                 value={formData.name} onChange={handleChange}
                                                 placeholder="Enter admin name"
@@ -102,10 +102,10 @@ export default function AddAdmin() {
                                     </div>
 
                                     <div className="space-y-2 group">
-                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest pl-1">Email Address</label>
+                                        <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">Email Address</label>
                                         <div className="relative">
-                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                                            <input 
+                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600 group-focus-within:text-blue-500 transition-colors" />
+                                            <input
                                                 required type="email" name="email"
                                                 value={formData.email} onChange={handleChange}
                                                 placeholder="admin@example.com"
@@ -115,10 +115,10 @@ export default function AddAdmin() {
                                     </div>
 
                                     <div className="space-y-2 group">
-                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest pl-1">Phone Number</label>
+                                        <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">Phone Number</label>
                                         <div className="relative">
-                                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                                            <input 
+                                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600 group-focus-within:text-blue-500 transition-colors" />
+                                            <input
                                                 required type="tel" name="phone"
                                                 value={formData.phone} onChange={handleChange}
                                                 placeholder="+91 00000 00000"
@@ -133,10 +133,10 @@ export default function AddAdmin() {
                                     {editingAdmin ? 'Update Settings' : 'Create Account'}
                                 </button>
                                 {editingAdmin && (
-                                    <button 
+                                    <button
                                         type="button"
                                         onClick={() => { setEditingAdmin(null); setFormData({ name: '', phone: '', email: '' }); }}
-                                        className="w-full py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                                        className="w-full py-2 text-xs font-bold text-slate-600 hover:text-slate-600 transition-colors"
                                     >
                                         Cancel Edit
                                     </button>
@@ -171,12 +171,12 @@ export default function AddAdmin() {
                                                 </td>
                                                 <td className="px-6 py-5">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="p-2 rounded-xl bg-slate-50 text-slate-400 group-hover:bg-white group-hover:text-indigo-600 transition-all border border-transparent group-hover:border-indigo-100 shadow-sm">
+                                                        <div className="p-2 rounded-xl bg-slate-50 text-slate-600 group-hover:bg-white group-hover:text-indigo-600 transition-all border border-transparent group-hover:border-indigo-100 shadow-sm">
                                                             <User className="w-5 h-5" />
                                                         </div>
                                                         <div className="flex flex-col">
                                                             <span className="font-bold text-slate-800 group-hover:text-indigo-700 transition-colors tracking-tight text-base">{admin.name}</span>
-                                                            <span className="text-xs text-slate-400 font-medium tracking-wide flex items-center gap-1">
+                                                            <span className="text-xs text-slate-600 font-medium tracking-wide flex items-center gap-1">
                                                                 <Mail size={10} className="inline" /> {admin.email}
                                                             </span>
                                                         </div>
@@ -188,26 +188,25 @@ export default function AddAdmin() {
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-5">
-                                                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide border ${
-                                                        admin.status === 'Active' 
-                                                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-[0_0_10px_rgba(16,185,129,0.05)]' 
-                                                        : 'bg-slate-50 text-slate-500 border-slate-200'
-                                                    }`}>
+                                                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide border ${admin.status === 'Active'
+                                                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-[0_0_10px_rgba(16,185,129,0.05)]'
+                                                            : 'bg-slate-50 text-slate-500 border-slate-200'
+                                                        }`}>
                                                         <span className={`w-1.5 h-1.5 rounded-full ${admin.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-400'} animate-pulse`} />
                                                         {admin.status}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-5 text-center">
                                                     <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleEdit(admin)}
-                                                            className="w-9 h-9 inline-flex items-center justify-center rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-white hover:shadow-sm active:scale-90 transition-all outline-none border border-transparent hover:border-indigo-100"
+                                                            className="w-9 h-9 inline-flex items-center justify-center rounded-xl text-slate-600 hover:text-indigo-600 hover:bg-white hover:shadow-sm active:scale-90 transition-all outline-none border border-transparent hover:border-indigo-100"
                                                         >
                                                             <SquarePen className="w-4 h-4" />
                                                         </button>
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleDelete(admin.id)}
-                                                            className="w-9 h-9 inline-flex items-center justify-center rounded-xl text-slate-400 hover:text-red-500 hover:bg-white hover:shadow-sm active:scale-90 transition-all outline-none border border-transparent hover:border-red-100"
+                                                            className="w-9 h-9 inline-flex items-center justify-center rounded-xl text-slate-600 hover:text-red-500 hover:bg-white hover:shadow-sm active:scale-90 transition-all outline-none border border-transparent hover:border-red-100"
                                                         >
                                                             <Trash2 className="w-4 h-4" />
                                                         </button>

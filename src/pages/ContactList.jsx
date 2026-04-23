@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { 
+import {
   UserCircle,
-  Search, 
-  Settings, 
-  UserPlus, 
-  Edit3, 
-  MoreVertical, 
-  ChevronLeft, 
+  Search,
+  Settings,
+  UserPlus,
+  Edit3,
+  MoreVertical,
+  ChevronLeft,
   ChevronRight,
   TrendingUp,
   Shield,
@@ -57,7 +57,7 @@ export default function ContactList() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [editingContact, setEditingContact] = useState(null);
-  
+
   // Default visible columns as per normal view
   const [visibleColumns, setVisibleColumns] = useState(['firstName', 'lastName', 'phone', 'email', 'designation', 'status']);
   const [tempVisibleColumns, setTempVisibleColumns] = useState(visibleColumns);
@@ -118,7 +118,7 @@ export default function ContactList() {
   };
 
   const toggleColumnSelection = (colId) => {
-    setTempVisibleColumns(prev => 
+    setTempVisibleColumns(prev =>
       prev.includes(colId) ? prev.filter(id => id !== colId) : [...prev, colId]
     );
   };
@@ -131,7 +131,7 @@ export default function ContactList() {
   return (
     <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
       <div className="max-w-[1400px] mx-auto space-y-8">
-        
+
         {/* Premium Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/60 shadow-sm">
           <div className="space-y-1">
@@ -143,12 +143,12 @@ export default function ContactList() {
               Manage and organize your professional communication directory.
             </p>
           </div>
-          
+
           <div className="flex flex-wrap items-center gap-4 ml-auto md:ml-0">
             <div className="relative group w-full md:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-              <input 
-                type="text" 
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500 transition-colors" />
+              <input
+                type="text"
                 placeholder="Search contacts..."
                 className="w-full pl-10 pr-4 py-2.5 bg-white/80 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm font-bold"
                 value={searchQuery}
@@ -156,7 +156,7 @@ export default function ContactList() {
               />
             </div>
             <div className="flex items-center gap-4 ml-auto md:ml-0">
-              <button 
+              <button
                 onClick={() => {
                   setTempVisibleColumns(visibleColumns);
                   setIsSettingsModalOpen(true);
@@ -165,7 +165,7 @@ export default function ContactList() {
               >
                 <Settings className="w-5 h-5" />
               </button>
-              <button 
+              <button
                 onClick={handleAdd}
                 className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:translate-y-[-2px] transition-all active:scale-95"
               >
@@ -182,31 +182,31 @@ export default function ContactList() {
             <table className="w-full text-left text-[13px] border-collapse min-w-[1000px]">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-8 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px]">S.No.</th>
-                  {visibleColumns.includes('clientId') && <th className="px-6 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px]">Client Id</th>}
-                  {visibleColumns.includes('clientCode') && <th className="px-6 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px]">Client Code</th>}
-                  {visibleColumns.includes('firstName') && <th className="px-6 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px]">First Name</th>}
-                  {visibleColumns.includes('lastName') && <th className="px-6 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px]">Last Name</th>}
-                  {visibleColumns.includes('countryCode') && <th className="px-6 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px]">Code</th>}
-                  {visibleColumns.includes('isoCode') && <th className="px-6 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px]">ISO</th>}
-                  {visibleColumns.includes('phone') && <th className="px-6 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px]">Phone No</th>}
-                  {visibleColumns.includes('email') && <th className="px-6 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px]">Email</th>}
-                  {visibleColumns.includes('dob') && <th className="px-6 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px]">DOB</th>}
-                  {visibleColumns.includes('gender') && <th className="px-6 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px]">Gender</th>}
-                  {visibleColumns.includes('companyId') && <th className="px-6 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px]">Comp ID</th>}
-                  {visibleColumns.includes('designation') && <th className="px-6 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px]">Designation</th>}
-                  {visibleColumns.includes('country') && <th className="px-6 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px]">Country</th>}
-                  {visibleColumns.includes('region') && <th className="px-6 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px]">Region</th>}
-                  {visibleColumns.includes('city') && <th className="px-6 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px]">City</th>}
-                  <th className="px-6 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px]">Status</th>
-                  <th className="px-6 py-6 font-black text-slate-400 uppercase tracking-[0.2em] text-[10px] text-center sticky right-0 bg-slate-50/50">Action</th>
+                  <th className="px-8 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">S.No.</th>
+                  {visibleColumns.includes('clientId') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Client Id</th>}
+                  {visibleColumns.includes('clientCode') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Client Code</th>}
+                  {visibleColumns.includes('firstName') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">First Name</th>}
+                  {visibleColumns.includes('lastName') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Last Name</th>}
+                  {visibleColumns.includes('countryCode') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Code</th>}
+                  {visibleColumns.includes('isoCode') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">ISO</th>}
+                  {visibleColumns.includes('phone') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Phone No</th>}
+                  {visibleColumns.includes('email') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Email</th>}
+                  {visibleColumns.includes('dob') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">DOB</th>}
+                  {visibleColumns.includes('gender') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Gender</th>}
+                  {visibleColumns.includes('companyId') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Comp ID</th>}
+                  {visibleColumns.includes('designation') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Designation</th>}
+                  {visibleColumns.includes('country') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Country</th>}
+                  {visibleColumns.includes('region') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Region</th>}
+                  {visibleColumns.includes('city') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">City</th>}
+                  <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Status</th>
+                  <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px] text-center sticky right-0 bg-slate-50/50">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {filteredContacts.map((contact, idx) => (
                   <tr key={contact.id} className="group hover:bg-indigo-50/20 transition-all duration-200">
                     <td className="px-8 py-5">
-                      <span className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center font-bold text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-inner">
+                      <span className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center font-bold text-slate-600 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-inner">
                         {idx + 1}
                       </span>
                     </td>
@@ -234,16 +234,15 @@ export default function ContactList() {
                     )}
                     {visibleColumns.includes('dob') && <td className="px-6 py-5 font-medium">{contact.dob}</td>}
                     {visibleColumns.includes('gender') && <td className="px-6 py-5"><span className="px-2 py-0.5 bg-slate-100 rounded-full text-[10px] font-bold uppercase">{contact.gender}</span></td>}
-                    {visibleColumns.includes('companyId') && <td className="px-6 py-5 text-slate-400 font-bold">{contact.companyId}</td>}
+                    {visibleColumns.includes('companyId') && <td className="px-6 py-5 text-slate-600 font-bold">{contact.companyId}</td>}
                     {visibleColumns.includes('designation') && <td className="px-6 py-5 font-bold text-indigo-600 italic">{contact.designation}</td>}
                     {visibleColumns.includes('country') && <td className="px-6 py-5 text-slate-600 font-medium">{contact.country}</td>}
-                    {visibleColumns.includes('region') && <td className="px-6 py-5 text-slate-400 uppercase tracking-tighter font-black">{contact.region}</td>}
+                    {visibleColumns.includes('region') && <td className="px-6 py-5 text-slate-600 uppercase tracking-tighter font-black">{contact.region}</td>}
                     {visibleColumns.includes('city') && <td className="px-6 py-5 font-bold">{contact.city}</td>}
-                    
+
                     <td className="px-6 py-5">
-                      <span className={`px-4 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest inline-flex items-center gap-2 shadow-sm ${
-                        contact.status === 'Active' 
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
+                      <span className={`px-4 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest inline-flex items-center gap-2 shadow-sm ${contact.status === 'Active'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
                           : 'bg-rose-50 text-rose-700 border border-rose-100'
                         }`}>
                         <div className={`w-1.5 h-1.5 rounded-full ${contact.status === 'Active' ? 'bg-emerald-500' : 'bg-rose-500'} animate-pulse`} />
@@ -252,13 +251,13 @@ export default function ContactList() {
                     </td>
                     <td className="px-6 py-5 text-center sticky right-0 bg-white/95 backdrop-blur-sm group-hover:bg-indigo-50/40 transition-all border-l border-slate-50">
                       <div className="flex items-center justify-center gap-2">
-                        <button 
+                        <button
                           onClick={() => handleEdit(contact)}
-                          className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-indigo-600 hover:text-white hover:scale-110 transition-all shadow-sm border border-slate-100"
+                          className="p-2.5 bg-slate-50 text-slate-600 rounded-xl hover:bg-indigo-600 hover:text-white hover:scale-110 transition-all shadow-sm border border-slate-100"
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
-                        <button className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm border border-slate-100">
+                        <button className="p-2.5 bg-slate-50 text-slate-600 rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm border border-slate-100">
                           <MoreVertical className="w-4 h-4" />
                         </button>
                       </div>
@@ -271,15 +270,15 @@ export default function ContactList() {
 
           {/* Pagination */}
           <div className="px-10 py-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
-            <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
+            <p className="text-[11px] font-black text-slate-600 uppercase tracking-[0.2em]">
               Showing <span className="text-slate-900 font-black">{filteredContacts.length}</span> of <span className="text-slate-900 font-black">{contacts.length}</span> Contacts
             </p>
             <div className="flex items-center gap-2">
-              <button className="p-2.5 text-slate-400 hover:text-indigo-600 transition-all disabled:opacity-30 cursor-not-allowed bg-white border border-slate-100 rounded-xl">
+              <button className="p-2.5 text-slate-600 hover:text-indigo-600 transition-all disabled:opacity-30 cursor-not-allowed bg-white border border-slate-100 rounded-xl">
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button className="w-10 h-10 rounded-xl bg-indigo-600 text-white font-black text-xs shadow-lg shadow-indigo-100">1</button>
-              <button className="p-2.5 bg-white text-slate-400 hover:text-indigo-600 transition-all border border-slate-100 rounded-xl">
+              <button className="p-2.5 bg-white text-slate-600 hover:text-indigo-600 transition-all border border-slate-100 rounded-xl">
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
@@ -291,11 +290,11 @@ export default function ContactList() {
       {isSettingsModalOpen && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsSettingsModalOpen(false)} />
-          
+
           <div className="relative bg-white rounded-[2rem] w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white">
             <div className="bg-[#1a1c31] px-6 py-5 flex items-center justify-between">
               <h2 className="text-white text-lg font-bold tracking-tight italic uppercase">Choose Columns</h2>
-              <button onClick={() => setIsSettingsModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+              <button onClick={() => setIsSettingsModalOpen(false)} className="text-slate-600 hover:text-white transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -305,7 +304,7 @@ export default function ContactList() {
                 {allColumns.map(col => (
                   <label key={col.id} className="flex items-center gap-4 px-6 py-3.5 hover:bg-slate-50 cursor-pointer transition-colors group">
                     <div className="relative flex items-center">
-                      <input 
+                      <input
                         type="checkbox"
                         className="peer h-6 w-6 appearance-none rounded-lg border-2 border-slate-200 checked:bg-blue-600 checked:border-blue-600 transition-all cursor-pointer shadow-sm"
                         checked={tempVisibleColumns.includes(col.id)}
@@ -320,7 +319,7 @@ export default function ContactList() {
             </div>
 
             <div className="p-6 pt-4 border-t border-slate-100">
-              <button 
+              <button
                 onClick={applyColumnSettings}
                 className="w-full py-4 bg-[#3382c4] hover:bg-[#286ba3] hover:shadow-xl hover:translate-y-[-2px] text-white rounded-2xl font-black text-base transition-all active:scale-95 shadow-lg shadow-blue-500/20 uppercase tracking-widest"
               >
@@ -335,7 +334,7 @@ export default function ContactList() {
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsModalOpen(false)} />
-          
+
           <div className="relative bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white">
             <div className="p-8 border-b border-slate-50 bg-slate-50/30">
               <div className="flex items-center justify-between mb-2">
@@ -343,17 +342,17 @@ export default function ContactList() {
                   {editingContact ? 'Edit Contact' : 'New Contact'}
                 </h2>
                 <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-                  <X className="w-5 h-5 text-slate-400" />
+                  <X className="w-5 h-5 text-slate-600" />
                 </button>
               </div>
-              <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Contact Records Management</p>
+              <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.2em]">Contact Records Management</p>
             </div>
 
             <form onSubmit={handleSubmit} className="p-8 space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">First Name</label>
-                  <input 
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">First Name</label>
+                  <input
                     type="text"
                     required
                     className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
@@ -362,8 +361,8 @@ export default function ContactList() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Last Name</label>
-                  <input 
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Last Name</label>
+                  <input
                     type="text"
                     required
                     className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
@@ -375,8 +374,8 @@ export default function ContactList() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone</label>
-                  <input 
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Phone</label>
+                  <input
                     type="text"
                     className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
                     value={formData.phone}
@@ -384,8 +383,8 @@ export default function ContactList() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Gender</label>
-                  <select 
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Gender</label>
+                  <select
                     className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
                     value={formData.gender}
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
@@ -398,8 +397,8 @@ export default function ContactList() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email</label>
-                <input 
+                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Email</label>
+                <input
                   type="email"
                   required
                   className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
@@ -410,8 +409,8 @@ export default function ContactList() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Designation</label>
-                  <input 
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Designation</label>
+                  <input
                     type="text"
                     className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
                     value={formData.designation}
@@ -419,8 +418,8 @@ export default function ContactList() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status</label>
-                  <select 
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Status</label>
+                  <select
                     className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
@@ -432,14 +431,14 @@ export default function ContactList() {
               </div>
 
               <div className="pt-6 flex gap-4">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setIsModalOpen(false)}
                   className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95 border border-slate-200"
                 >
                   Discard
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:shadow-indigo-200 hover:translate-y-[-2px] transition-all active:scale-95"
                 >

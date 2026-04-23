@@ -27,6 +27,7 @@ import VendorList from "./pages/VendorList";
 import Evaluation from "./pages/Evaluation";
 import AddAdmin from "./pages/AddAdmin";
 import AddClient from "./pages/AddClient";
+import ViewClient from "./pages/ViewClient";
 
 // Generic placeholder for other pages
 const PagePlaceholder = ({ title, icon }) => (
@@ -116,6 +117,7 @@ const App = () => {
           <Route path="vendors/evaluation" element={<Evaluation />} />
           <Route path="clients" element={<ClientList />} />
           <Route path="clients/add-client" element={<AddClient />} />
+          <Route path="clients/view-client" element={<ViewClient />} />
           <Route path="contacts" element={<ContactList />} />
           <Route path="projects" element={<ProjectsList />} />
           <Route path="invoice" element={<InvoiceList />} />

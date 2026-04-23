@@ -20,8 +20,9 @@ import {
 import { createClient, getNextMembershipCode, updateClient } from '../lib/clientApi';
 
 const getInitialFormData = () => ({
-  domain: '',
-  status: 'Active',
+  domain: 'LSP',
+  status: 'Client',
+  membership: 'Proz',
   membershipCode: '',
   name: '',
   website: '',
@@ -29,6 +30,8 @@ const getInitialFormData = () => ({
   phone: '',
   address: '',
   city: '',
+  state: '',
+  zip: '',
   country: '',
   currency: 'USD',
   registrationDate: new Date().toISOString().split('T')[0],
@@ -38,6 +41,9 @@ const getInitialFormData = () => ({
 const normalizeClientForForm = (client) => ({
   ...getInitialFormData(),
   ...client,
+  membership: client?.membership || 'Proz',
+  state: client?.state || '',
+  zip: client?.zip || '',
   registrationDate: client?.registrationDate
     ? new Date(client.registrationDate).toISOString().split('T')[0]
     : getInitialFormData().registrationDate,
@@ -100,13 +106,16 @@ export default function AddClient() {
       const payload = {
         domain: formData.domain.trim(),
         status: formData.status,
+        membership: formData.membership || 'Proz',
         membershipCode: formData.membershipCode.trim(),
         name: formData.name.trim(),
         website: formData.website.trim(),
-        email: formData.email.trim(),
+        email: formData.email ? formData.email.trim() : formData.email, // email is removed from UI but kept in state/payload if API expects it, else it passes empty string
         phone: formData.phone.trim(),
         address: formData.address.trim(),
         city: formData.city.trim(),
+        state: formData.state ? formData.state.trim() : '',
+        zip: formData.zip ? formData.zip.trim() : '',
         country: formData.country.trim(),
         currency: formData.currency,
         registrationDate: formData.registrationDate,
@@ -140,7 +149,7 @@ export default function AddClient() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/clients')}
-              className="p-3 bg-white text-slate-400 hover:text-indigo-600 rounded-2xl shadow-sm hover:shadow-md transition-all group"
+              className="p-3 bg-white text-slate-600 hover:text-indigo-600 rounded-2xl shadow-sm hover:shadow-md transition-all group"
             >
               <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
             </button>
@@ -169,175 +178,186 @@ export default function AddClient() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              {/* Row 1: Company Name */}
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Domain</label>
+                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Company Name</label>
                 <div className="relative group">
-                  <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500" />
-                  <input
-                    type="text"
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    placeholder="example.com"
-                    value={formData.domain}
-                    onChange={(e) => updateField('domain', e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status</label>
-                <select
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                  value={formData.status}
-                  onChange={(e) => updateField('status', e.target.value)}
-                >
-                  <option>Active</option>
-                  <option>Inactive</option>
-                  <option>Onboarding</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Membership Code</label>
-                <div className="relative group">
-                  <Award className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500" />
-                  <input
-                    type="text"
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold opacity-70"
-                    value={loadingCode ? 'Loading...' : formData.membershipCode}
-                    disabled
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Name</label>
-                <div className="relative group">
-                  <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500" />
+                  <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
                   <input
                     type="text"
                     required
                     className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    placeholder="Client Name"
+                    placeholder="Company Name"
                     value={formData.name}
                     onChange={(e) => updateField('name', e.target.value)}
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Website</label>
-                <div className="relative group">
-                  <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500" />
-                  <input
-                    type="url"
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    placeholder="https://..."
-                    value={formData.website}
-                    onChange={(e) => updateField('website', e.target.value)}
-                  />
+              {/* Row 2: Website | Phone */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Website</label>
+                  <div className="relative group">
+                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                    <input
+                      type="url"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                      placeholder="https://..."
+                      value={formData.website}
+                      onChange={(e) => updateField('website', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Phone</label>
+                  <div className="relative group">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                    <input
+                      type="tel"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                      placeholder="Phone"
+                      value={formData.phone}
+                      onChange={(e) => updateField('phone', e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
-                <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500" />
-                  <input
-                    type="email"
-                    required
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    placeholder="email@example.com"
-                    value={formData.email}
-                    onChange={(e) => updateField('email', e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Row 3: Address */}
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Phone</label>
+                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Address</label>
                 <div className="relative group">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500" />
-                  <input
-                    type="tel"
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    placeholder="Contact No"
-                    value={formData.phone}
-                    onChange={(e) => updateField('phone', e.target.value)}
+                  <MapPin className="absolute left-4 top-4 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                  <textarea
+                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none min-h-[100px]"
+                    placeholder="Full Address"
+                    value={formData.address}
+                    onChange={(e) => updateField('address', e.target.value)}
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Registration Date</label>
-                <input
-                  type="date"
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                  value={formData.registrationDate}
-                  onChange={(e) => updateField('registrationDate', e.target.value)}
-                />
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Address</label>
-              <div className="relative group">
-                <MapPin className="absolute left-4 top-4 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500" />
-                <textarea
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none min-h-[100px]"
-                  placeholder="Full Address"
-                  value={formData.address}
-                  onChange={(e) => updateField('address', e.target.value)}
-                />
+              {/* Row 4: City | State | Country | ZIP */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">City</label>
+                  <div className="relative group">
+                    <Map className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                    <input
+                      type="text"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                      placeholder="City"
+                      value={formData.city}
+                      onChange={(e) => updateField('city', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">State</label>
+                  <div className="relative group">
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                    <input
+                      type="text"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                      placeholder="State"
+                      value={formData.state || ''}
+                      onChange={(e) => updateField('state', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Country</label>
+                  <div className="relative group">
+                    <Flag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                    <input
+                      type="text"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                      placeholder="Country"
+                      value={formData.country}
+                      onChange={(e) => {
+                        updateField('country', e.target.value);
+                        if (e.target.value.toLowerCase() === 'india') {
+                          updateField('currency', 'INR');
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">ZIP</label>
+                  <div className="relative group">
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                    <input
+                      type="text"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                      placeholder="ZIP"
+                      value={formData.zip || ''}
+                      onChange={(e) => updateField('zip', e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">City</label>
-                <div className="relative group">
-                  <Map className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500" />
-                  <input
-                    type="text"
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    placeholder="City"
-                    value={formData.city}
-                    onChange={(e) => updateField('city', e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Country</label>
-                <div className="relative group">
-                  <Flag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500" />
-                  <input
-                    type="text"
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    placeholder="Country"
-                    value={formData.country}
-                    onChange={(e) => updateField('country', e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Currency</label>
-                <div className="relative group">
-                  <CircleDollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500" />
+              {/* Row 5: Status | Domain | Membership | Currency */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Status <span className="text-red-500">*</span></label>
                   <select
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                    value={formData.currency}
-                    onChange={(e) => updateField('currency', e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
+                    value={formData.status}
+                    onChange={(e) => updateField('status', e.target.value)}
+                    required
                   >
-                    <option value="USD">USD - US Dollar</option>
-                    <option value="EUR">EUR - Euro</option>
-                    <option value="GBP">GBP - British Pound</option>
-                    <option value="INR">INR - Indian Rupee</option>
-                    <option value="JPY">JPY - Japanese Yen</option>
-                    <option value="CAD">CAD - Canadian Dollar</option>
-                    <option value="AUD">AUD - Australian Dollar</option>
+                    <option value="" disabled>Select Status</option>
+                    <option value="Client">Client</option>
+                    <option value="Prospect Warm">Prospect Warm</option>
+                    <option value="Prospect Cold">Prospect Cold</option>
                   </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Domain</label>
+                  <div className="relative group">
+                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                    <input
+                      type="text"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                      placeholder="LSP"
+                      value={formData.domain}
+                      onChange={(e) => updateField('domain', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Membership</label>
+                  <div className="relative group">
+                    <Award className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                    <select
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
+                      value={formData.membership || 'Proz'}
+                      onChange={(e) => updateField('membership', e.target.value)}
+                    >
+                      <option value="Proz">Proz</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Currency</label>
+                  <div className="relative group">
+                    <CircleDollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                    <select
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
+                      value={formData.currency}
+                      onChange={(e) => updateField('currency', e.target.value)}
+                    >
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
+                      <option value="GBP">GBP</option>
+                      <option value="INR">INR (Rs.)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -352,11 +372,10 @@ export default function AddClient() {
               </button>
               <button
                 type="submit"
-                disabled={saving || loadingCode}
-                className="inline-flex items-center gap-2 px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-1 transition-all disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
+                disabled={saving}
+                className="px-8 py-4 bg-white text-slate-900 border-2 border-slate-900 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-50 transition-all"
               >
-                {saving ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                {saving ? 'Saving...' : isEditMode ? 'Update Info' : 'Confirm Registration'}
+                {saving ? 'Saving...' : 'Save'}
               </button>
             </div>
           </form>

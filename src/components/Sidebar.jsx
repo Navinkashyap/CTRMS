@@ -163,7 +163,7 @@ const Sidebar = ({ isCollapsed = false }) => {
           {isCollapsed ? (
             <button
               type="button"
-              className="w-full flex justify-center py-3 rounded-xl bg-white/5 border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all duration-300 group"
+              className="w-full flex justify-center py-3 rounded-xl bg-white/5 border border-white/5 text-slate-600 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all duration-300 group"
               title="Search modules"
             >
               <Search size={20} className="transition-transform group-hover:rotate-12" />
@@ -177,8 +177,8 @@ const Sidebar = ({ isCollapsed = false }) => {
               />
               <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-40 group-focus-within:opacity-100 transition-opacity">
-                <Command size={10} className="text-slate-400" />
-                <span className="text-[10px] font-bold text-slate-400">K</span>
+                <Command size={10} className="text-slate-600" />
+                <span className="text-[10px] font-bold text-slate-600">K</span>
               </div>
             </div>
           )}
@@ -215,7 +215,7 @@ const Sidebar = ({ isCollapsed = false }) => {
                     className={`group relative w-full flex items-center ${isCollapsed ? "justify-center gap-0 py-3.5 px-0" : "gap-3.5 px-4 py-3"} rounded-xl text-[14px] font-semibold transition-all duration-300 outline-none
                       ${isActiveParent
                         ? "text-white bg-indigo-600/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
-                        : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
+                        : "text-slate-600 hover:bg-white/5 hover:text-slate-100"
                       }`}
                   >
                     {isActiveParent && (
@@ -230,7 +230,7 @@ const Sidebar = ({ isCollapsed = false }) => {
                         <span className="flex-1 text-left tracking-wide">{label}</span>
                         <ChevronRight
                           size={16}
-                          className={`transition-all duration-500 ${isOpen ? "rotate-90 text-indigo-400" : "text-slate-600 group-hover:text-slate-400"}`}
+                          className={`transition-all duration-500 ${isOpen ? "rotate-90 text-indigo-400" : "text-slate-600 group-hover:text-slate-600"}`}
                         />
                       </>
                     )}
@@ -286,7 +286,7 @@ const Sidebar = ({ isCollapsed = false }) => {
                               `group flex items-center px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-300 outline-none
                                 ${isActive
                                 ? "text-white bg-indigo-600/20"
-                                : "text-slate-400 hover:text-white hover:bg-white/10"
+                                : "text-slate-600 hover:text-white hover:bg-white/10"
                               }`
                             }
                           >
@@ -312,7 +312,7 @@ const Sidebar = ({ isCollapsed = false }) => {
                   `group relative flex items-center ${isCollapsed ? "justify-center gap-0 py-3.5 px-0" : "gap-3.5 px-4 py-3"} rounded-xl text-[14px] font-semibold transition-all duration-300 outline-none
                     ${isActive
                     ? "text-white bg-indigo-600/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] font-bold"
-                    : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
+                    : "text-slate-600 hover:bg-white/5 hover:text-slate-100"
                   }`
                 }
               >

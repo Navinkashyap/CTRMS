@@ -4,6 +4,7 @@ import express from "express";
 import mongoose from "mongoose";
 
 import clientRoutes from "./src/routes/clientRoutes.js";
+import vendorRoutes from "./src/routes/vendorRoutes.js";
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/clients", clientRoutes);
+app.use("/api/vendors", vendorRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

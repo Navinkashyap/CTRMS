@@ -9,7 +9,7 @@ const clientSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Active", "Inactive", "Onboarding"],
+      enum: ["Active", "Inactive", "Onboarding", "Client", "Prospect Warm", "Prospect Cold"],
       default: "Active",
     },
     membershipCode: {
@@ -45,6 +45,16 @@ const clientSchema = new mongoose.Schema(
       default: "",
     },
     city: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    state: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    zip: {
       type: String,
       trim: true,
       default: "",
