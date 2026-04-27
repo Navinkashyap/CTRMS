@@ -134,7 +134,7 @@ const Sidebar = ({ isCollapsed = false }) => {
   const logoutItem = useMemo(() => navItems.find((item) => item.to === "/logout"), []);
 
   return (
-    <aside className={`sticky top-0 h-screen flex flex-col flex-shrink-0 border-r border-white/5 bg-slate-950/90 backdrop-blur-2xl text-slate-300 selection:bg-indigo-500/30 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isCollapsed ? "w-[80px]" : "w-[280px]"} shadow-[4px_0_24px_-12px_rgba(0,0,0,0.5)]`}>
+    <aside className={`sticky top-0 h-screen flex flex-col flex-shrink-0 border-r border-white/5 bg-slate-950/90 backdrop-blur-2xl text-slate-300 selection:bg-indigo-500/30 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isCollapsed ? "w-[80px]" : "w-[240px]"} shadow-[4px_0_24px_-12px_rgba(0,0,0,0.5)]`}>
 
       {/* Dynamic Background Noise/Glow */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.05),transparent_50%)] pointer-events-none" />
