@@ -1,23 +1,32 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, Tag } from 'lucide-react';
-
-const typeData = [
-  { id: 1, type: 'LSP', status: 'Active' },
-  { id: 2, type: 'Direct', status: 'Active' },
-  { id: 3, type: 'Crowdsourcer', status: 'Active' },
-  { id: 4, type: 'Advertising Agency', status: 'Active' },
-  { id: 5, type: 'Market Research Company', status: 'Active' },
-  { id: 6, type: 'Elearning Company', status: 'Active' },
-  { id: 7, type: 'Publishing Company', status: 'Active' },
-];
+import * as typeApi from '../lib/typeApi';
 
 export default function Typelist() {
-  const [types, setTypes] = useState(typeData);
+  const [types, setTypes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingType, setEditingType] = useState(null);
   const [formData, setFormData] = useState({ type: '', status: 'Active' });
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    fetchTypes();
+  }, []);
+
+  const fetchTypes = async () => {
+    try {
+      setIsLoading(true);
+      const data = await typeApi.getTypes();
+      setTypes(data);
+    } catch (error) {
+      console.error('Failed to fetch types:', error);
+      showNotification('Failed to load types');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredTypes = useMemo(() => {
     return types.filter(t =>
@@ -42,17 +51,23 @@ export default function Typelist() {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (editingType) {
-      setTypes(types.map(t => t.id === editingType.id ? { ...t, ...formData } : t));
-      showNotification(`Updated ${formData.type} successfully!`);
-    } else {
-      const newId = types.length > 0 ? Math.max(...types.map(t => t.id)) + 1 : 1;
-      setTypes([...types, { id: newId, ...formData }]);
-      showNotification(`Added ${formData.type} successfully!`);
+    try {
+      if (editingType) {
+        const updated = await typeApi.updateType(editingType.id, formData);
+        setTypes(types.map(t => t.id === editingType.id ? updated : t));
+        showNotification(`Updated ${formData.type} successfully!`);
+      } else {
+        const created = await typeApi.createType(formData);
+        setTypes([created, ...types]);
+        showNotification(`Added ${formData.type} successfully!`);
+      }
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Failed to save type:', error);
+      showNotification(error.response?.data?.message || 'Failed to save type');
     }
-    setIsModalOpen(false);
   };
 
   return (
@@ -100,62 +115,70 @@ export default function Typelist() {
         {/* Premium Table Card */}
         <div className="bg-white/70 backdrop-blur-xl border border-slate-200 rounded-[2rem] shadow-2xl shadow-slate-200/50 p-2 overflow-hidden">
           <div className="overflow-x-auto rounded-[1.5rem]">
-            <table className="w-full text-left text-[14px] border-collapse min-w-[500px]">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-16 text-center">#</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Type</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-32">Status</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-24 text-center">
-                    <MoreHorizontal className="w-4 h-4 mx-auto" />
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {filteredTypes.map((type, index) => (
-                  <tr key={type.id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
-                    <td className="px-6 py-5 text-center">
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-500 font-mono text-xs font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
-                        {index + 1}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-slate-50 text-slate-600 group-hover:bg-white group-hover:text-blue-600 transition-all border border-transparent group-hover:border-blue-100 shadow-sm">
-                          <Tag className="w-4 h-4" />
-                        </div>
-                        <span className="font-bold text-slate-800 group-hover:text-blue-700 transition-colors tracking-tight">{type.type}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide border ${type.status === 'Active'
-                          ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                          : 'bg-rose-50 text-rose-600 border-rose-100'
-                        }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${type.status === 'Active' ? 'bg-emerald-500' : 'bg-rose-500'} animate-pulse`} />
-                        {type.status}
-                      </div>
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                      <button
-                        onClick={() => handleEditClick(type)}
-                        className="w-10 h-10 inline-flex items-center justify-center rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:scale-95 transition-all outline-none"
-                      >
-                        <SquarePen className="w-5 h-5" />
-                      </button>
-                    </td>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              <table className="w-full text-left text-[14px] border-collapse min-w-[500px]">
+                <thead>
+                  <tr className="border-b border-slate-100">
+                    <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-16 text-center">#</th>
+                    <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Type</th>
+                    <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-32">Status</th>
+                    <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-24 text-center">
+                      <MoreHorizontal className="w-4 h-4 mx-auto" />
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filteredTypes.map((type, index) => (
+                    <tr key={type.id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
+                      <td className="px-6 py-5 text-center">
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-500 font-mono text-xs font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                          {index + 1}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-slate-50 text-slate-600 group-hover:bg-white group-hover:text-blue-600 transition-all border border-transparent group-hover:border-blue-100 shadow-sm">
+                            <Tag className="w-4 h-4" />
+                          </div>
+                          <span className="font-bold text-slate-800 group-hover:text-blue-700 transition-colors tracking-tight">{type.type}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide border ${type.status === 'Active'
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                            : 'bg-rose-50 text-rose-600 border-rose-100'
+                          }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${type.status === 'Active' ? 'bg-emerald-500' : 'bg-rose-500'} animate-pulse`} />
+                          {type.status}
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-center">
+                        <button
+                          onClick={() => handleEditClick(type)}
+                          className="w-10 h-10 inline-flex items-center justify-center rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:scale-95 transition-all outline-none"
+                        >
+                          <SquarePen className="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
-          <div className="px-8 py-5 flex items-center justify-between border-t border-slate-50 text-xs font-bold text-slate-600 tracking-wider uppercase">
-            <span>Showing {filteredTypes.length} of {types.length} entries</span>
-            <div className="flex items-center gap-2">
-              <button className="p-2 hover:text-slate-600 transition-colors disabled:opacity-30" disabled><ChevronLeft className="w-4 h-4" /></button>
-              <button className="p-2 hover:text-slate-600 transition-colors disabled:opacity-30" disabled><ChevronRight className="w-4 h-4" /></button>
+          {!isLoading && (
+            <div className="px-8 py-5 flex items-center justify-between border-t border-slate-50 text-xs font-bold text-slate-600 tracking-wider uppercase">
+              <span>Showing {filteredTypes.length} of {types.length} entries</span>
+              <div className="flex items-center gap-2">
+                <button className="p-2 hover:text-slate-600 transition-colors disabled:opacity-30" disabled><ChevronLeft className="w-4 h-4" /></button>
+                <button className="p-2 hover:text-slate-600 transition-colors disabled:opacity-30" disabled><ChevronRight className="w-4 h-4" /></button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 

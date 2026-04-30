@@ -22,15 +22,16 @@ import { getClients } from '../lib/clientApi';
 const allColumns = [
   { id: 'domain', label: 'Domain' },
   { id: 'status', label: 'Status' },
-  { id: 'membershipCode', label: 'Membership Code' },
+  { id: 'membership', label: 'Membership' },
+  { id: 'membershipCode', label: 'Code' },
   { id: 'name', label: 'Name' },
   { id: 'website', label: 'Website' },
+  { id: 'email', label: 'Email' },
   { id: 'phone', label: 'Phone' },
-  { id: 'address', label: 'Address' },
   { id: 'city', label: 'City' },
   { id: 'country', label: 'Country' },
+  { id: 'registrationDate', label: 'Date of Registration' },
   { id: 'currency', label: 'Currency' },
-  { id: 'registrationDate', label: 'Registration Date' },
   { id: 'createdBy', label: 'Added By' },
 ];
 
@@ -44,7 +45,7 @@ export default function ClientList() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const [visibleColumns, setVisibleColumns] = useState(['domain', 'status', 'name', 'phone', 'city', 'country', 'currency']);
+  const [visibleColumns, setVisibleColumns] = useState(['domain', 'status', 'membership', 'membershipCode', 'name', 'website', 'email', 'phone', 'city', 'country', 'registrationDate']);
   const [tempVisibleColumns, setTempVisibleColumns] = useState(visibleColumns);
 
   const defaultFilters = { status: 'All', country: 'All', currency: 'All' };
@@ -204,15 +205,17 @@ export default function ClientList() {
                   <th className="px-6 py-4 font-semibold text-slate-500 text-xs">S.No.</th>
                   {visibleColumns.includes('domain') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Domain</th>}
                   {visibleColumns.includes('status') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Status</th>}
-                  {visibleColumns.includes('membershipCode') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs shadow-none">Membership Code</th>}
+                  {visibleColumns.includes('membership') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Membership</th>}
+                  {visibleColumns.includes('membershipCode') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs shadow-none">Code</th>}
                   {visibleColumns.includes('name') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Name</th>}
                   {visibleColumns.includes('website') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Website</th>}
+                  {visibleColumns.includes('email') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Email</th>}
                   {visibleColumns.includes('phone') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Phone</th>}
                   {visibleColumns.includes('address') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Address</th>}
                   {visibleColumns.includes('city') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">City</th>}
                   {visibleColumns.includes('country') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Country</th>}
                   {visibleColumns.includes('currency') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Currency</th>}
-                  {visibleColumns.includes('registrationDate') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Registration</th>}
+                  {visibleColumns.includes('registrationDate') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Date of Registration</th>}
                   {visibleColumns.includes('createdBy') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Added By</th>}
                   <th className="px-6 py-4 font-semibold text-slate-500 text-xs text-center sticky right-0 bg-slate-50/80">Action</th>
                 </tr>
@@ -283,15 +286,18 @@ export default function ClientList() {
                         </span>
                       </td>
                     )}
+                    {visibleColumns.includes('membership') && (
+                      <td className="px-6 py-4">
+                        <span className="font-medium text-slate-700 bg-slate-100 border border-slate-200/60 px-2 py-0.5 rounded text-xs">
+                          {client.membership || 'PROZ'}
+                        </span>
+                      </td>
+                    )}
                     {visibleColumns.includes('membershipCode') && <td className="px-6 py-4 text-slate-600 font-medium">{client.membershipCode}</td>}
                     {visibleColumns.includes('name') && (
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
                           <span className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">{client.name}</span>
-                          <span className="text-xs text-slate-500 flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                            Verified
-                          </span>
                         </div>
                       </td>
                     )}
@@ -306,6 +312,7 @@ export default function ClientList() {
                         )}
                       </td>
                     )}
+                    {visibleColumns.includes('email') && <td className="px-6 py-4 text-slate-600">{client.email || '-'}</td>}
                     {visibleColumns.includes('phone') && <td className="px-6 py-4 text-slate-600">{client.phone || '-'}</td>}
                     {visibleColumns.includes('address') && <td className="px-6 py-4 text-slate-600 max-w-[200px] truncate" title={client.address}>{client.address || '-'}</td>}
                     {visibleColumns.includes('city') && <td className="px-6 py-4 text-slate-600">{client.city || '-'}</td>}

@@ -24,6 +24,7 @@ import ProjectsList from "./pages/ProjectsList";
 import InvoiceList from "./pages/InvoiceList";
 import UsersList from "./pages/UsersList";
 import VendorList from "./pages/VendorList";
+import AddVendor from "./pages/AddVendor";
 import Evaluation from "./pages/Evaluation";
 import AddAdmin from "./pages/AddAdmin";
 import AddClient from "./pages/AddClient";
@@ -113,6 +114,7 @@ const App = () => {
           <Route path="menus/role-menu-permission" element={<RoleMenuPermission />} />
           <Route path="users" element={<UsersList />} />
           <Route path="vendors" element={<VendorList />} />
+          <Route path="vendors/add-vendor" element={<AddVendor />} />
           <Route path="vendors/manage-vendors" element={<VendorList />} />
           <Route path="vendors/evaluation" element={<Evaluation />} />
           <Route path="clients" element={<ClientList />} />

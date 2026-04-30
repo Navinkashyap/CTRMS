@@ -18,11 +18,13 @@ import {
 } from 'lucide-react';
 
 import { createClient, getNextMembershipCode, updateClient } from '../lib/clientApi';
+import { getTypes } from '../lib/typeApi';
+import { getMemberships } from '../lib/membershipApi';
 
 const getInitialFormData = () => ({
-  domain: 'LSP',
+  domain: '',
   status: 'Client',
-  membership: 'Proz',
+  membership: '',
   membershipCode: '',
   name: '',
   website: '',
@@ -41,7 +43,7 @@ const getInitialFormData = () => ({
 const normalizeClientForForm = (client) => ({
   ...getInitialFormData(),
   ...client,
-  membership: client?.membership || 'Proz',
+  membership: client?.membership || '',
   state: client?.state || '',
   zip: client?.zip || '',
   registrationDate: client?.registrationDate
@@ -61,7 +63,36 @@ export default function AddClient() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  const [domains, setDomains] = useState([]);
+  const [memberships, setMemberships] = useState([]);
+  const [loadingOptions, setLoadingOptions] = useState(false);
+
   useEffect(() => {
+    const loadOptions = async () => {
+      setLoadingOptions(true);
+      try {
+        const [typesData, membershipsData] = await Promise.all([
+          getTypes(),
+          getMemberships()
+        ]);
+        setDomains(typesData.filter(t => t.status === 'Active'));
+        setMemberships(membershipsData.filter(m => m.status === 'Active'));
+
+        // Set defaults if not editing
+        if (!isEditMode) {
+          setFormData(prev => ({
+            ...prev,
+            domain: typesData[0]?.type || '',
+            membership: membershipsData[0]?.name || ''
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading options:', error);
+      } finally {
+        setLoadingOptions(false);
+      }
+    };
+
     const loadMembershipCode = async () => {
       setLoadingCode(true);
       setErrorMessage('');
@@ -78,6 +109,8 @@ export default function AddClient() {
         setLoadingCode(false);
       }
     };
+
+    loadOptions();
 
     if (isEditMode) {
       setFormData(normalizeClientForForm(editingClient));
@@ -106,11 +139,11 @@ export default function AddClient() {
       const payload = {
         domain: formData.domain.trim(),
         status: formData.status,
-        membership: formData.membership || 'Proz',
+        membership: formData.membership,
         membershipCode: formData.membershipCode.trim(),
         name: formData.name.trim(),
         website: formData.website.trim(),
-        email: formData.email ? formData.email.trim() : formData.email, // email is removed from UI but kept in state/payload if API expects it, else it passes empty string
+        email: formData.email ? formData.email.trim() : formData.email,
         phone: formData.phone.trim(),
         address: formData.address.trim(),
         city: formData.city.trim(),
@@ -195,8 +228,8 @@ export default function AddClient() {
                 </div>
               </div>
 
-              {/* Row 2: Website | Phone */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Row 2: Website | Phone | Email */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Website</label>
                   <div className="relative group">
@@ -223,10 +256,24 @@ export default function AddClient() {
                     />
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Email</label>
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                    <input
+                      type="email"
+                      required
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                      placeholder="Email"
+                      value={formData.email}
+                      onChange={(e) => updateField('email', e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Row 3: Address */}
-              <div className="space-y-2">
+              <div className="space-y-2 md:max-w-2xl">
                 <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Address</label>
                 <div className="relative group">
                   <MapPin className="absolute left-4 top-4 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
@@ -234,7 +281,7 @@ export default function AddClient() {
                     className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none min-h-[100px]"
                     placeholder="Full Address"
                     value={formData.address}
-                    onChange={(e) => updateField('address', e.target.value)}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   />
                 </div>
               </div>
@@ -320,13 +367,23 @@ export default function AddClient() {
                   <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Domain</label>
                   <div className="relative group">
                     <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                    <input
-                      type="text"
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                      placeholder="LSP"
+                    <select
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
                       value={formData.domain}
                       onChange={(e) => updateField('domain', e.target.value)}
-                    />
+                    >
+                      {loadingOptions ? (
+                        <option>Loading domains...</option>
+                      ) : domains.length > 0 ? (
+                        domains.map((d) => (
+                          <option key={d.id} value={d.type}>
+                            {d.type}
+                          </option>
+                        ))
+                      ) : (
+                        <option>No domains found</option>
+                      )}
+                    </select>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -335,11 +392,20 @@ export default function AddClient() {
                     <Award className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
                     <select
                       className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                      value={formData.membership || 'Proz'}
+                      value={formData.membership}
                       onChange={(e) => updateField('membership', e.target.value)}
                     >
-                      <option value="Proz">Proz</option>
-                      <option value="Other">Other</option>
+                      {loadingOptions ? (
+                        <option>Loading...</option>
+                      ) : memberships.length > 0 ? (
+                        memberships.map((m) => (
+                          <option key={m.id} value={m.name}>
+                            {m.name}
+                          </option>
+                        ))
+                      ) : (
+                        <option>No memberships found</option>
+                      )}
                     </select>
                   </div>
                 </div>
