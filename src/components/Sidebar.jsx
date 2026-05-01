@@ -52,7 +52,7 @@ const navItems = [
       { label: "Specialization", to: "/master/specialization" },
       { label: "Quality", to: "/master/quality" },
       { label: "Deadline", to: "/master/deadline" },
-      { label: "Type", to: "/master/type" },
+      { label: "Domain", to: "/master/type" },
       { label: "Membership", to: "/master/membership" },
     ],
   },

@@ -1,24 +1,32 @@
-import React, { useState, useMemo } from 'react';
-import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, Languages as LanguageIcon } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Plus, SquarePen, Trash2, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, Languages as LanguageIcon } from 'lucide-react';
+import { getLanguages, createLanguage, updateLanguage, deleteLanguage } from '../lib/languageApi';
 
-const languageData = [
-  { id: 1, name: 'Assamese', status: 'Active' },
-  { id: 2, name: 'Bengali (bn_IN)', status: 'Active' },
-  { id: 3, name: 'Gujarati', status: 'Active' },
-  { id: 4, name: 'Hindi', status: 'Active' },
-  { id: 5, name: 'Kannada', status: 'Active' },
-  { id: 6, name: 'Kashmiri', status: 'Active' },
-  { id: 7, name: 'Konkani', status: 'Active' },
-  { id: 8, name: 'Malayalam', status: 'Active' },
-];
-
-export default function Launges() {
-  const [languages, setLanguages] = useState(languageData);
+export default function Languages() {
+  const [languages, setLanguages] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLanguage, setEditingLanguage] = useState(null);
-  const [formData, setFormData] = useState({ name: '', status: 'Active' });
+  const [formData, setFormData] = useState({ name: '', localeCode: '', status: 'Active' });
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchLanguages();
+  }, []);
+
+  const fetchLanguages = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getLanguages();
+      setLanguages(data);
+    } catch (error) {
+      console.error("Error fetching languages:", error);
+      showNotification("Failed to fetch languages.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredLanguages = useMemo(() => {
     return languages.filter(l =>
@@ -33,27 +41,45 @@ export default function Launges() {
 
   const handleAddClick = () => {
     setEditingLanguage(null);
-    setFormData({ name: '', status: 'Active' });
+    setFormData({ name: '', localeCode: '', status: 'Active' });
     setIsModalOpen(true);
   };
 
   const handleEditClick = (language) => {
     setEditingLanguage(language);
-    setFormData({ name: language.name, status: language.status });
+    setFormData({ name: language.name, localeCode: language.localeCode || '', status: language.status });
     setIsModalOpen(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (editingLanguage) {
-      setLanguages(languages.map(l => l.id === editingLanguage.id ? { ...l, ...formData } : l));
-      showNotification(`Updated ${formData.name} successfully!`);
-    } else {
-      const newId = languages.length > 0 ? Math.max(...languages.map(l => l.id)) + 1 : 1;
-      setLanguages([...languages, { id: newId, ...formData }]);
-      showNotification(`Added ${formData.name} successfully!`);
+    try {
+      if (editingLanguage) {
+        await updateLanguage(editingLanguage._id, formData);
+        showNotification(`Updated ${formData.name} successfully!`);
+      } else {
+        await createLanguage(formData);
+        showNotification(`Added ${formData.name} successfully!`);
+      }
+      fetchLanguages();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error saving language:", error);
+      showNotification("Failed to save language.");
     }
-    setIsModalOpen(false);
+  };
+
+  const handleDeleteClick = async (id) => {
+    if (window.confirm('Are you sure you want to delete this language?')) {
+      try {
+        await deleteLanguage(id);
+        showNotification('Language deleted successfully!');
+        fetchLanguages();
+      } catch (error) {
+        console.error("Error deleting language:", error);
+        showNotification("Failed to delete language.");
+      }
+    }
   };
 
   return (
@@ -106,6 +132,7 @@ export default function Launges() {
                 <tr className="border-b border-slate-100">
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-16 text-center">#</th>
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Language</th>
+                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Locale Code</th>
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-32">Status</th>
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-24 text-center">
                     <MoreHorizontal className="w-4 h-4 mx-auto" />
@@ -114,7 +141,7 @@ export default function Launges() {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {filteredLanguages.map((lang, index) => (
-                  <tr key={lang.id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
+                  <tr key={lang._id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
                     <td className="px-6 py-5 text-center">
                       <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-500 font-mono text-xs font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                         {index + 1}
@@ -129,6 +156,11 @@ export default function Launges() {
                       </div>
                     </td>
                     <td className="px-6 py-5">
+                      <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-semibold font-mono border border-slate-200">
+                        {lang.localeCode || '-'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5">
                       <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide border ${lang.status === 'Active'
                           ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
                           : 'bg-rose-50 text-rose-600 border-rose-100'
@@ -138,12 +170,20 @@ export default function Launges() {
                       </div>
                     </td>
                     <td className="px-6 py-5 text-center">
-                      <button
-                        onClick={() => handleEditClick(lang)}
-                        className="w-10 h-10 inline-flex items-center justify-center rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:scale-95 transition-all outline-none"
-                      >
-                        <SquarePen className="w-5 h-5" />
-                      </button>
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => handleEditClick(lang)}
+                          className="w-10 h-10 inline-flex items-center justify-center rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:scale-95 transition-all outline-none"
+                        >
+                          <SquarePen className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(lang._id)}
+                          className="w-10 h-10 inline-flex items-center justify-center rounded-xl text-slate-600 hover:text-rose-600 hover:bg-rose-50 active:scale-95 transition-all outline-none"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -186,6 +226,19 @@ export default function Launges() {
                       className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
                       value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="e.g. French"
+                    />
+                  </div>
+
+                  <div className="space-y-2 group">
+                    <div className="flex justify-between items-center pl-1">
+                      <label className="text-xs font-black text-slate-600 uppercase tracking-widest">Locale Code</label>
+                      <a href="https://simplelocalize.io/data/locales/" target="_blank" rel="noreferrer" className="text-[10px] font-bold text-blue-500 hover:text-blue-600 hover:underline">Reference</a>
+                    </div>
+                    <input
+                      type="text"
+                      className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
+                      value={formData.localeCode} onChange={(e) => setFormData({ ...formData, localeCode: e.target.value })}
+                      placeholder="e.g. fr-FR"
                     />
                   </div>
 

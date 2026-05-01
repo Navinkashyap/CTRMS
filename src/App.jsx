@@ -8,9 +8,9 @@ import City from "./pages/City";
 import Services from "./pages/Services";
 import Tools from "./pages/Tools";
 import Currency from "./pages/Currency";
-import Launges from "./pages/Launges";
+import Languages from "./pages/Languages";
 import Specialization from "./pages/Specialization";
-import QuiltyRate from "./pages/QuiltyRate";
+import Quality from "./pages/Quality";
 import Deadline from "./pages/Deadline";
 import Typelist from "./pages/Typelist";
 import Membership from "./pages/Membership";
@@ -99,9 +99,9 @@ const App = () => {
           <Route path="master/services" element={<Services />} />
           <Route path="master/tool" element={<Tools />} />
           <Route path="master/currency" element={<Currency />} />
-          <Route path="master/language" element={<Launges />} />
+          <Route path="master/language" element={<Languages />} />
           <Route path="master/specialization" element={<Specialization />} />
-          <Route path="master/quality" element={<QuiltyRate />} />
+          <Route path="master/quality" element={<Quality />} />
           <Route path="master/deadline" element={<Deadline />} />
           <Route path="master/type" element={<Typelist />} />
           <Route path="master/membership" element={<Membership />} />

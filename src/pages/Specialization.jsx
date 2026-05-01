@@ -1,23 +1,32 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, Lightbulb } from 'lucide-react';
-
-const specializationData = [
-  { id: 1, name: 'Root', parent: 'NA', status: 'Active' },
-  { id: 2, name: 'Medical', parent: 'Root', status: 'Active' },
-  { id: 3, name: 'Legal', parent: 'Root', status: 'Active' },
-  { id: 4, name: 'General', parent: 'Root', status: 'Active' },
-  { id: 5, name: 'Information Technology', parent: 'Root', status: 'Active' },
-  { id: 6, name: 'Automotive', parent: 'Root', status: 'Active' },
-  { id: 7, name: 'Advertisement', parent: 'Root', status: 'Active' },
-];
+import { getSpecializations, createSpecialization, updateSpecialization, deleteSpecialization } from '../lib/specializationApi';
 
 export default function Specialization() {
-  const [specializations, setSpecializations] = useState(specializationData);
+  const [specializations, setSpecializations] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSpecialization, setEditingSpecialization] = useState(null);
   const [formData, setFormData] = useState({ name: '', parent: 'Root', status: 'Active' });
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSpecializations();
+  }, []);
+
+  const fetchSpecializations = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getSpecializations();
+      setSpecializations(data);
+    } catch (error) {
+      console.error("Error fetching specializations:", error);
+      showNotification("Failed to fetch specializations.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredSpecializations = useMemo(() => {
     return specializations.filter(s =>
@@ -43,17 +52,22 @@ export default function Specialization() {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (editingSpecialization) {
-      setSpecializations(specializations.map(s => s.id === editingSpecialization.id ? { ...s, ...formData } : s));
-      showNotification(`Updated ${formData.name} successfully!`);
-    } else {
-      const newId = specializations.length > 0 ? Math.max(...specializations.map(s => s.id)) + 1 : 1;
-      setSpecializations([...specializations, { id: newId, ...formData }]);
-      showNotification(`Added ${formData.name} successfully!`);
+    try {
+      if (editingSpecialization) {
+        await updateSpecialization(editingSpecialization._id, formData);
+        showNotification(`Updated ${formData.name} successfully!`);
+      } else {
+        await createSpecialization(formData);
+        showNotification(`Added ${formData.name} successfully!`);
+      }
+      fetchSpecializations();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error saving specialization:", error);
+      showNotification("Failed to save specialization.");
     }
-    setIsModalOpen(false);
   };
 
   return (
@@ -115,7 +129,7 @@ export default function Specialization() {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {filteredSpecializations.map((spec, index) => (
-                  <tr key={spec.id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
+                  <tr key={spec._id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
                     <td className="px-6 py-5 text-center">
                       <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-500 font-mono text-xs font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                         {index + 1}
@@ -203,9 +217,9 @@ export default function Specialization() {
                     >
                       <option value="NA">NA</option>
                       <option value="Root">Root</option>
-                      <option value="Medical">Medical</option>
-                      <option value="Legal">Legal</option>
-                      <option value="Technology">Technology</option>
+                      {specializations.map(spec => (
+                        <option key={spec._id} value={spec.name}>{spec.name}</option>
+                      ))}
                     </select>
                   </div>
 

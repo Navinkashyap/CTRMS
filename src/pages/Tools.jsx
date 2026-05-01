@@ -1,23 +1,32 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, Wrench } from 'lucide-react';
-
-const toolsData = [
-  { id: 1, name: 'Root', parentTool: 'N/A', status: 'Active' },
-  { id: 2, name: 'SDL Trados', parentTool: 'Root', status: 'Active' },
-  { id: 3, name: 'Trados 2011', parentTool: 'SDL Trados', status: 'Inactive' },
-  { id: 4, name: 'Trados 2015', parentTool: 'SDL Trados', status: 'Active' },
-  { id: 5, name: 'Trados 2007', parentTool: 'SDL Trados', status: 'Inactive' },
-  { id: 6, name: 'Trados 2009', parentTool: 'SDL Trados', status: 'Inactive' },
-  { id: 7, name: 'Trados 2014', parentTool: 'SDL Trados', status: 'Inactive' },
-];
+import { getTools, createTool, updateTool, deleteTool } from '../lib/toolApi';
 
 export default function Tools() {
-  const [tools, setTools] = useState(toolsData);
+  const [tools, setTools] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTool, setEditingTool] = useState(null);
   const [formData, setFormData] = useState({ name: '', parentTool: 'Root', status: 'Active' });
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTools();
+  }, []);
+
+  const fetchTools = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getTools();
+      setTools(data);
+    } catch (error) {
+      console.error("Error fetching tools:", error);
+      showNotification("Failed to fetch tools.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredTools = useMemo(() => {
     return tools.filter(t =>
@@ -47,17 +56,22 @@ export default function Tools() {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (editingTool) {
-      setTools(tools.map(t => t.id === editingTool.id ? { ...t, ...formData } : t));
-      showNotification(`Updated ${formData.name} successfully!`);
-    } else {
-      const newId = tools.length > 0 ? Math.max(...tools.map(t => t.id)) + 1 : 1;
-      setTools([...tools, { id: newId, ...formData }]);
-      showNotification(`Added ${formData.name} successfully!`);
+    try {
+      if (editingTool) {
+        await updateTool(editingTool._id, formData);
+        showNotification(`Updated ${formData.name} successfully!`);
+      } else {
+        await createTool(formData);
+        showNotification(`Added ${formData.name} successfully!`);
+      }
+      fetchTools();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error saving tool:", error);
+      showNotification("Failed to save tool.");
     }
-    setIsModalOpen(false);
   };
 
   return (
@@ -119,7 +133,7 @@ export default function Tools() {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {filteredTools.map((tool, index) => (
-                  <tr key={tool.id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
+                  <tr key={tool._id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
                     <td className="px-6 py-5 text-center">
                       <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-500 font-mono text-xs font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                         {index + 1}
@@ -222,8 +236,9 @@ export default function Tools() {
                           value={formData.parentTool} onChange={(e) => setFormData({ ...formData, parentTool: e.target.value })}
                         >
                           <option value="Root">Root</option>
-                          <option value="SDL Trados">SDL Trados</option>
-                          <option value="Memsource">Memsource</option>
+                          {tools.map(tool => (
+                            <option key={tool._id} value={tool.name}>{tool.name}</option>
+                          ))}
                           <option value="N/A">N/A</option>
                         </select>
                         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600">

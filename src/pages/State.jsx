@@ -1,24 +1,38 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
-
-const stateData = [
-  { id: 1, name: 'Andaman and Nicobar Island 2', shortName: 'Andaman and Nicobar Island', country: 'India', status: 'Active' },
-  { id: 2, name: 'Andhra Pradesh', shortName: 'Andhra Pradesh', country: 'India', status: 'Active' },
-  { id: 3, name: 'Arunachal Pradesh', shortName: 'Arunachal Pradesh', country: 'India', status: 'Active' },
-  { id: 4, name: 'Assam', shortName: 'Assam', country: 'India', status: 'Active' },
-  { id: 5, name: 'Bihar', shortName: 'Bihar', country: 'India', status: 'Active' },
-  { id: 6, name: 'Chandigarh', shortName: 'Chandigarh', country: 'India', status: 'Active' },
-  { id: 7, name: 'Chhattisgarh', shortName: 'Chhattisgarh', country: 'India', status: 'Active' },
-  { id: 8, name: 'Dadra and Nagar Haveli', shortName: 'Dadra and Nagar Haveli', country: 'India', status: 'Active' },
-];
+import { getStates, createState, updateState, deleteState } from '../lib/stateApi';
+import { getCountries } from '../lib/countryApi';
 
 export default function State() {
-  const [states, setStates] = useState(stateData);
+  const [states, setStates] = useState([]);
+  const [countriesList, setCountriesList] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingState, setEditingState] = useState(null);
   const [formData, setFormData] = useState({ name: '', shortName: '', country: 'India', status: 'Active' });
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const [statesData, countriesData] = await Promise.all([
+        getStates(),
+        getCountries()
+      ]);
+      setStates(statesData);
+      setCountriesList(countriesData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      showNotification("Failed to fetch data.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Filtering states based on search query
   const filteredStates = useMemo(() => {
@@ -35,7 +49,7 @@ export default function State() {
 
   const handleAddClick = () => {
     setEditingState(null);
-    setFormData({ name: '', shortName: '', country: 'India', status: 'Active' });
+    setFormData({ name: '', shortName: '', country: countriesList[0]?.name || 'India', status: 'Active' });
     setIsModalOpen(true);
   };
 
@@ -45,17 +59,22 @@ export default function State() {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (editingState) {
-      setStates(states.map(s => s.id === editingState.id ? { ...s, ...formData } : s));
-      showNotification(`Updated ${formData.name} successfully!`);
-    } else {
-      const newId = states.length > 0 ? Math.max(...states.map(s => s.id)) + 1 : 1;
-      setStates([...states, { id: newId, ...formData }]);
-      showNotification(`Added ${formData.name} successfully!`);
+    try {
+      if (editingState) {
+        await updateState(editingState._id, formData);
+        showNotification(`Updated ${formData.name} successfully!`);
+      } else {
+        await createState(formData);
+        showNotification(`Added ${formData.name} successfully!`);
+      }
+      fetchData();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error saving state:", error);
+      showNotification("Failed to save state.");
     }
-    setIsModalOpen(false);
   };
 
   return (
@@ -121,7 +140,7 @@ export default function State() {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {filteredStates.map((state, index) => (
-                  <tr key={state.id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
+                  <tr key={state._id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
                     <td className="px-6 py-5 text-center">
                       <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-500 font-mono text-xs font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                         {index + 1}
@@ -251,9 +270,9 @@ export default function State() {
                         value={formData.country}
                         onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                       >
-                        <option value="India">India</option>
-                        <option value="USA">USA</option>
-                        <option value="United Kingdom">United Kingdom</option>
+                        {countriesList.map(country => (
+                          <option key={country._id} value={country.name}>{country.name}</option>
+                        ))}
                       </select>
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600">
                         <ChevronRight className="w-4 h-4 rotate-90" />

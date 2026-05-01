@@ -1,16 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, Globe } from 'lucide-react';
-
-const countryData = [
-  { id: 1, name: 'India', code: '+91', shortName: 'IND', status: 'Active' },
-  { id: 2, name: 'USA', code: '+1', shortName: 'USA', status: 'Active' },
-  { id: 3, name: 'Afghanistan', code: '+93', shortName: 'AFG', status: 'Active' },
-  { id: 4, name: 'Albania', code: '+355', shortName: 'ALB', status: 'Active' },
-  { id: 5, name: 'Algeria', code: '+213', shortName: 'DZA', status: 'Active' },
-  { id: 6, name: 'Andorra', code: '+376', shortName: 'AND', status: 'Active' },
-  { id: 7, name: 'Angola', code: '+244', shortName: 'AGO', status: 'Active' },
-  { id: 8, name: 'Anguilla', code: '+1-264', shortName: 'AIA', status: 'Active' },
-];
+import { getCountries, createCountry, updateCountry, deleteCountry } from '../lib/countryApi';
 
 const availableCountriesList = [
   { name: 'Afghanistan', code: '+93', shortName: 'AFG' },
@@ -43,12 +33,30 @@ const availableCountriesList = [
 ];
 
 export default function Country() {
-  const [countries, setCountries] = useState(countryData);
+  const [countries, setCountries] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCountry, setEditingCountry] = useState(null);
   const [formData, setFormData] = useState({ name: '', code: '', shortName: '', status: 'Active' });
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCountries();
+  }, []);
+
+  const fetchCountries = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getCountries();
+      setCountries(data);
+    } catch (error) {
+      console.error("Error fetching countries:", error);
+      showNotification("Failed to fetch countries.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredCountries = useMemo(() => {
     return countries.filter(c =>
@@ -91,17 +99,22 @@ export default function Country() {
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (editingCountry) {
-      setCountries(countries.map(c => c.id === editingCountry.id ? { ...c, ...formData } : c));
-      showNotification(`Updated ${formData.name} successfully!`);
-    } else {
-      const newId = countries.length > 0 ? Math.max(...countries.map(c => c.id)) + 1 : 1;
-      setCountries([...countries, { id: newId, ...formData }]);
-      showNotification(`Added ${formData.name} successfully!`);
+    try {
+      if (editingCountry) {
+        await updateCountry(editingCountry._id, formData);
+        showNotification(`Updated ${formData.name} successfully!`);
+      } else {
+        await createCountry(formData);
+        showNotification(`Added ${formData.name} successfully!`);
+      }
+      fetchCountries();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error saving country:", error);
+      showNotification("Failed to save country.");
     }
-    setIsModalOpen(false);
   };
 
   return (
@@ -159,7 +172,7 @@ export default function Country() {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {filteredCountries.map((country, index) => (
-                  <tr key={country.id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
+                  <tr key={country._id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
                     <td className="px-6 py-5 text-center">
                       <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-500 font-mono text-xs font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                         {index + 1}

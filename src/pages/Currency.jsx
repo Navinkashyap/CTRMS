@@ -1,20 +1,32 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, IndianRupee } from 'lucide-react';
-
-const currencyData = [
-  { id: 1, name: 'INR', status: 'Active' },
-  { id: 2, name: 'USD', status: 'Active' },
-  { id: 3, name: 'JPY', status: 'Active' },
-  { id: 4, name: 'EUR', status: 'Active' },
-];
+import { getCurrencies, createCurrency, updateCurrency, deleteCurrency } from '../lib/currencyApi';
 
 export default function Currency() {
-  const [currencies, setCurrencies] = useState(currencyData);
+  const [currencies, setCurrencies] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCurrency, setEditingCurrency] = useState(null);
   const [formData, setFormData] = useState({ name: '', status: 'Active' });
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCurrencies();
+  }, []);
+
+  const fetchCurrencies = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getCurrencies();
+      setCurrencies(data);
+    } catch (error) {
+      console.error("Error fetching currencies:", error);
+      showNotification("Failed to fetch currencies.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredCurrencies = useMemo(() => {
     return currencies.filter(c =>
@@ -39,17 +51,22 @@ export default function Currency() {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (editingCurrency) {
-      setCurrencies(currencies.map(c => c.id === editingCurrency.id ? { ...c, ...formData } : c));
-      showNotification(`Updated ${formData.name} successfully!`);
-    } else {
-      const newId = currencies.length > 0 ? Math.max(...currencies.map(c => c.id)) + 1 : 1;
-      setCurrencies([...currencies, { id: newId, ...formData }]);
-      showNotification(`Added ${formData.name} successfully!`);
+    try {
+      if (editingCurrency) {
+        await updateCurrency(editingCurrency._id, formData);
+        showNotification(`Updated ${formData.name} successfully!`);
+      } else {
+        await createCurrency(formData);
+        showNotification(`Added ${formData.name} successfully!`);
+      }
+      fetchCurrencies();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error saving currency:", error);
+      showNotification("Failed to save currency.");
     }
-    setIsModalOpen(false);
   };
 
   return (
@@ -110,7 +127,7 @@ export default function Currency() {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {filteredCurrencies.map((currency, index) => (
-                  <tr key={currency.id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
+                  <tr key={currency._id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
                     <td className="px-6 py-5 text-center">
                       <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-500 font-mono text-xs font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                         {index + 1}

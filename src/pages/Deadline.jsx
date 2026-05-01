@@ -1,21 +1,32 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
-
-const deadlineData = [
-  { id: 1, name: 'Very late delivery', rating: 1, status: 'Active' },
-  { id: 2, name: 'Late delivery', rating: 2, status: 'Active' },
-  { id: 3, name: 'On time delivery', rating: 3, status: 'Active' },
-  { id: 4, name: 'Before time delivery', rating: 4, status: 'Active' },
-  { id: 5, name: 'Delivered ASAP', rating: 5, status: 'Active' },
-];
+import { getDeadlines, createDeadline, updateDeadline, deleteDeadline } from '../lib/deadlineApi';
 
 export default function Deadline() {
-  const [deadlines, setDeadlines] = useState(deadlineData);
+  const [deadlines, setDeadlines] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDeadline, setEditingDeadline] = useState(null);
   const [formData, setFormData] = useState({ name: '', rating: 1, status: 'Active' });
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDeadlines();
+  }, []);
+
+  const fetchDeadlines = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getDeadlines();
+      setDeadlines(data);
+    } catch (error) {
+      console.error("Error fetching deadlines:", error);
+      showNotification("Failed to fetch deadlines.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredDeadlines = useMemo(() => {
     return deadlines.filter(d =>
@@ -41,17 +52,22 @@ export default function Deadline() {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (editingDeadline) {
-      setDeadlines(deadlines.map(d => d.id === editingDeadline.id ? { ...d, ...formData } : d));
-      showNotification(`Updated ${formData.name} successfully!`);
-    } else {
-      const newId = deadlines.length > 0 ? Math.max(...deadlines.map(d => d.id)) + 1 : 1;
-      setDeadlines([...deadlines, { id: newId, ...formData }]);
-      showNotification(`Added ${formData.name} successfully!`);
+    try {
+      if (editingDeadline) {
+        await updateDeadline(editingDeadline._id, formData);
+        showNotification(`Updated ${formData.name} successfully!`);
+      } else {
+        await createDeadline(formData);
+        showNotification(`Added ${formData.name} successfully!`);
+      }
+      fetchDeadlines();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error saving deadline:", error);
+      showNotification("Failed to save deadline.");
     }
-    setIsModalOpen(false);
   };
 
   return (
@@ -113,7 +129,7 @@ export default function Deadline() {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {filteredDeadlines.map((deadline, index) => (
-                  <tr key={deadline.id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
+                  <tr key={deadline._id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
                     <td className="px-6 py-5 text-center">
                       <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-500 font-mono text-xs font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                         {index + 1}

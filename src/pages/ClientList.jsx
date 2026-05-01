@@ -23,7 +23,6 @@ const allColumns = [
   { id: 'domain', label: 'Domain' },
   { id: 'status', label: 'Status' },
   { id: 'membership', label: 'Membership' },
-  { id: 'membershipCode', label: 'Code' },
   { id: 'name', label: 'Name' },
   { id: 'website', label: 'Website' },
   { id: 'email', label: 'Email' },
@@ -45,7 +44,7 @@ export default function ClientList() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const [visibleColumns, setVisibleColumns] = useState(['domain', 'status', 'membership', 'membershipCode', 'name', 'website', 'email', 'phone', 'city', 'country', 'registrationDate']);
+  const [visibleColumns, setVisibleColumns] = useState(['domain', 'status', 'membership', 'name', 'website', 'email', 'phone', 'city', 'country', 'registrationDate']);
   const [tempVisibleColumns, setTempVisibleColumns] = useState(visibleColumns);
 
   const defaultFilters = { status: 'All', country: 'All', currency: 'All' };
@@ -202,11 +201,10 @@ export default function ClientList() {
             <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-100/80">
-                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs">S.No.</th>
+                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Client Code</th>
                   {visibleColumns.includes('domain') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Domain</th>}
                   {visibleColumns.includes('status') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Status</th>}
                   {visibleColumns.includes('membership') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Membership</th>}
-                  {visibleColumns.includes('membershipCode') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs shadow-none">Code</th>}
                   {visibleColumns.includes('name') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Name</th>}
                   {visibleColumns.includes('website') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Website</th>}
                   {visibleColumns.includes('email') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Email</th>}
@@ -248,7 +246,7 @@ export default function ClientList() {
                   <tr key={client._id} className="group hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4">
                       <span className="text-slate-400 font-medium text-sm">
-                        {(idx + 1).toString().padStart(2, '0')}
+                        {client.membershipCode || '-'}
                       </span>
                     </td>
                     {visibleColumns.includes('domain') && (
@@ -293,7 +291,6 @@ export default function ClientList() {
                         </span>
                       </td>
                     )}
-                    {visibleColumns.includes('membershipCode') && <td className="px-6 py-4 text-slate-600 font-medium">{client.membershipCode}</td>}
                     {visibleColumns.includes('name') && (
                       <td className="px-6 py-4">
                         <div className="flex flex-col">

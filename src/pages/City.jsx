@@ -1,21 +1,38 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
-
-const cityData = [
-  { id: 1, name: 'Port Blair', shortName: 'PBL', district: 'South Andaman', status: 'Active' },
-  { id: 2, name: 'Anantapur City', shortName: 'ANT', district: 'Anantapur', status: 'Active' },
-  { id: 3, name: 'Chittoor City', shortName: 'CHT', district: 'Chittoor', status: 'Active' },
-  { id: 4, name: 'Cuddapah City', shortName: 'CDP', district: 'Cuddapah', status: 'Active' },
-  { id: 5, name: 'Kakinada', shortName: 'KKD', district: 'East Godavari', status: 'Active' },
-];
+import { getCities, createCity, updateCity, deleteCity } from '../lib/cityApi';
+import { getStates } from '../lib/stateApi';
 
 export default function City() {
-  const [cities, setCities] = useState(cityData);
+  const [cities, setCities] = useState([]);
+  const [statesList, setStatesList] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCity, setEditingCity] = useState(null);
   const [formData, setFormData] = useState({ name: '', shortName: '', district: 'South Andaman', status: 'Active' });
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const [citiesData, statesData] = await Promise.all([
+        getCities(),
+        getStates()
+      ]);
+      setCities(citiesData);
+      setStatesList(statesData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      showNotification("Failed to fetch data.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredCities = useMemo(() => {
     return cities.filter(c =>
@@ -31,7 +48,7 @@ export default function City() {
 
   const handleAddClick = () => {
     setEditingCity(null);
-    setFormData({ name: '', shortName: '', district: 'South Andaman', status: 'Active' });
+    setFormData({ name: '', shortName: '', district: statesList[0]?.name || 'South Andaman', status: 'Active' });
     setIsModalOpen(true);
   };
 
@@ -41,17 +58,22 @@ export default function City() {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (editingCity) {
-      setCities(cities.map(c => c.id === editingCity.id ? { ...c, ...formData } : c));
-      showNotification(`Updated ${formData.name} successfully!`);
-    } else {
-      const newId = cities.length > 0 ? Math.max(...cities.map(c => c.id)) + 1 : 1;
-      setCities([...cities, { id: newId, ...formData }]);
-      showNotification(`Added ${formData.name} successfully!`);
+    try {
+      if (editingCity) {
+        await updateCity(editingCity._id, formData);
+        showNotification(`Updated ${formData.name} successfully!`);
+      } else {
+        await createCity(formData);
+        showNotification(`Added ${formData.name} successfully!`);
+      }
+      fetchData();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error saving city:", error);
+      showNotification("Failed to save city.");
     }
-    setIsModalOpen(false);
   };
 
   return (
@@ -114,7 +136,7 @@ export default function City() {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {filteredCities.map((city, index) => (
-                  <tr key={city.id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
+                  <tr key={city._id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
                     <td className="px-6 py-5 text-center">
                       <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-500 font-mono text-xs font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                         {index + 1}
@@ -216,11 +238,9 @@ export default function City() {
                         className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold appearance-none cursor-pointer"
                         value={formData.district} onChange={(e) => setFormData({ ...formData, district: e.target.value })}
                       >
-                        <option value="South Andaman">South Andaman</option>
-                        <option value="Anantapur">Anantapur</option>
-                        <option value="Chittoor">Chittoor</option>
-                        <option value="Cuddapah">Cuddapah</option>
-                        <option value="East Godavari">East Godavari</option>
+                        {statesList.map(state => (
+                          <option key={state._id} value={state.name}>{state.name}</option>
+                        ))}
                       </select>
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600">
                         <ChevronRight className="w-4 h-4 rotate-90" />

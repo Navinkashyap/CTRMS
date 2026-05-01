@@ -20,6 +20,9 @@ import {
 import { createClient, getNextMembershipCode, updateClient } from '../lib/clientApi';
 import { getTypes } from '../lib/typeApi';
 import { getMemberships } from '../lib/membershipApi';
+import { getCountries, createCountry } from '../lib/countryApi';
+import { getStates, createState } from '../lib/stateApi';
+import { getCities, createCity } from '../lib/cityApi';
 
 const getInitialFormData = () => ({
   domain: '',
@@ -30,6 +33,7 @@ const getInitialFormData = () => ({
   website: '',
   email: '',
   phone: '',
+  countryCode: '+91',
   address: '',
   city: '',
   state: '',
@@ -40,16 +44,40 @@ const getInitialFormData = () => ({
   createdBy: 'System Admin',
 });
 
-const normalizeClientForForm = (client) => ({
-  ...getInitialFormData(),
-  ...client,
-  membership: client?.membership || '',
-  state: client?.state || '',
-  zip: client?.zip || '',
-  registrationDate: client?.registrationDate
-    ? new Date(client.registrationDate).toISOString().split('T')[0]
-    : getInitialFormData().registrationDate,
-});
+const normalizeClientForForm = (client) => {
+  let countryCode = '+91';
+  let phone = client?.phone || '';
+  
+  const knownCodes = ['+91', '+1', '+44', '+61', '+971', '+65', '+86', '+81', '+49', '+33'];
+  for (const code of knownCodes) {
+    if (phone.startsWith(code + ' ')) {
+      countryCode = code;
+      phone = phone.substring(code.length + 1);
+      break;
+    } else if (phone.startsWith(code + '-')) {
+      countryCode = code;
+      phone = phone.substring(code.length + 1);
+      break;
+    } else if (phone.startsWith(code)) {
+      countryCode = code;
+      phone = phone.substring(code.length);
+      break;
+    }
+  }
+
+  return {
+    ...getInitialFormData(),
+    ...client,
+    countryCode,
+    phone,
+    membership: client?.membership || '',
+    state: client?.state || '',
+    zip: client?.zip || '',
+    registrationDate: client?.registrationDate
+      ? new Date(client.registrationDate).toISOString().split('T')[0]
+      : getInitialFormData().registrationDate,
+  };
+};
 
 export default function AddClient() {
   const navigate = useNavigate();
@@ -65,25 +93,34 @@ export default function AddClient() {
 
   const [domains, setDomains] = useState([]);
   const [memberships, setMemberships] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
 
   useEffect(() => {
     const loadOptions = async () => {
       setLoadingOptions(true);
       try {
-        const [typesData, membershipsData] = await Promise.all([
+        const [typesData, membershipsData, countriesData, statesData, citiesData] = await Promise.all([
           getTypes(),
-          getMemberships()
+          getMemberships(),
+          getCountries(),
+          getStates(),
+          getCities()
         ]);
         setDomains(typesData.filter(t => t.status === 'Active'));
         setMemberships(membershipsData.filter(m => m.status === 'Active'));
+        setCountries(countriesData.filter(c => c.status === 'Active'));
+        setStates(statesData.filter(s => s.status === 'Active'));
+        setCities(citiesData.filter(c => c.status === 'Active'));
 
         // Set defaults if not editing
         if (!isEditMode) {
           setFormData(prev => ({
             ...prev,
             domain: typesData[0]?.type || '',
-            membership: membershipsData[0]?.name || ''
+            membership: membershipsData[0]?.name || '',
           }));
         }
       } catch (error) {
@@ -128,6 +165,89 @@ export default function AddClient() {
     }));
   };
 
+  const handleCountryChange = async (e) => {
+    const value = e.target.value;
+    if (value === 'add_new') {
+      const newName = window.prompt('Enter new Country name:');
+      if (newName?.trim()) {
+        const code = window.prompt('Enter Country Code (e.g., +1):') || '+00';
+        try {
+          const newCountry = await createCountry({
+            name: newName.trim(),
+            code: code.trim(),
+            shortName: newName.substring(0, 3).toUpperCase(),
+            status: 'Active'
+          });
+          setCountries(prev => [...prev, newCountry]);
+          updateField('country', newCountry.name);
+          updateField('currency', newName.trim().toLowerCase() === 'india' ? 'INR' : formData.currency);
+        } catch (err) {
+          alert('Failed to add new country.');
+          updateField('country', '');
+        }
+      } else {
+        updateField('country', '');
+      }
+    } else {
+      updateField('country', value);
+      if (value.toLowerCase() === 'india') {
+        updateField('currency', 'INR');
+      }
+    }
+  };
+
+  const handleStateChange = async (e) => {
+    const value = e.target.value;
+    if (value === 'add_new') {
+      const newName = window.prompt('Enter new State name:');
+      if (newName?.trim()) {
+        try {
+          const newState = await createState({
+            name: newName.trim(),
+            shortName: newName.substring(0, 2).toUpperCase(),
+            country: formData.country || 'Unknown',
+            status: 'Active'
+          });
+          setStates(prev => [...prev, newState]);
+          updateField('state', newState.name);
+        } catch (err) {
+          alert('Failed to add new state.');
+          updateField('state', '');
+        }
+      } else {
+        updateField('state', '');
+      }
+    } else {
+      updateField('state', value);
+    }
+  };
+
+  const handleCityChange = async (e) => {
+    const value = e.target.value;
+    if (value === 'add_new') {
+      const newName = window.prompt('Enter new City name:');
+      if (newName?.trim()) {
+        try {
+          const newCity = await createCity({
+            name: newName.trim(),
+            shortName: newName.substring(0, 3).toUpperCase(),
+            district: newName.trim(),
+            status: 'Active'
+          });
+          setCities(prev => [...prev, newCity]);
+          updateField('city', newCity.name);
+        } catch (err) {
+          alert('Failed to add new city.');
+          updateField('city', '');
+        }
+      } else {
+        updateField('city', '');
+      }
+    } else {
+      updateField('city', value);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -144,7 +264,7 @@ export default function AddClient() {
         name: formData.name.trim(),
         website: formData.website.trim(),
         email: formData.email ? formData.email.trim() : formData.email,
-        phone: formData.phone.trim(),
+        phone: formData.phone.trim() ? `${formData.countryCode} ${formData.phone.trim()}` : '',
         address: formData.address.trim(),
         city: formData.city.trim(),
         state: formData.state ? formData.state.trim() : '',
@@ -214,7 +334,7 @@ export default function AddClient() {
             <div className="space-y-6">
               {/* Row 1: Company Name */}
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Company Name</label>
+                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Company Name <span className="text-red-500">*</span></label>
                 <div className="relative group">
                   <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
                   <input
@@ -245,19 +365,39 @@ export default function AddClient() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Phone</label>
-                  <div className="relative group">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                    <input
-                      type="tel"
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                      placeholder="Phone"
-                      value={formData.phone}
-                      onChange={(e) => updateField('phone', e.target.value)}
-                    />
+                  <div className="relative group flex gap-2">
+                    <div className="relative w-1/3">
+                      <select
+                        className="w-full px-2 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
+                        value={formData.countryCode}
+                        onChange={(e) => updateField('countryCode', e.target.value)}
+                      >
+                        <option value="+91">+91 (IN)</option>
+                        <option value="+1">+1 (US/CA)</option>
+                        <option value="+44">+44 (UK)</option>
+                        <option value="+61">+61 (AU)</option>
+                        <option value="+971">+971 (AE)</option>
+                        <option value="+65">+65 (SG)</option>
+                        <option value="+86">+86 (CN)</option>
+                        <option value="+81">+81 (JP)</option>
+                        <option value="+49">+49 (DE)</option>
+                        <option value="+33">+33 (FR)</option>
+                      </select>
+                    </div>
+                    <div className="relative w-2/3">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                      <input
+                        type="tel"
+                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                        placeholder="Phone"
+                        value={formData.phone}
+                        onChange={(e) => updateField('phone', e.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Email</label>
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Email <span className="text-red-500">*</span></label>
                   <div className="relative group">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
                     <input
@@ -292,44 +432,45 @@ export default function AddClient() {
                   <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">City</label>
                   <div className="relative group">
                     <Map className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                    <input
-                      type="text"
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                      placeholder="City"
+                    <select
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
                       value={formData.city}
-                      onChange={(e) => updateField('city', e.target.value)}
-                    />
+                      onChange={handleCityChange}
+                    >
+                      <option value="" disabled>Select City</option>
+                      {cities.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                      <option value="add_new" className="text-indigo-600 font-bold">+ Add New City</option>
+                    </select>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">State</label>
                   <div className="relative group">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                    <input
-                      type="text"
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                      placeholder="State"
+                    <select
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
                       value={formData.state || ''}
-                      onChange={(e) => updateField('state', e.target.value)}
-                    />
+                      onChange={handleStateChange}
+                    >
+                      <option value="" disabled>Select State</option>
+                      {states.map(s => <option key={s._id} value={s.name}>{s.name}</option>)}
+                      <option value="add_new" className="text-indigo-600 font-bold">+ Add New State</option>
+                    </select>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Country</label>
                   <div className="relative group">
                     <Flag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                    <input
-                      type="text"
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                      placeholder="Country"
+                    <select
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
                       value={formData.country}
-                      onChange={(e) => {
-                        updateField('country', e.target.value);
-                        if (e.target.value.toLowerCase() === 'india') {
-                          updateField('currency', 'INR');
-                        }
-                      }}
-                    />
+                      onChange={handleCountryChange}
+                    >
+                      <option value="" disabled>Select Country</option>
+                      {countries.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                      <option value="add_new" className="text-indigo-600 font-bold">+ Add New Country</option>
+                    </select>
                   </div>
                 </div>
                 <div className="space-y-2">

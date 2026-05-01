@@ -7,6 +7,16 @@ import clientRoutes from "./src/routes/clientRoutes.js";
 import vendorRoutes from "./src/routes/vendorRoutes.js";
 import typeRoutes from "./src/routes/typeRoutes.js";
 import membershipRoutes from "./src/routes/membershipRoutes.js";
+import countryRoutes from "./src/routes/countryRoutes.js";
+import stateRoutes from "./src/routes/stateRoutes.js";
+import cityRoutes from "./src/routes/cityRoutes.js";
+import serviceRoutes from "./src/routes/serviceRoutes.js";
+import toolRoutes from "./src/routes/toolRoutes.js";
+import currencyRoutes from "./src/routes/currencyRoutes.js";
+import languageRoutes from "./src/routes/languageRoutes.js";
+import specializationRoutes from "./src/routes/specializationRoutes.js";
+import qualityRoutes from "./src/routes/qualityRoutes.js";
+import deadlineRoutes from "./src/routes/deadlineRoutes.js";
 
 dotenv.config();
 
@@ -30,6 +40,16 @@ app.use("/api/clients", clientRoutes);
 app.use("/api/vendors", vendorRoutes);
 app.use("/api/types", typeRoutes);
 app.use("/api/memberships", membershipRoutes);
+app.use("/api/countries", countryRoutes);
+app.use("/api/states", stateRoutes);
+app.use("/api/cities", cityRoutes);
+app.use("/api/services", serviceRoutes);
+app.use("/api/tools", toolRoutes);
+app.use("/api/currencies", currencyRoutes);
+app.use("/api/languages", languageRoutes);
+app.use("/api/specializations", specializationRoutes);
+app.use("/api/qualities", qualityRoutes);
+app.use("/api/deadlines", deadlineRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
