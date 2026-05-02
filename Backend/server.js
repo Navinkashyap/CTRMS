@@ -17,6 +17,8 @@ import languageRoutes from "./src/routes/languageRoutes.js";
 import specializationRoutes from "./src/routes/specializationRoutes.js";
 import qualityRoutes from "./src/routes/qualityRoutes.js";
 import deadlineRoutes from "./src/routes/deadlineRoutes.js";
+import departmentRoutes from "./src/routes/departmentRoutes.js";
+import contactRoutes from "./src/routes/contactRoutes.js";
 
 dotenv.config();
 
@@ -50,6 +52,8 @@ app.use("/api/languages", languageRoutes);
 app.use("/api/specializations", specializationRoutes);
 app.use("/api/qualities", qualityRoutes);
 app.use("/api/deadlines", deadlineRoutes);
+app.use("/api/departments", departmentRoutes);
+app.use("/api/contacts", contactRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

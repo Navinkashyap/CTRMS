@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   UserCircle,
   Search,
   Settings,
   UserPlus,
   Edit3,
-  MoreVertical,
-  ChevronLeft,
   ChevronRight,
+  ChevronLeft,
+  Trash2,
   TrendingUp,
   Shield,
   Building2,
@@ -19,8 +20,10 @@ import {
   MapPin,
   Calendar,
   Layers,
-  Heart
+  Heart,
+  Loader2
 } from 'lucide-react';
+import { getContacts, deleteContact } from '../lib/contactApi';
 
 const initialContacts = [
   { id: 1, clientId: 'CL001', clientCode: 'CC001', firstName: 'Aham', lastName: 'Brahmasmi', phone: '+91 12346 57890', email: 'admin@example.com', company: 'ADK Fortune - Delhi', status: 'Inactive', dob: '1990-05-15', gender: 'Male', companyId: 'CP001', designation: 'Admin', country: 'India', region: 'North', city: 'Delhi', countryCode: 'IN', isoCode: 'IND' },
@@ -36,8 +39,7 @@ const initialContacts = [
 const allColumns = [
   { id: 'clientId', label: 'Client id' },
   { id: 'clientCode', label: 'Client code' },
-  { id: 'firstName', label: 'First name' },
-  { id: 'lastName', label: 'Last name' },
+  { id: 'fullName', label: 'Full Name' },
   { id: 'countryCode', label: 'Country code' },
   { id: 'isoCode', label: 'Iso code' },
   { id: 'phone', label: 'Phone no' },
@@ -52,69 +54,55 @@ const allColumns = [
 ];
 
 export default function ContactList() {
-  const [contacts, setContacts] = useState(initialContacts);
+  const navigate = useNavigate();
+  const [contacts, setContacts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [editingContact, setEditingContact] = useState(null);
+
+  useEffect(() => {
+    fetchContacts();
+  }, []);
+
+  const fetchContacts = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getContacts();
+      setContacts(data);
+    } catch (err) {
+      console.error("Failed to fetch contacts", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this contact?")) return;
+    try {
+      await deleteContact(id);
+      fetchContacts();
+    } catch (err) {
+      console.error("Failed to delete contact", err);
+    }
+  };
 
   // Default visible columns as per normal view
-  const [visibleColumns, setVisibleColumns] = useState(['firstName', 'lastName', 'phone', 'email', 'designation', 'status']);
+  const [visibleColumns, setVisibleColumns] = useState(['fullName', 'phone', 'email', 'designation']);
   const [tempVisibleColumns, setTempVisibleColumns] = useState(visibleColumns);
 
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    phone: '',
-    email: '',
-    company: '',
-    designation: '',
-    status: 'Active',
-    dob: '',
-    gender: 'Male',
-    country: 'India',
-    city: ''
-  });
-
   const filteredContacts = contacts.filter(contact =>
-    contact.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contact.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contact.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    contact.company.toLowerCase().includes(searchQuery.toLowerCase())
+    (contact.firstName?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+    (contact.lastName?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+    (contact.email?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+    (contact.company?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
 
   const handleEdit = (contact) => {
-    setEditingContact(contact);
-    setFormData({ ...contact });
-    setIsModalOpen(true);
+    navigate('/contacts/add-contact', { state: { contact } });
   };
 
   const handleAdd = () => {
-    setEditingContact(null);
-    setFormData({
-      firstName: '',
-      lastName: '',
-      phone: '',
-      email: '',
-      company: '',
-      designation: '',
-      status: 'Active',
-      dob: '',
-      gender: 'Male',
-      country: 'India',
-      city: ''
-    });
-    setIsModalOpen(true);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (editingContact) {
-      setContacts(contacts.map(c => c.id === editingContact.id ? { ...formData, id: c.id } : c));
-    } else {
-      setContacts([...contacts, { ...formData, id: Date.now() }]);
-    }
-    setIsModalOpen(false);
+    navigate('/contacts/add-contact');
   };
 
   const toggleColumnSelection = (colId) => {
@@ -182,11 +170,10 @@ export default function ContactList() {
             <table className="w-full text-left text-[13px] border-collapse min-w-[1000px]">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-8 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">S.No.</th>
+                  
                   {visibleColumns.includes('clientId') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Client Id</th>}
                   {visibleColumns.includes('clientCode') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Client Code</th>}
-                  {visibleColumns.includes('firstName') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">First Name</th>}
-                  {visibleColumns.includes('lastName') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Last Name</th>}
+                  {visibleColumns.includes('fullName') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Full Name</th>}
                   {visibleColumns.includes('countryCode') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Code</th>}
                   {visibleColumns.includes('isoCode') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">ISO</th>}
                   {visibleColumns.includes('phone') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Phone No</th>}
@@ -198,72 +185,82 @@ export default function ContactList() {
                   {visibleColumns.includes('country') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Country</th>}
                   {visibleColumns.includes('region') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Region</th>}
                   {visibleColumns.includes('city') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">City</th>}
-                  <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Status</th>
+                  
                   <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px] text-center sticky right-0 bg-slate-50/50">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {filteredContacts.map((contact, idx) => (
-                  <tr key={contact.id} className="group hover:bg-indigo-50/20 transition-all duration-200">
-                    <td className="px-8 py-5">
-                      <span className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center font-bold text-slate-600 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-inner">
-                        {idx + 1}
-                      </span>
-                    </td>
-                    {visibleColumns.includes('clientId') && <td className="px-6 py-5 font-bold">{contact.clientId}</td>}
-                    {visibleColumns.includes('clientCode') && <td className="px-6 py-5 font-mono text-[11px] bg-slate-50 rounded px-1">{contact.clientCode}</td>}
-                    {visibleColumns.includes('firstName') && <td className="px-6 py-5 font-extrabold text-slate-900">{contact.firstName}</td>}
-                    {visibleColumns.includes('lastName') && <td className="px-6 py-5 font-extrabold text-slate-900">{contact.lastName}</td>}
-                    {visibleColumns.includes('countryCode') && <td className="px-6 py-5 text-slate-500">{contact.countryCode}</td>}
-                    {visibleColumns.includes('isoCode') && <td className="px-6 py-5 font-mono text-indigo-600">{contact.isoCode}</td>}
-                    {visibleColumns.includes('phone') && (
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-2 text-slate-500 font-bold tabular-nums">
-                          <Phone className="w-3 h-3 text-slate-300" />
-                          {contact.phone || <span className="text-slate-300 italic font-medium">--</span>}
-                        </div>
-                      </td>
-                    )}
-                    {visibleColumns.includes('email') && (
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-2 text-slate-500 font-bold">
-                          <Mail className="w-3 h-3 text-slate-300" />
-                          {contact.email}
-                        </div>
-                      </td>
-                    )}
-                    {visibleColumns.includes('dob') && <td className="px-6 py-5 font-medium">{contact.dob}</td>}
-                    {visibleColumns.includes('gender') && <td className="px-6 py-5"><span className="px-2 py-0.5 bg-slate-100 rounded-full text-[10px] font-bold uppercase">{contact.gender}</span></td>}
-                    {visibleColumns.includes('companyId') && <td className="px-6 py-5 text-slate-600 font-bold">{contact.companyId}</td>}
-                    {visibleColumns.includes('designation') && <td className="px-6 py-5 font-bold text-indigo-600 italic">{contact.designation}</td>}
-                    {visibleColumns.includes('country') && <td className="px-6 py-5 text-slate-600 font-medium">{contact.country}</td>}
-                    {visibleColumns.includes('region') && <td className="px-6 py-5 text-slate-600 uppercase tracking-tighter font-black">{contact.region}</td>}
-                    {visibleColumns.includes('city') && <td className="px-6 py-5 font-bold">{contact.city}</td>}
-
-                    <td className="px-6 py-5">
-                      <span className={`px-4 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest inline-flex items-center gap-2 shadow-sm ${contact.status === 'Active'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                          : 'bg-rose-50 text-rose-700 border border-rose-100'
-                        }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${contact.status === 'Active' ? 'bg-emerald-500' : 'bg-rose-500'} animate-pulse`} />
-                        {contact.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5 text-center sticky right-0 bg-white/95 backdrop-blur-sm group-hover:bg-indigo-50/40 transition-all border-l border-slate-50">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => handleEdit(contact)}
-                          className="p-2.5 bg-slate-50 text-slate-600 rounded-xl hover:bg-indigo-600 hover:text-white hover:scale-110 transition-all shadow-sm border border-slate-100"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button className="p-2.5 bg-slate-50 text-slate-600 rounded-xl hover:bg-slate-900 hover:text-white transition-all shadow-sm border border-slate-100">
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="20" className="px-6 py-20 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+                        <p className="text-slate-400 font-bold italic">Loading contacts...</p>
                       </div>
                     </td>
                   </tr>
-                ))}
+                ) : filteredContacts.length === 0 ? (
+                  <tr>
+                    <td colSpan="20" className="px-6 py-20 text-center">
+                      <p className="text-slate-400 font-bold italic">No contacts found.</p>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredContacts.map((contact, idx) => (
+                    <tr key={contact._id} className="group hover:bg-indigo-50/20 transition-all duration-200">
+                      {visibleColumns.includes('clientId') && <td className="px-6 py-5 font-bold">{contact.clientId}</td>}
+                      {visibleColumns.includes('clientCode') && <td className="px-6 py-5 font-mono text-[11px] bg-slate-50 rounded px-1">{contact.clientCode}</td>}
+                      {visibleColumns.includes('fullName') && (
+                        <td className="px-6 py-5 font-extrabold text-slate-900 capitalize">
+                          {contact.firstName} {contact.lastName}
+                        </td>
+                      )}
+                      {visibleColumns.includes('countryCode') && <td className="px-6 py-5 text-slate-500">{contact.countryCode}</td>}
+                      {visibleColumns.includes('isoCode') && <td className="px-6 py-5 font-mono text-indigo-600">{contact.isoCode}</td>}
+                      {visibleColumns.includes('phone') && (
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-2 text-slate-500 font-bold tabular-nums">
+                            <Phone className="w-3 h-3 text-slate-300" />
+                            {contact.phone || <span className="text-slate-300 italic font-medium">--</span>}
+                          </div>
+                        </td>
+                      )}
+                      {visibleColumns.includes('email') && (
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-2 text-slate-500 font-bold">
+                            <Mail className="w-3 h-3 text-slate-300" />
+                            {contact.email}
+                          </div>
+                        </td>
+                      )}
+                      {visibleColumns.includes('dob') && <td className="px-6 py-5 font-medium">{contact.dob}</td>}
+                      {visibleColumns.includes('gender') && <td className="px-6 py-5"><span className="px-2 py-0.5 bg-slate-100 rounded-full text-[10px] font-bold uppercase">{contact.gender}</span></td>}
+                      {visibleColumns.includes('companyId') && <td className="px-6 py-5 text-slate-600 font-bold">{contact.companyId}</td>}
+                      {visibleColumns.includes('designation') && <td className="px-6 py-5 font-bold text-indigo-600 italic">{contact.designation}</td>}
+                      {visibleColumns.includes('country') && <td className="px-6 py-5 text-slate-600 font-medium">{contact.country}</td>}
+                      {visibleColumns.includes('region') && <td className="px-6 py-5 text-slate-600 uppercase tracking-tighter font-black">{contact.region}</td>}
+                      {visibleColumns.includes('city') && <td className="px-6 py-5 font-bold">{contact.city}</td>}
+
+                      <td className="px-6 py-5 text-center sticky right-0 bg-white/95 backdrop-blur-sm group-hover:bg-indigo-50/40 transition-all border-l border-slate-50">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleEdit(contact)}
+                            className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white hover:scale-105 transition-all shadow-sm font-bold text-xs"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(contact._id)}
+                            className="p-2 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white hover:scale-105 transition-all shadow-sm border border-rose-100"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )))
+                }
               </tbody>
             </table>
           </div>
@@ -326,126 +323,6 @@ export default function ContactList() {
                 Apply
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add/Edit Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsModalOpen(false)} />
-
-          <div className="relative bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white">
-            <div className="p-8 border-b border-slate-50 bg-slate-50/30">
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight italic uppercase">
-                  {editingContact ? 'Edit Contact' : 'New Contact'}
-                </h2>
-                <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
-                  <X className="w-5 h-5 text-slate-600" />
-                </button>
-              </div>
-              <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.2em]">Contact Records Management</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-8 space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">First Name</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Last Name</label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Phone</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Gender</label>
-                  <select
-                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    value={formData.gender}
-                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                  >
-                    <option>Male</option>
-                    <option>Female</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Email</label>
-                <input
-                  type="email"
-                  required
-                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Designation</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    value={formData.designation}
-                    onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Status</label>
-                  <select
-                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  >
-                    <option>Active</option>
-                    <option>Inactive</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="pt-6 flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95 border border-slate-200"
-                >
-                  Discard
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:shadow-indigo-200 hover:translate-y-[-2px] transition-all active:scale-95"
-                >
-                  Confirm
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

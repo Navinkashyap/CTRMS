@@ -14,18 +14,18 @@ import {
   Layers,
   FileText,
   PieChart,
-
   Search,
   ChevronRight,
   Settings,
-  Command
+  Command,
+  LogOut,
+  Bell
 } from "lucide-react";
 
 // --- Configuration ---
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/", sub: [] },
-
   {
     label: "Add Admin",
     icon: User,
@@ -34,7 +34,6 @@ const navItems = [
       { label: "Add Admin", to: "/add-admin" },
     ],
   },
-
   {
     label: "Master",
     icon: Database,
@@ -54,6 +53,7 @@ const navItems = [
       { label: "Deadline", to: "/master/deadline" },
       { label: "Domain", to: "/master/type" },
       { label: "Membership", to: "/master/membership" },
+      { label: "Department", to: "/master/department" },
     ],
   },
   {
@@ -61,7 +61,6 @@ const navItems = [
     icon: Shield,
     to: null,
     sub: [
-
       { label: "Manage Role", to: "/roles/manage-role" },
       { label: "Action", to: "/roles/action" },
       { label: "Role Action Mapping", to: "/roles/role-action-mapping" },
@@ -97,7 +96,6 @@ const navItems = [
     sub: [],
   },
   { label: "Report", icon: PieChart, to: "/report", sub: [] },
-
 ];
 
 // --- Helpers ---
@@ -118,7 +116,6 @@ const Sidebar = ({ isCollapsed = false }) => {
   const location = useLocation();
   const [openMenus, setOpenMenus] = useState(() => getActiveParentMenus(location.pathname));
 
-  // Automatically open parent menu if a child is active
   useEffect(() => {
     const autoOpenMenus = getActiveParentMenus(location.pathname);
     if (Object.keys(autoOpenMenus).length > 0) {
@@ -130,138 +127,122 @@ const Sidebar = ({ isCollapsed = false }) => {
     setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
   };
 
-  const menuItems = useMemo(() => navItems.filter((item) => item.to !== "/logout"), []);
-  const logoutItem = useMemo(() => navItems.find((item) => item.to === "/logout"), []);
+  const menuItems = useMemo(() => navItems, []);
 
   return (
-    <aside className={`sticky top-0 h-screen flex flex-col flex-shrink-0 border-r border-white/5 bg-slate-950/90 backdrop-blur-2xl text-slate-300 selection:bg-indigo-500/30 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isCollapsed ? "w-[80px]" : "w-[240px]"} shadow-[4px_0_24px_-12px_rgba(0,0,0,0.5)]`}>
+    <aside className={`sticky top-0 h-screen flex flex-col flex-shrink-0 border-r border-white/5 bg-[#0a0a0c]/95 backdrop-blur-3xl text-slate-400 selection:bg-indigo-500/30 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isCollapsed ? "w-[72px]" : "w-[240px]"} shadow-[10px_0_40px_-20px_rgba(0,0,0,0.7)] z-50`}>
 
-      {/* Dynamic Background Noise/Glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.05),transparent_50%)] pointer-events-none" />
+      {/* Premium Decorative Glows */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-40">
+        <div className="absolute -top-[10%] -left-[20%] w-[140%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-full" />
+        <div className="absolute top-[40%] -right-[30%] w-[100%] h-[30%] bg-purple-500/5 blur-[100px] rounded-full" />
+      </div>
 
-      {/* Top Header / Logo Area */}
-      <div className={`relative z-10 py-6 flex items-center justify-center ${isCollapsed ? "px-0" : "px-6"}`}>
+      {/* Header Section */}
+      <div className={`relative z-10 pt-8 pb-6 flex items-center ${isCollapsed ? "justify-center px-0" : "px-5"}`}>
         <NavLink
           to="/"
-          end
-          className={`group block overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl transition-all duration-500 hover:border-indigo-500/50 hover:shadow-indigo-500/20 active:scale-95 ${isCollapsed ? "p-1 w-12 h-12" : "p-1.5 w-full h-14"}`}
-          aria-label="Go to Dashboard"
+          className={`group relative flex items-center gap-3 overflow-hidden transition-all duration-500 ${isCollapsed ? "w-12 h-12 justify-center" : "w-full"}`}
         >
-          <img
-            src={brandLogo}
-            alt="Perfectrans logo"
-            className="w-full h-full object-contain rounded-xl bg-[#e2e2e4] group-hover:scale-110 transition-transform duration-700 ease-out"
-          />
+          <div className={`relative flex items-center justify-center shrink-0 bg-white p-1 rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all duration-500 group-hover:shadow-[0_0_25px_rgba(99,102,241,0.3)] ${isCollapsed ? "w-10 h-10" : "w-10 h-10"}`}>
+            <img
+              src={brandLogo}
+              alt="Logo"
+              className="w-full h-full object-contain rounded-xl transition-transform duration-700 group-hover:scale-110"
+            />
+            <div className="absolute inset-0 rounded-2xl border border-white/20 group-hover:border-indigo-500/50 transition-colors" />
+          </div>
+
+          {!isCollapsed && (
+            <div className="flex flex-col">
+              <span className="text-base font-black tracking-tight text-white leading-tight">PERFECTRANS</span>
+              <span className="text-[9px] font-bold text-indigo-400/80 tracking-[0.2em] uppercase">Enterprise</span>
+            </div>
+          )}
         </NavLink>
       </div>
 
-      {/* Main Navigation */}
-      <nav className="relative z-10 flex-1 px-4 pt-2 pb-6 overflow-y-auto overflow-x-hidden sidebar-scrollbar custom-scrollbar">
-
-        {/* Premium Search Bar */}
-        <div className="relative mb-8 px-1">
-          {isCollapsed ? (
-            <button
-              type="button"
-              className="w-full flex justify-center py-3 rounded-xl bg-white/5 border border-white/5 text-slate-600 hover:text-white hover:bg-white/10 hover:border-white/10 transition-all duration-300 group"
-              title="Search modules"
-            >
-              <Search size={20} className="transition-transform group-hover:rotate-12" />
-            </button>
-          ) : (
-            <div className="relative group">
-              <input
-                type="text"
-                placeholder="Search modules..."
-                className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/5 rounded-xl text-sm font-medium text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:bg-white/10 focus:border-indigo-500/30 transition-all duration-300"
-              />
-              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-40 group-focus-within:opacity-100 transition-opacity">
-                <Command size={10} className="text-slate-600" />
-                <span className="text-[10px] font-bold text-slate-600">K</span>
-              </div>
+      {/* Search Section */}
+      <div className={`relative z-10 mb-6 ${isCollapsed ? "px-3" : "px-5"}`}>
+        {isCollapsed ? (
+          <button className="w-full h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-slate-500 hover:text-white hover:bg-white/10 transition-all duration-300">
+            <Search size={16} />
+          </button>
+        ) : (
+          <div className="relative group">
+            <input
+              type="text"
+              placeholder="Search..."
+              className="w-full h-10 pl-10 pr-4 bg-white/[0.03] border border-white/5 rounded-xl text-sm font-medium text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:bg-white/[0.07] focus:border-indigo-500/30 transition-all duration-300"
+            />
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-indigo-400 transition-colors" />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-focus-within:opacity-100 transition-opacity">
+              <Command size={10} className="text-slate-600" />
+              <span className="text-[8px] font-bold text-slate-600">K</span>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
 
+      {/* Navigation Menu */}
+      <nav className="relative z-10 flex-1 px-3 space-y-1 overflow-y-auto custom-scrollbar">
         {!isCollapsed && (
-          <div className="text-[10px] font-black tracking-[0.2em] text-slate-600 uppercase mb-4 px-4 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/50 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
-            Main Architecture
+          <div className="px-4 mb-3">
+            <span className="text-[10px] font-black text-slate-600 tracking-[0.25em] uppercase">Management</span>
           </div>
         )}
 
-        <div className="space-y-1.5">
-          {menuItems.map(({ label, icon: Icon, to, sub }) => {
-            const hasSub = sub.length > 0;
-            const childIsActive = hasSub
-              ? sub.some((subItem) => location.pathname.startsWith(subItem.to))
-              : false;
-            const isOpen = Boolean(openMenus[label]);
+        {menuItems.map(({ label, icon: Icon, to, sub }) => {
+          const hasSub = sub.length > 0;
+          const childIsActive = hasSub ? sub.some((s) => location.pathname.startsWith(s.to)) : false;
+          const isActive = to ? (to === "/" ? location.pathname === "/" : location.pathname.startsWith(to)) : false;
+          const isOpen = Boolean(openMenus[label]);
+          const isHighlighted = isActive || childIsActive || (hasSub && isOpen);
 
-            // Render Submenu Parent
-            if (hasSub) {
-              const submenuId = toSubmenuId(label);
-              const isActiveParent = isOpen || childIsActive;
-
-              return (
-                <div key={label} className="flex flex-col relative group/parent">
+          return (
+            <div key={label} className="relative group/nav-item">
+              {hasSub ? (
+                <>
                   <button
-                    type="button"
                     onClick={() => !isCollapsed && toggle(label)}
-                    aria-expanded={isOpen}
-                    aria-controls={submenuId}
-                    title={isCollapsed ? label : undefined}
-                    className={`group relative w-full flex items-center ${isCollapsed ? "justify-center gap-0 py-3.5 px-0" : "gap-3.5 px-4 py-3"} rounded-xl text-[14px] font-semibold transition-all duration-300 outline-none
-                      ${isActiveParent
-                        ? "text-white bg-indigo-600/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
-                        : "text-slate-600 hover:bg-white/5 hover:text-slate-100"
+                    className={`w-full flex items-center gap-3.5 ${isCollapsed ? "justify-center px-0 h-12" : "px-4 h-12"} rounded-xl transition-all duration-300 group ${isHighlighted
+                      ? "text-white bg-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
+                      : "text-slate-500 hover:text-slate-200 hover:bg-white/[0.02]"
                       }`}
                   >
-                    {isActiveParent && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-indigo-500 shadow-[2px_0_12px_rgba(99,102,241,0.8)]" />
-                    )}
-                    {React.createElement(Icon, {
-                      size: 20,
-                      className: `transition-all duration-300 ${isActiveParent ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300 group-hover:scale-110"}`,
-                    })}
+                    <div className={`relative flex items-center justify-center shrink-0 ${isHighlighted ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"}`}>
+                      <Icon size={20} className={`transition-transform duration-500 ${isHighlighted ? "scale-110" : "group-hover:scale-110"}`} />
+                      {isHighlighted && <div className="absolute -inset-1.5 bg-indigo-500/20 blur-md rounded-full -z-10 animate-pulse" />}
+                    </div>
+
                     {!isCollapsed && (
                       <>
-                        <span className="flex-1 text-left tracking-wide">{label}</span>
-                        <ChevronRight
-                          size={16}
-                          className={`transition-all duration-500 ${isOpen ? "rotate-90 text-indigo-400" : "text-slate-600 group-hover:text-slate-600"}`}
-                        />
+                        <span className="flex-1 text-[14px] font-semibold text-left tracking-wide">{label}</span>
+                        <ChevronRight size={14} className={`transition-transform duration-500 ${isOpen ? "rotate-90 text-indigo-400" : "text-slate-600"}`} />
                       </>
                     )}
                   </button>
 
                   {!isCollapsed && (
-                    <div
-                      id={submenuId}
-                      className={`grid transition-[grid-template-rows,opacity] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
-                    >
+                    <div className={`grid transition-[grid-template-rows,opacity,margin] duration-500 ease-in-out ${isOpen ? "grid-rows-[1fr] opacity-100 mt-1" : "grid-rows-[0fr] opacity-0 mt-0"}`}>
                       <div className="overflow-hidden">
-                        <div className="relative ml-8 pl-4 py-2 mt-1 space-y-1 border-l-2 border-slate-800/50">
+                        <div className="ml-6 pl-4 border-l border-white/5 space-y-0.5">
                           {sub.map((subItem) => (
                             <NavLink
                               key={subItem.label}
                               to={subItem.to}
-                              end
-                              className={({ isActive }) =>
-                                `group flex items-center gap-3.5 py-2.5 px-4 rounded-lg text-[13px] font-medium transition-all duration-300 outline-none
-                                  ${isActive
-                                  ? "text-white bg-indigo-500/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-                                  : "text-slate-500 hover:text-slate-200 hover:bg-white/5"
-                                }`
-                              }
+                              className={({ isActive: isSubActive }) => `
+                                flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-300
+                                ${isSubActive
+                                  ? "text-white bg-indigo-500/10"
+                                  : "text-slate-500 hover:text-slate-300 hover:translate-x-1"
+                                }
+                              `}
                             >
-                              {({ isActive }) => (
+                              {({ isActive: isSubActive }) => (
                                 <>
-                                  <span
-                                    className={`shrink-0 h-1.5 w-1.5 rounded-full transition-all duration-500 ${isActive ? "bg-indigo-400 scale-125 shadow-[0_0_10px_rgba(99,102,241,0.8)]" : "bg-slate-700 group-hover:bg-slate-500 group-hover:scale-110"}`}
-                                  />
-                                  <span className="tracking-tight">{subItem.label}</span>
+                                  <div className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${isSubActive ? "bg-indigo-400 shadow-[0_0_8px_rgba(99,102,241,0.6)] scale-125" : "bg-slate-700"}`} />
+                                  <span>{subItem.label}</span>
                                 </>
                               )}
                             </NavLink>
@@ -272,114 +253,132 @@ const Sidebar = ({ isCollapsed = false }) => {
                   )}
 
                   {isCollapsed && (
-                    <div className="absolute left-full top-0 invisible opacity-0 -translate-x-4 group-hover/parent:translate-x-0 group-hover/parent:visible group-hover/parent:opacity-100 transition-all duration-500 min-w-[220px] z-[100] bg-[#0c111d] border border-white/5 rounded-2xl shadow-[24px_0_48px_-12px_rgba(0,0,0,0.6)] p-3 ml-4 pointer-events-none group-hover/parent:pointer-events-auto backdrop-blur-3xl">
-                      <div className="text-[11px] font-black tracking-[0.2em] text-indigo-400/80 uppercase mb-3 px-4 pt-2 pb-2 border-b border-white/5">
-                        {label}
-                      </div>
-                      <div className="space-y-1">
+                    <div className="absolute left-full top-0 ml-3 invisible opacity-0 -translate-x-2 group-hover/nav-item:visible group-hover/nav-item:opacity-100 group-hover/nav-item:translate-x-0 transition-all duration-300 z-50">
+                      <div className="min-w-[200px] bg-[#0c0c0e] border border-white/10 rounded-2xl p-2 shadow-2xl backdrop-blur-xl">
+                        <div className="px-3 py-2 border-b border-white/5 mb-1">
+                          <span className="text-[10px] font-black text-indigo-400 tracking-wider uppercase">{label}</span>
+                        </div>
                         {sub.map((subItem) => (
                           <NavLink
                             key={subItem.label}
                             to={subItem.to}
-                            end
-                            className={({ isActive }) =>
-                              `group flex items-center px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-300 outline-none
-                                ${isActive
-                                ? "text-white bg-indigo-600/20"
-                                : "text-slate-600 hover:text-white hover:bg-white/10"
-                              }`
-                            }
+                            className={({ isActive: isSubActive }) => `
+                              block px-3 py-2 rounded-lg text-[13px] font-medium transition-all
+                              ${isSubActive ? "text-white bg-indigo-500/20" : "text-slate-400 hover:text-white hover:bg-white/5"}
+                            `}
                           >
-                            <span className="truncate">{subItem.label}</span>
+                            {subItem.label}
                           </NavLink>
                         ))}
                       </div>
                     </div>
                   )}
-                </div>
-              );
-            }
-
-            // Render Standard Link
-            return (
-              <NavLink
-                key={label}
-                to={to}
-                end={to === "/"}
-                style={({ isActive }) => ({ transitionDelay: '50ms' })}
-                title={isCollapsed ? label : undefined}
-                className={({ isActive }) =>
-                  `group relative flex items-center ${isCollapsed ? "justify-center gap-0 py-3.5 px-0" : "gap-3.5 px-4 py-3"} rounded-xl text-[14px] font-semibold transition-all duration-300 outline-none
-                    ${isActive
-                    ? "text-white bg-indigo-600/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] font-bold"
-                    : "text-slate-600 hover:bg-white/5 hover:text-slate-100"
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    {isActive && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-indigo-500 shadow-[2px_0_12px_rgba(99,102,241,0.8)]" />
-                    )}
-                    {React.createElement(Icon, {
-                      size: 20,
-                      className: `transition-all duration-300 ${isActive ? "text-indigo-400 scale-110" : "text-slate-500 group-hover:text-slate-300 group-hover:scale-110 group-hover:rotate-3"}`,
-                    })}
-                    {!isCollapsed && <span className="tracking-wide">{label}</span>}
-                  </>
-                )}
-              </NavLink>
-            );
-          })}
-        </div>
+                </>
+              ) : (
+                <NavLink
+                  to={to}
+                  end={to === "/"}
+                  className={({ isActive: isNavActive }) => `
+                    flex items-center gap-3.5 ${isCollapsed ? "justify-center px-0 h-12" : "px-4 h-12"} rounded-xl transition-all duration-300 group
+                    ${isNavActive
+                      ? "text-white bg-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
+                      : "text-slate-500 hover:text-slate-200 hover:bg-white/[0.02]"
+                    }
+                  `}
+                >
+                  {({ isActive: isNavActive }) => (
+                    <>
+                      <div className={`relative flex items-center justify-center shrink-0 ${isNavActive ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"}`}>
+                        <Icon size={20} className={`transition-transform duration-500 ${isNavActive ? "scale-110" : "group-hover:scale-110 group-hover:rotate-3"}`} />
+                        {isNavActive && (
+                          <>
+                            <div className="absolute -inset-1.5 bg-indigo-500/20 blur-md rounded-full -z-10 animate-pulse" />
+                            <div className="absolute -left-4 w-1 h-6 bg-indigo-500 rounded-r-full shadow-[2px_0_10px_rgba(99,102,241,0.5)]" />
+                          </>
+                        )}
+                      </div>
+                      {!isCollapsed && <span className="text-[14px] font-semibold tracking-wide">{label}</span>}
+                      {isCollapsed && (
+                        <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-indigo-600 text-white text-[12px] font-bold rounded-lg invisible opacity-0 -translate-x-2 group-hover:visible group-hover:opacity-100 group-hover:translate-x-0 transition-all whitespace-nowrap z-50">
+                          {label}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              )}
+            </div>
+          );
+        })}
       </nav>
 
-      {/* Premium Footer Area */}
-      <div className={`relative z-10 pb-8 pt-6 border-t border-white/5 space-y-4 bg-transparent ${isCollapsed ? "flex flex-col items-center px-2" : "px-4"}`}>
-
-
-        {/* User Card */}
-        <div className={`mt-2 rounded-2xl border border-white/5 bg-white/[0.03] backdrop-blur-xl flex items-center hover:bg-white/[0.08] hover:border-white/10 transition-all duration-500 group cursor-pointer ${isCollapsed ? "p-2 justify-center" : "p-3 gap-4 shadow-xl shadow-black/20"}`}>
-          <div className="relative shrink-0 scale-90 group-hover:scale-100 transition-transform duration-500">
-            <div className="absolute inset-0 bg-indigo-500/20 blur-lg rounded-full animate-pulse" />
-            <img
-              src="https://api.dicebear.com/7.x/notionists/svg?seed=Jane&backgroundColor=transparent"
-              alt="User"
-              className="relative w-11 h-8 rounded-2xl bg-slate-800 border border-white/10 p-0.5 object-cover"
-            />
-            <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-4 border-slate-900 shadow-lg" />
+      {/* Footer / Profile Section */}
+      <div className={`relative z-6 border-t border-white/5 pt-3 pb-4 ${isCollapsed ? "px-3" : "px-4"}`}>
+        {!isCollapsed && (
+          <div className="flex items-center justify-between mb-4 px-1">
+            <button className="relative p-2 text-slate-500 hover:text-white transition-colors group">
+              <Bell size={18} />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-indigo-500 rounded-full border-2 border-[#0a0a0c]" />
+            </button>
+            <button className="p-2 text-slate-500 hover:text-white transition-colors">
+              <Settings size={18} className="hover:rotate-45 transition-transform duration-500" />
+            </button>
+            <button className="p-2 text-red-500/70 hover:text-red-400 transition-colors">
+              <LogOut size={18} />
+            </button>
           </div>
+        )}
+
+        <div className={`group relative flex items-center ${isCollapsed ? "justify-center" : "gap-4 p-3 bg-white/[0.03] rounded-2xl border border-white/5 hover:bg-white/[0.06] transition-all duration-500 cursor-pointer shadow-lg hover:shadow-indigo-500/5 hover:border-indigo-500/20"}`}>
+          <div className="relative shrink-0">
+            <div className="w-11 h-11 rounded-xl bg-slate-800 border border-white/10 p-0.5 overflow-hidden transition-transform duration-500 group-hover:scale-105">
+              <img
+                src="https://api.dicebear.com/7.x/notionists/svg?seed=Jane&backgroundColor=transparent"
+                alt="Avatar"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-[3px] border-[#0a0a0c] rounded-full" />
+          </div>
+
           {!isCollapsed && (
-            <>
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-bold text-slate-100 truncate tracking-tight">Jane Doe</p>
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <Shield size={10} className="text-indigo-400 group-hover:animate-bounce" />
-                  <p className="text-[11px] text-slate-500 truncate font-semibold uppercase tracking-tighter">Chief Admin</p>
-                </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-bold text-white truncate">PYUSH</p>
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-tighter">Super Admin</p>
+            </div>
+          )}
+
+          {isCollapsed && (
+            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-[#0c0c0e] border border-white/10 rounded-xl p-3 shadow-2xl invisible opacity-0 -translate-x-2 group-hover:visible group-hover:opacity-100 group-hover:translate-x-0 transition-all z-50 min-w-[140px]">
+              <p className="text-[13px] font-bold text-white">PYUSH</p>
+              <p className="text-[10px] font-medium text-slate-500 uppercase">Super Admin</p>
+              <div className="mt-2 pt-2 border-t border-white/5 flex gap-2">
+                <Settings size={14} className="text-slate-500 hover:text-white cursor-pointer" />
+                <LogOut size={14} className="text-red-500/70 hover:text-red-400 cursor-pointer" />
               </div>
-              <button
-                type="button"
-                className="h-9 w-9 flex items-center justify-center rounded-xl text-slate-500 hover:text-white hover:bg-indigo-600 transition-all duration-300 shadow-sm"
-                aria-label="Account Settings"
-              >
-                <Settings size={18} className="group-hover:rotate-90 transition-transform duration-700" />
-              </button>
-            </>
+            </div>
           )}
         </div>
       </div>
 
       <style>{`
-        .sidebar-scrollbar::-webkit-scrollbar { width: 4px; }
-        .sidebar-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .sidebar-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 20px; transition: all 0.5s; }
-        .sidebar-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.4); }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(99, 102, 241, 0.3);
+        }
         
-        @keyframes float {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-5px); }
-          100% { transform: translateY(0px); }
+        @keyframes pulse-subtle {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 0.7; }
         }
       `}</style>
     </aside>
@@ -387,3 +386,4 @@ const Sidebar = ({ isCollapsed = false }) => {
 };
 
 export default Sidebar;
+

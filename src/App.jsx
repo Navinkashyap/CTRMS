@@ -14,6 +14,7 @@ import Quality from "./pages/Quality";
 import Deadline from "./pages/Deadline";
 import Typelist from "./pages/Typelist";
 import Membership from "./pages/Membership";
+import Department from "./pages/Department";
 import RoleAction from "./pages/RoleAction";
 import Action from "./pages/Action";
 import MangerRole from "./pages/MangerRole";
@@ -29,6 +30,7 @@ import Evaluation from "./pages/Evaluation";
 import AddAdmin from "./pages/AddAdmin";
 import AddClient from "./pages/AddClient";
 import ViewClient from "./pages/ViewClient";
+import AddContact from "./pages/AddContact";
 
 // Generic placeholder for other pages
 const PagePlaceholder = ({ title, icon }) => (
@@ -105,6 +107,7 @@ const App = () => {
           <Route path="master/deadline" element={<Deadline />} />
           <Route path="master/type" element={<Typelist />} />
           <Route path="master/membership" element={<Membership />} />
+          <Route path="master/department" element={<Department />} />
 
           <Route path="roles/manage-role" element={<MangerRole />} />
 
@@ -121,6 +124,7 @@ const App = () => {
           <Route path="clients/add-client" element={<AddClient />} />
           <Route path="clients/view-client" element={<ViewClient />} />
           <Route path="contacts" element={<ContactList />} />
+          <Route path="contacts/add-contact" element={<AddContact />} />
           <Route path="projects" element={<ProjectsList />} />
           <Route path="invoice" element={<InvoiceList />} />
           <Route path="report" element={<PagePlaceholder title="Analytics & Reports" icon="fa-chart-pie" />} />
