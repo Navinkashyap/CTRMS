@@ -1,8 +1,21 @@
 import express from "express";
+import multer from "multer";
+import path from "path";
 
 import Client from "../models/Client.js";
 
 const router = express.Router();
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (_req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+const upload = multer({ storage });
+
 
 const formatClient = (client) => ({
   _id: client._id,
@@ -21,6 +34,7 @@ const formatClient = (client) => ({
     ? new Date(client.registrationDate).toISOString().split("T")[0]
     : "",
   createdBy: client.createdBy,
+  documents: client.documents || [],
   createdAt: client.createdAt,
   updatedAt: client.updatedAt,
 });
@@ -68,18 +82,50 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", upload.array("documents"), async (req, res, next) => {
   try {
-    const client = await Client.create(req.body);
+    const clientData = { ...req.body };
+    if (req.files && req.files.length > 0) {
+      clientData.documents = req.files.map((file) => ({
+        name: file.originalname,
+        url: `/uploads/${file.filename}`,
+      }));
+    }
+    const client = await Client.create(clientData);
     res.status(201).json(formatClient(client));
   } catch (error) {
     next(error);
   }
 });
 
-router.put("/:id", async (req, res, next) => {
+router.put("/:id", upload.array("documents"), async (req, res, next) => {
   try {
-    const client = await Client.findByIdAndUpdate(req.params.id, req.body, {
+    const clientData = { ...req.body };
+    
+    // If the request body sends existing documents as string (e.g. JSON.stringify)
+    if (typeof clientData.existingDocuments === 'string') {
+      try {
+        clientData.documents = JSON.parse(clientData.existingDocuments);
+      } catch (e) {
+        clientData.documents = [];
+      }
+      delete clientData.existingDocuments;
+    } else if (Array.isArray(clientData.existingDocuments)) {
+      clientData.documents = clientData.existingDocuments;
+      delete clientData.existingDocuments;
+    } else {
+      clientData.documents = [];
+    }
+
+    if (req.files && req.files.length > 0) {
+      const newDocs = req.files.map((file) => ({
+        name: file.originalname,
+        url: `/uploads/${file.filename}`,
+      }));
+      clientData.documents = [...clientData.documents, ...newDocs];
+    }
+
+    const client = await Client.findByIdAndUpdate(req.params.id, clientData, {
       new: true,
       runValidators: true,
     });

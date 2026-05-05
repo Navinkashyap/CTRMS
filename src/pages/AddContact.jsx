@@ -15,10 +15,12 @@ import {
   CheckCircle2,
   CircleAlert,
   Building,
-  Loader2
+  Loader2,
+  MessageSquare,
 } from 'lucide-react';
 import { getDepartments } from '../lib/departmentApi';
 import { createContact, updateContact } from '../lib/contactApi';
+import { getClients } from '../lib/clientApi';
 
 export default function AddContact() {
   const navigate = useNavigate();
@@ -27,6 +29,7 @@ export default function AddContact() {
   const isEditMode = Boolean(editingContact);
 
   const [formData, setFormData] = useState({
+    salutation: 'Mr.',
     firstName: '',
     lastName: '',
     phone: '',
@@ -35,29 +38,33 @@ export default function AddContact() {
     designation: '',
     status: 'Active',
     dob: '',
-    gender: 'Male',
-    country: 'India',
-    city: '',
     department: '',
-    countryCode: '+91'
+    countryCode: '+91',
+    isWhatsapp: false,
+    remark: ''
   });
 
   const [departments, setDepartments] = useState([]);
+  const [clients, setClients] = useState([]);
 
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const fetchDeps = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getDepartments();
-        setDepartments(data);
+        const [depsData, clientsData] = await Promise.all([
+          getDepartments(),
+          getClients()
+        ]);
+        setDepartments(depsData);
+        setClients(clientsData);
       } catch (err) {
-        console.error("Failed to fetch departments", err);
+        console.error("Failed to fetch data", err);
       }
     };
-    fetchDeps();
+    fetchData();
 
     if (isEditMode) {
       setFormData(editingContact);
@@ -136,19 +143,33 @@ export default function AddContact() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* First Name */}
+              {/* Salutation + First Name */}
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">First Name</label>
-                <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                  <input
-                    type="text"
-                    required
-                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    placeholder="Enter first name"
-                    value={formData.firstName}
-                    onChange={(e) => updateField('firstName', e.target.value)}
-                  />
+                <div className="relative group flex gap-2">
+                  <div className="relative w-[30%]">
+                    <select
+                      className="w-full px-3 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
+                      value={formData.salutation}
+                      onChange={(e) => updateField('salutation', e.target.value)}
+                    >
+                      <option value="Mr.">Mr.</option>
+                      <option value="Ms.">Ms.</option>
+                      <option value="Mrs.">Mrs.</option>
+                      <option value="Dr.">Dr.</option>
+                    </select>
+                  </div>
+                  <div className="relative flex-1">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                    <input
+                      type="text"
+                      required
+                      className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                      placeholder="Enter first name"
+                      value={formData.firstName}
+                      onChange={(e) => updateField('firstName', e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -170,40 +191,32 @@ export default function AddContact() {
 
               {/* Phone */}
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Phone Number</label>
+                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1 flex justify-between items-center">
+                  <span>Phone Number</span>
+                  <label className="flex items-center gap-1.5 cursor-pointer text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
+                      checked={formData.isWhatsapp}
+                      onChange={(e) => updateField('isWhatsapp', e.target.checked)}
+                    />
+                    <span className="text-[9px] font-bold">WhatsApp</span>
+                  </label>
+                </label>
                 <div className="relative group flex gap-2">
-                  <div className="relative w-1/3">
+                  <div className="relative w-[30%]">
                     <select
-                      className="w-full px-3 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
+                      className="w-full px-2 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
                       value={formData.countryCode}
                       onChange={(e) => updateField('countryCode', e.target.value)}
                     >
                       <option value="+91">+91 (IN)</option>
-                      <option value="+1">+1 (US)</option>
+                      <option value="+1">+1 (US/CA)</option>
                       <option value="+44">+44 (UK)</option>
-                      <option value="+971">+971 (UAE)</option>
+                      <option value="+971">+971 (AE)</option>
                       <option value="+61">+61 (AU)</option>
-                      <option value="+1">+1 (CA)</option>
                       <option value="+49">+49 (DE)</option>
                       <option value="+33">+33 (FR)</option>
-                      <option value="+81">+81 (JP)</option>
-                      <option value="+86">+86 (CN)</option>
-                      <option value="+65">+65 (SG)</option>
-                      <option value="+7">+7 (RU)</option>
-                      <option value="+55">+55 (BR)</option>
-                      <option value="+27">+27 (ZA)</option>
-                      <option value="+34">+34 (ES)</option>
-                      <option value="+39">+39 (IT)</option>
-                      <option value="+82">+82 (KR)</option>
-                      <option value="+60">+60 (MY)</option>
-                      <option value="+66">+66 (TH)</option>
-                      <option value="+62">+62 (ID)</option>
-                      <option value="+63">+63 (PH)</option>
-                      <option value="+84">+84 (VN)</option>
-                      <option value="+92">+92 (PK)</option>
-                      <option value="+880">+880 (BD)</option>
-                      <option value="+94">+94 (LK)</option>
-                      <option value="+977">+977 (NP)</option>
                     </select>
                   </div>
                   <div className="relative flex-1">
@@ -240,13 +253,16 @@ export default function AddContact() {
                 <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Company</label>
                 <div className="relative group">
                   <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                  <input
-                    type="text"
-                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    placeholder="Enter company name"
+                  <select
+                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
                     value={formData.company}
                     onChange={(e) => updateField('company', e.target.value)}
-                  />
+                  >
+                    <option value="" disabled>Select Client</option>
+                    {clients.map(client => (
+                      <option key={client._id} value={client.name}>{client.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -264,61 +280,24 @@ export default function AddContact() {
                   />
                 </div>
               </div>
+            </div>
 
-              {/* Gender */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {/* Department */}
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Gender</label>
-                <select
-                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
-                  value={formData.gender}
-                  onChange={(e) => updateField('gender', e.target.value)}
-                >
-                  <option>Male</option>
-                  <option>Female</option>
-                  <option>Other</option>
-                </select>
-              </div>
-
-              {/* Status */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Status</label>
-                <select
-                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
-                  value={formData.status}
-                  onChange={(e) => updateField('status', e.target.value)}
-                >
-                  <option>Active</option>
-                  <option>Inactive</option>
-                </select>
-              </div>
-
-              {/* Country */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Country</label>
+                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Department</label>
                 <div className="relative group">
-                  <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                  <input
-                    type="text"
-                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    placeholder="Enter country"
-                    value={formData.country}
-                    onChange={(e) => updateField('country', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* City */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">City</label>
-                <div className="relative group">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                  <input
-                    type="text"
-                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    placeholder="Enter city"
-                    value={formData.city}
-                    onChange={(e) => updateField('city', e.target.value)}
-                  />
+                  <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <select
+                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
+                    value={formData.department}
+                    onChange={(e) => updateField('department', e.target.value)}
+                  >
+                    <option value="" disabled>Select Department</option>
+                    {departments.map(dept => (
+                      <option key={dept._id} value={dept.name}>{dept.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -336,21 +315,32 @@ export default function AddContact() {
                 </div>
               </div>
 
-              {/* Department Dropdown */}
+              {/* Status */}
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Department</label>
+                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Status</label>
+                <select
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
+                  value={formData.status}
+                  onChange={(e) => updateField('status', e.target.value)}
+                >
+                  <option>Active</option>
+                  <option>Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-8">
+              {/* Remark */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Remark</label>
                 <div className="relative group">
-                  <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-                  <select
-                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
-                    value={formData.department}
-                    onChange={(e) => updateField('department', e.target.value)}
-                  >
-                    <option value="" disabled>Select Department</option>
-                    {departments.map(dept => (
-                      <option key={dept._id} value={dept.name}>{dept.name}</option>
-                    ))}
-                  </select>
+                  <MessageSquare className="absolute left-4 top-4 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                  <textarea
+                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none min-h-[100px]"
+                    placeholder="Enter remarks..."
+                    value={formData.remark}
+                    onChange={(e) => updateField('remark', e.target.value)}
+                  ></textarea>
                 </div>
               </div>
             </div>

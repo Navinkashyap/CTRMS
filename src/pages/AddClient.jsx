@@ -15,6 +15,9 @@ import {
   MapPin,
   Phone,
   Save,
+  UploadCloud,
+  FileText,
+  X,
 } from 'lucide-react';
 
 import { createClient, getNextMembershipCode, updateClient } from '../lib/clientApi';
@@ -76,6 +79,7 @@ const normalizeClientForForm = (client) => {
     registrationDate: client?.registrationDate
       ? new Date(client.registrationDate).toISOString().split('T')[0]
       : getInitialFormData().registrationDate,
+    existingDocuments: client?.documents || [],
   };
 };
 
@@ -90,6 +94,7 @@ export default function AddClient() {
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState([]);
 
   const [domains, setDomains] = useState([]);
   const [memberships, setMemberships] = useState([]);
@@ -248,6 +253,23 @@ export default function AddClient() {
     }
   };
 
+  const handleFileChange = (e) => {
+    if (e.target.files) {
+      setSelectedFiles(prev => [...prev, ...Array.from(e.target.files)]);
+    }
+  };
+
+  const removeSelectedFile = (index) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingDocument = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      existingDocuments: prev.existingDocuments.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -256,29 +278,40 @@ export default function AddClient() {
     setSuccessMessage('');
 
     try {
-      const payload = {
-        domain: formData.domain.trim(),
-        status: formData.status,
-        membership: formData.membership,
-        membershipCode: formData.membershipCode.trim(),
-        name: formData.name.trim(),
-        website: formData.website.trim(),
-        email: formData.email ? formData.email.trim() : formData.email,
-        phone: formData.phone.trim() ? `${formData.countryCode} ${formData.phone.trim()}` : '',
-        address: formData.address.trim(),
-        city: formData.city.trim(),
-        state: formData.state ? formData.state.trim() : '',
-        zip: formData.zip ? formData.zip.trim() : '',
-        country: formData.country.trim(),
-        currency: formData.currency,
-        registrationDate: formData.registrationDate,
-        createdBy: formData.createdBy || 'System Admin',
-      };
+      const formDataToSend = new FormData();
+      
+      formDataToSend.append('domain', formData.domain.trim());
+      formDataToSend.append('status', formData.status);
+      formDataToSend.append('membership', formData.membership || '');
+      formDataToSend.append('membershipCode', formData.membershipCode.trim());
+      formDataToSend.append('name', formData.name.trim());
+      formDataToSend.append('website', formData.website.trim());
+      if (formData.email) formDataToSend.append('email', formData.email.trim());
+      
+      const formattedPhone = formData.phone.trim() ? `${formData.countryCode} ${formData.phone.trim()}` : '';
+      formDataToSend.append('phone', formattedPhone);
+      
+      formDataToSend.append('address', formData.address.trim());
+      formDataToSend.append('city', formData.city.trim());
+      if (formData.state) formDataToSend.append('state', formData.state.trim());
+      if (formData.zip) formDataToSend.append('zip', formData.zip.trim());
+      formDataToSend.append('country', formData.country.trim());
+      formDataToSend.append('currency', formData.currency);
+      formDataToSend.append('registrationDate', formData.registrationDate);
+      formDataToSend.append('createdBy', formData.createdBy || 'System Admin');
 
       if (isEditMode) {
-        await updateClient(editingClient._id, payload);
+        formDataToSend.append('existingDocuments', JSON.stringify(formData.existingDocuments || []));
+      }
+
+      selectedFiles.forEach(file => {
+        formDataToSend.append('documents', file);
+      });
+
+      if (isEditMode) {
+        await updateClient(editingClient._id, formDataToSend);
       } else {
-        await createClient(payload);
+        await createClient(formDataToSend);
       }
 
       setSuccessMessage(isEditMode ? 'Client updated successfully.' : 'Client created successfully.');
@@ -565,6 +598,66 @@ export default function AddClient() {
                       <option value="INR">INR (Rs.)</option>
                     </select>
                   </div>
+                </div>
+              </div>
+              
+              {/* Row 6: Document Upload */}
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Documents</label>
+                <div className="flex flex-col gap-4">
+                  <div className="relative border-2 border-dashed border-slate-200 rounded-2xl p-8 hover:bg-slate-50 transition-colors group cursor-pointer">
+                    <input
+                      type="file"
+                      multiple
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      onChange={handleFileChange}
+                    />
+                    <div className="flex flex-col items-center justify-center text-slate-500 group-hover:text-indigo-500 transition-colors">
+                      <UploadCloud className="w-8 h-8 mb-3" />
+                      <p className="text-sm font-bold">Click to upload or drag and drop</p>
+                      <p className="text-xs font-medium text-slate-400 mt-1">PDF, DOCX, JPG, PNG up to 10MB each</p>
+                    </div>
+                  </div>
+
+                  {((formData.existingDocuments && formData.existingDocuments.length > 0) || selectedFiles.length > 0) && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
+                      {formData.existingDocuments && formData.existingDocuments.map((doc, idx) => (
+                        <div key={`existing-${idx}`} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                          <div className="flex items-center gap-3 overflow-hidden">
+                            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
+                              <FileText className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-bold text-slate-700 truncate">{doc.name}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeExistingDocument(idx)}
+                            className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                      
+                      {selectedFiles.map((file, idx) => (
+                        <div key={`new-${idx}`} className="flex items-center justify-between p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl">
+                          <div className="flex items-center gap-3 overflow-hidden">
+                            <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg shrink-0">
+                              <FileText className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-bold text-slate-700 truncate">{file.name}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeSelectedFile(idx)}
+                            className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

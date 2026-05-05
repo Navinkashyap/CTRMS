@@ -78,6 +78,12 @@ const clientSchema = new mongoose.Schema(
       trim: true,
       default: "System Admin",
     },
+    documents: [
+      {
+        name: { type: String, required: true },
+        url: { type: String, required: true },
+      },
+    ],
   },
   {
     timestamps: true,
