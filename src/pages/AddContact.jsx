@@ -101,7 +101,7 @@ export default function AddContact() {
   return (
     <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
       <div className="max-w-[1000px] mx-auto space-y-8">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/60 shadow-sm">
           <div className="flex items-center gap-4">
@@ -126,7 +126,7 @@ export default function AddContact() {
         {/* Form Card */}
         <div className="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden relative">
           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 via-blue-500 to-indigo-600"></div>
-          
+
           <form onSubmit={handleSubmit} className="p-8 lg:p-12 space-y-8">
             {successMessage && (
               <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-2xl animate-in slide-in-from-top-2">
@@ -194,8 +194,8 @@ export default function AddContact() {
                 <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1 flex justify-between items-center">
                   <span>Phone Number</span>
                   <label className="flex items-center gap-1.5 cursor-pointer text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-3 h-3 cursor-pointer"
                       checked={formData.isWhatsapp}
                       onChange={(e) => updateField('isWhatsapp', e.target.checked)}
@@ -250,7 +250,7 @@ export default function AddContact() {
 
               {/* Company */}
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Company</label>
+                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Client</label>
                 <div className="relative group">
                   <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                   <select

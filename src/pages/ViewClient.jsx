@@ -1,5 +1,5 @@
-import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   Building2,
   ChevronLeft,
@@ -13,22 +13,64 @@ import {
   User,
   Map,
   Flag,
-  Briefcase
+  Briefcase,
+  Paperclip,
+  FileText,
+  LoaderCircle,
+  AlertCircle
 } from 'lucide-react';
+import { getClient as fetchClientById } from '../lib/clientApi';
 
 export default function ViewClient() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const location = useLocation();
-  const client = location.state?.client;
+  const [client, setClient] = useState(location.state?.client || null);
+  const [loading, setLoading] = useState(!client);
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    if (!client && id) {
+      const loadClient = async () => {
+        try {
+          setLoading(true);
+          const data = await fetchClientById(id);
+          setClient(data);
+        } catch (err) {
+          setError(err.response?.data?.message || 'Failed to load client details.');
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadClient();
+    }
+  }, [id, client]);
 
-  if (!client) {
+  const getFileUrl = (url) => {
+    const backendUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : 'http://localhost:5000';
+    return `${backendUrl}${url}`;
+  };
+
+  if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <LoaderCircle className="w-12 h-12 text-indigo-500 animate-spin" />
+        <p className="text-slate-500 font-medium animate-pulse">Loading client profile...</p>
+      </div>
+    );
+  }
+
+  if (error || !client) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 bg-white rounded-3xl border border-slate-100 shadow-sm mx-auto max-w-md mt-10">
+        <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mb-4">
+          <AlertCircle className="w-8 h-8 text-rose-500" />
+        </div>
         <h2 className="text-2xl font-bold text-slate-800 mb-2">Client Not Found</h2>
-        <p className="text-slate-500 mb-6">We couldn't find the details for this client.</p>
+        <p className="text-slate-500 mb-8">{error || "We couldn't find the details for this client."}</p>
         <button
           onClick={() => navigate('/clients')}
-          className="px-6 py-2 bg-indigo-600 text-white rounded-xl shadow hover:bg-indigo-700 transition"
+          className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition active:scale-95"
         >
           Back to Client List
         </button>
@@ -65,12 +107,12 @@ export default function ViewClient() {
                 {client.name}
                 <span
                   className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${['Active', 'Client'].includes(client.status)
-                      ? 'text-emerald-700 bg-emerald-50 border border-emerald-200'
-                      : ['Onboarding', 'Prospect Warm'].includes(client.status)
-                        ? 'text-amber-700 bg-amber-50 border border-amber-200'
-                        : client.status === 'Prospect Cold'
-                          ? 'text-blue-700 bg-blue-50 border border-blue-200'
-                          : 'text-slate-600 bg-slate-100 border border-slate-200'
+                    ? 'text-emerald-700 bg-emerald-50 border border-emerald-200'
+                    : ['Onboarding', 'Prospect Warm'].includes(client.status)
+                      ? 'text-amber-700 bg-amber-50 border border-amber-200'
+                      : client.status === 'Prospect Cold'
+                        ? 'text-blue-700 bg-blue-50 border border-blue-200'
+                        : 'text-slate-600 bg-slate-100 border border-slate-200'
                     }`}
                 >
                   {client.status}
@@ -92,7 +134,7 @@ export default function ViewClient() {
         {/* Details Grid */}
         <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden">
           <div className="p-6 sm:p-8 space-y-8">
-            
+
             {/* Section 1: Primary Info */}
             <div>
               <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -101,7 +143,7 @@ export default function ViewClient() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <DetailItem icon={Building2} label="Company Name" value={client.name} />
-                <DetailItem icon={Award} label="Membership Code" value={client.membershipCode} />
+                <DetailItem icon={Award} label="Membership Code" value={client.membershipCode?.replace('MEM-', '')} />
                 <DetailItem icon={Globe} label="Domain" value={client.domain} />
                 <DetailItem icon={Award} label="Membership Type" value={client.membership} />
                 <DetailItem icon={Calendar} label="Registration Date" value={client.registrationDate} />
@@ -161,7 +203,49 @@ export default function ViewClient() {
                 <DetailItem icon={CircleDollarSign} label="Preferred Currency" value={client.currency} />
               </div>
             </div>
-            
+
+            <hr className="border-slate-100" />
+
+            {/* Section 5: Documents */}
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <Paperclip className="w-5 h-5 text-indigo-500" />
+                Uploaded Documents
+              </h3>
+              {client.documents && client.documents.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {client.documents.map((doc, i) => (
+                    <a
+                      key={i}
+                      href={getFileUrl(doc.url)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 hover:bg-white border border-transparent hover:border-indigo-100 hover:shadow-md transition-all group"
+                    >
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-50 group-hover:bg-indigo-100 flex items-center justify-center shrink-0 transition-colors">
+                          <FileText className="w-5 h-5 text-indigo-500" />
+                        </div>
+                        <div className="overflow-hidden">
+                          <p className="font-semibold text-slate-800 text-sm truncate" title={doc.name}>
+                            {doc.name}
+                          </p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            Click to view
+                          </p>
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 bg-slate-50/30 rounded-3xl border border-dashed border-slate-200">
+                  <Paperclip className="w-8 h-8 text-slate-200 mb-2" />
+                  <p className="text-sm font-medium text-slate-400 italic">No documents uploaded for this client.</p>
+                </div>
+              )}
+            </div>
+
           </div>
         </div>
       </div>

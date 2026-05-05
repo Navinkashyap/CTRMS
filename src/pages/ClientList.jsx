@@ -11,9 +11,11 @@ import {
   Eye,
   Filter,
   LoaderCircle,
+  MoreVertical,
   Search,
   Settings,
   UserPlus,
+  Users,
   X,
   Paperclip,
 } from 'lucide-react';
@@ -42,9 +44,9 @@ export default function ClientList() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [openActionId, setOpenActionId] = useState(null);
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const [visibleColumns, setVisibleColumns] = useState(['domain', 'status', 'membership', 'name', 'website', 'email', 'phone', 'city', 'country', 'registrationDate', 'documents']);
   const [tempVisibleColumns, setTempVisibleColumns] = useState(visibleColumns);
@@ -54,9 +56,7 @@ export default function ClientList() {
     return `${backendUrl}${url}`;
   };
 
-  const defaultFilters = { status: 'All', country: 'All', currency: 'All' };
-  const [filters, setFilters] = useState(defaultFilters);
-  const [tempFilters, setTempFilters] = useState(defaultFilters);
+
 
   useEffect(() => {
     const loadClients = async () => {
@@ -76,34 +76,24 @@ export default function ClientList() {
     loadClients();
   }, []);
 
-  const uniqueStatuses = useMemo(() => {
-    const predefined = ['Client', 'Prospect Warm', 'Prospect Cold'];
-    const existing = clients.map((client) => client.status).filter(Boolean);
-    return ['All', ...new Set([...predefined, ...existing])];
-  }, [clients]);
-  const uniqueCountries = useMemo(() => ['All', ...new Set(clients.map((client) => client.country).filter(Boolean))], [clients]);
-  const uniqueCurrencies = useMemo(() => ['All', ...new Set(clients.map((client) => client.currency).filter(Boolean))], [clients]);
+
 
   const filteredClients = clients.filter((client) => {
     const query = searchQuery.toLowerCase();
-    const matchesSearch =
+    return (
       (client.name || '').toLowerCase().includes(query) ||
-      (client.domain || '').toLowerCase().includes(query);
-    const matchesStatus = filters.status === 'All' || client.status === filters.status;
-    const matchesCountry = filters.country === 'All' || client.country === filters.country;
-    const matchesCurrency = filters.currency === 'All' || client.currency === filters.currency;
-
-    return matchesSearch && matchesStatus && matchesCountry && matchesCurrency;
+      (client.domain || '').toLowerCase().includes(query)
+    );
   });
 
-  const activeFilterCount = Object.values(filters).filter((value) => value !== 'All').length;
+
 
   const handleEdit = (client) => {
-    navigate('/clients/add-client', { state: { client } });
+    navigate('add-client', { state: { client } });
   };
 
   const handleAdd = () => {
-    navigate('/clients/add-client');
+    navigate('add-client');
   };
 
   const toggleColumnSelection = (colId) => {
@@ -117,16 +107,7 @@ export default function ClientList() {
     setIsSettingsModalOpen(false);
   };
 
-  const applyFilters = () => {
-    setFilters(tempFilters);
-    setIsFilterOpen(false);
-  };
 
-  const resetFilters = () => {
-    setTempFilters(defaultFilters);
-    setFilters(defaultFilters);
-    setIsFilterOpen(false);
-  };
 
   return (
     <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8 animate-in fade-in duration-700">
@@ -155,23 +136,7 @@ export default function ClientList() {
             </div>
 
             <div className="flex items-center gap-3 w-full md:w-auto">
-              <button
-                onClick={() => {
-                  setTempFilters(filters);
-                  setIsFilterOpen(true);
-                }}
-                className={`relative p-2.5 border rounded-2xl transition-all flex items-center justify-center ${activeFilterCount > 0
-                    ? 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
-                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                  }`}
-              >
-                <Filter className="w-5 h-5" />
-                {activeFilterCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center bg-indigo-600 text-white text-[9px] font-bold rounded-full ring-2 ring-white">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
+
 
               <button
                 onClick={() => {
@@ -242,9 +207,8 @@ export default function ClientList() {
                   <tr>
                     <td colSpan={visibleColumns.length + 2} className="px-8 py-16 text-center">
                       <div className="flex flex-col items-center justify-center text-slate-600 space-y-3">
-                        <Filter className="w-12 h-12 text-slate-200" />
-                        <p className="font-medium text-slate-500">No clients match your filters.</p>
-                        <button onClick={resetFilters} className="text-indigo-600 font-bold hover:underline">Clear Filters</button>
+                        <Search className="w-12 h-12 text-slate-200" />
+                        <p className="font-medium text-slate-500">No clients found matching your search.</p>
                       </div>
                     </td>
                   </tr>
@@ -254,7 +218,7 @@ export default function ClientList() {
                   <tr key={client._id} className="group hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4">
                       <span className="text-slate-400 font-medium text-sm">
-                        {client.membershipCode || '-'}
+                        {client.membershipCode?.replace('MEM-', '') || '-'}
                       </span>
                     </td>
                     {visibleColumns.includes('domain') && (
@@ -262,12 +226,12 @@ export default function ClientList() {
                         <div className="flex items-center gap-2">
                           <div
                             className={`w-1.5 h-1.5 rounded-full ${['Active', 'Client'].includes(client.status)
-                                ? 'bg-indigo-500'
-                                : ['Onboarding', 'Prospect Warm'].includes(client.status)
-                                  ? 'bg-amber-400'
-                                  : client.status === 'Prospect Cold'
-                                    ? 'bg-blue-400'
-                                    : 'bg-slate-300'
+                              ? 'bg-indigo-500'
+                              : ['Onboarding', 'Prospect Warm'].includes(client.status)
+                                ? 'bg-amber-400'
+                                : client.status === 'Prospect Cold'
+                                  ? 'bg-blue-400'
+                                  : 'bg-slate-300'
                               }`}
                           />
                           <span className="font-medium text-slate-700">
@@ -280,12 +244,12 @@ export default function ClientList() {
                       <td className="px-6 py-4">
                         <span
                           className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${['Active', 'Client'].includes(client.status)
-                              ? 'text-emerald-700 bg-emerald-50 border border-emerald-200/60'
-                              : ['Onboarding', 'Prospect Warm'].includes(client.status)
-                                ? 'text-amber-700 bg-amber-50 border border-amber-200/60'
-                                : client.status === 'Prospect Cold'
-                                  ? 'text-blue-700 bg-blue-50 border border-blue-200/60'
-                                  : 'text-slate-600 bg-slate-50 border border-slate-200'
+                            ? 'text-emerald-700 bg-emerald-50 border border-emerald-200/60'
+                            : ['Onboarding', 'Prospect Warm'].includes(client.status)
+                              ? 'text-amber-700 bg-amber-50 border border-amber-200/60'
+                              : client.status === 'Prospect Cold'
+                                ? 'text-blue-700 bg-blue-50 border border-blue-200/60'
+                                : 'text-slate-600 bg-slate-50 border border-slate-200'
                             }`}
                         >
                           {client.status}
@@ -340,6 +304,7 @@ export default function ClientList() {
                         </div>
                       </td>
                     )}
+
                     {visibleColumns.includes('documents') && (
                       <td className="px-6 py-4">
                         {client.documents && client.documents.length > 0 ? (
@@ -364,22 +329,67 @@ export default function ClientList() {
                         )}
                       </td>
                     )}
-                    <td className="px-6 py-4 text-center sticky right-0 bg-white group-hover:bg-slate-50/50 transition-colors border-l border-slate-50">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="px-6 py-4 text-center sticky right-0 bg-white group-hover:bg-slate-50/50 transition-colors border-l border-slate-50 z-10">
+                      <div className="relative flex justify-center">
                         <button
-                          onClick={() => navigate('/clients/view-client', { state: { client } })}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg hover:border-indigo-600 hover:text-indigo-600 transition-all font-medium text-xs shadow-sm"
+                          onClick={() => setOpenActionId(openActionId === client._id ? null : client._id)}
+                          className={`p-2 rounded-xl transition-all ${openActionId === client._id
+                            ? 'bg-indigo-50 text-indigo-600 shadow-inner'
+                            : 'hover:bg-slate-100 text-slate-400 hover:text-slate-600'
+                            }`}
                         >
-                          <Eye className="w-3.5 h-3.5" />
-                          View
+                          <MoreVertical className="w-5 h-5" />
                         </button>
-                        <button
-                          onClick={() => handleEdit(client)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg hover:border-indigo-600 hover:text-indigo-600 transition-all font-medium text-xs shadow-sm"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                          Edit
-                        </button>
+
+                        {openActionId === client._id && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-20"
+                              onClick={() => setOpenActionId(null)}
+                            />
+                            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100 py-2 z-30 animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200">
+                              <div className="px-4 py-1.5 mb-1 border-b border-slate-50">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Actions</p>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setOpenActionId(null);
+                                  navigate(`view-client/${client._id}`);
+                                }}
+                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all group"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-slate-50 group-hover:bg-white flex items-center justify-center transition-colors">
+                                  <Eye className="w-4 h-4" />
+                                </div>
+                                View Details
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setOpenActionId(null);
+                                  navigate('/contacts', { state: { clientName: client.name } });
+                                }}
+                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all group"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-slate-50 group-hover:bg-white flex items-center justify-center transition-colors">
+                                  <Users className="w-4 h-4" />
+                                </div>
+                                View Contacts
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setOpenActionId(null);
+                                  handleEdit(client);
+                                }}
+                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all group"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-slate-50 group-hover:bg-white flex items-center justify-center transition-colors">
+                                  <Edit3 className="w-4 h-4" />
+                                </div>
+                                Edit Client
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -406,88 +416,7 @@ export default function ClientList() {
         </div>
       </div>
 
-      {isFilterOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsFilterOpen(false)} />
 
-          <div className="relative bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white">
-            <div className="bg-[#1a1c31] px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-indigo-400" />
-                <h2 className="text-white text-lg font-bold tracking-tight">Filter Clients</h2>
-              </div>
-              <button onClick={() => setIsFilterOpen(false)} className="text-slate-600 hover:text-white transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-5 max-h-[60vh] overflow-y-auto">
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Status</label>
-                <div className="relative">
-                  <select
-                    value={tempFilters.status}
-                    onChange={(e) => setTempFilters({ ...tempFilters, status: e.target.value })}
-                    className="w-full pl-4 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none transition-all cursor-pointer"
-                  >
-                    {uniqueStatuses.map((status) => (
-                      <option key={status} value={status}>{status}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Country</label>
-                <div className="relative">
-                  <select
-                    value={tempFilters.country}
-                    onChange={(e) => setTempFilters({ ...tempFilters, country: e.target.value })}
-                    className="w-full pl-4 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none transition-all cursor-pointer"
-                  >
-                    {uniqueCountries.map((country) => (
-                      <option key={country} value={country}>{country}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Currency</label>
-                <div className="relative">
-                  <select
-                    value={tempFilters.currency}
-                    onChange={(e) => setTempFilters({ ...tempFilters, currency: e.target.value })}
-                    className="w-full pl-4 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 appearance-none transition-all cursor-pointer"
-                  >
-                    {uniqueCurrencies.map((currency) => (
-                      <option key={currency} value={currency}>{currency}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6 pt-4 border-t border-slate-100 flex gap-3 bg-slate-50/50">
-              <button
-                onClick={resetFilters}
-                className="flex-1 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-bold text-sm transition-all active:scale-95 shadow-sm"
-              >
-                Reset
-              </button>
-              <button
-                onClick={applyFilters}
-                className="flex-[2] py-3 bg-[#3382c4] hover:bg-[#286ba3] text-white rounded-xl font-bold text-sm transition-all active:scale-95 shadow-lg shadow-blue-500/10"
-              >
-                Apply Filters
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {isSettingsModalOpen && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">

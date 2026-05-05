@@ -120,9 +120,11 @@ const App = () => {
           <Route path="vendors/add-vendor" element={<AddVendor />} />
           <Route path="vendors/manage-vendors" element={<VendorList />} />
           <Route path="vendors/evaluation" element={<Evaluation />} />
-          <Route path="clients" element={<ClientList />} />
-          <Route path="clients/add-client" element={<AddClient />} />
-          <Route path="clients/view-client" element={<ViewClient />} />
+          <Route path="clients">
+            <Route index element={<ClientList />} />
+            <Route path="add-client" element={<AddClient />} />
+            <Route path="view-client/:id" element={<ViewClient />} />
+          </Route>
           <Route path="contacts" element={<ContactList />} />
           <Route path="contacts/add-contact" element={<AddContact />} />
           <Route path="projects" element={<ProjectsList />} />

@@ -9,6 +9,11 @@ export const getClients = async () => {
   return response.data;
 };
 
+export const getClient = async (id) => {
+  const response = await api.get(`/clients/${id}`);
+  return response.data;
+};
+
 export const getNextMembershipCode = async () => {
   const response = await api.get('/clients/next-membership-code');
   return response.data.membershipCode;

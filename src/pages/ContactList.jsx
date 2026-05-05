@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   UserCircle,
   Search,
@@ -55,9 +55,10 @@ const allColumns = [
 
 export default function ContactList() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [contacts, setContacts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(location.state?.clientName || '');
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -209,7 +210,7 @@ export default function ContactList() {
                   filteredContacts.map((contact, idx) => (
                     <tr key={contact._id} className="group hover:bg-indigo-50/20 transition-all duration-200">
                       {visibleColumns.includes('clientId') && <td className="px-6 py-5 font-bold">{contact.clientId}</td>}
-                      {visibleColumns.includes('clientCode') && <td className="px-6 py-5 font-mono text-[11px] bg-slate-50 rounded px-1">{contact.clientCode}</td>}
+                      {visibleColumns.includes('clientCode') && <td className="px-6 py-5 font-mono text-[11px] bg-slate-50 rounded px-1">{contact.clientCode?.replace('MEM-', '')}</td>}
                       {visibleColumns.includes('fullName') && (
                         <td className="px-6 py-5 font-extrabold text-slate-900 capitalize">
                           {contact.firstName} {contact.lastName}
