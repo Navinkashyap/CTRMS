@@ -12,6 +12,11 @@ const clientSchema = new mongoose.Schema(
       enum: ["Active", "Inactive", "Onboarding", "Client", "Prospect Warm", "Prospect Cold"],
       default: "Active",
     },
+    membership: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     membershipCode: {
       type: String,
       required: [true, "Membership code is required"],

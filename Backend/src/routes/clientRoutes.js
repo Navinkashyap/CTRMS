@@ -1,14 +1,19 @@
 import express from "express";
 import multer from "multer";
 import path from "path";
+import { fileURLToPath } from "url";
 
 import Client from "../models/Client.js";
 
 const router = express.Router();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const uploadDir = path.join(__dirname, "../../uploads");
+
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    cb(null, "uploads/");
+    cb(null, uploadDir);
   },
   filename: (_req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
@@ -21,6 +26,7 @@ const formatClient = (client) => ({
   _id: client._id,
   domain: client.domain,
   status: client.status,
+  membership: client.membership,
   membershipCode: client.membershipCode,
   name: client.name,
   website: client.website,
@@ -28,6 +34,8 @@ const formatClient = (client) => ({
   phone: client.phone,
   address: client.address,
   city: client.city,
+  state: client.state,
+  zip: client.zip,
   country: client.country,
   currency: client.currency,
   registrationDate: client.registrationDate
