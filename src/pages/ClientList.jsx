@@ -17,7 +17,6 @@ import {
   UserPlus,
   Users,
   X,
-  Paperclip,
 } from 'lucide-react';
 
 import { getClients } from '../lib/clientApi';
@@ -35,7 +34,6 @@ const allColumns = [
   { id: 'registrationDate', label: 'Date of Registration' },
   { id: 'currency', label: 'Currency' },
   { id: 'createdBy', label: 'Added By' },
-  { id: 'documents', label: 'Documents' },
 ];
 
 export default function ClientList() {
@@ -48,13 +46,10 @@ export default function ClientList() {
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
-  const [visibleColumns, setVisibleColumns] = useState(['domain', 'status', 'membership', 'name', 'website', 'email', 'phone', 'city', 'country', 'registrationDate', 'documents']);
+  const [visibleColumns, setVisibleColumns] = useState(['domain', 'status', 'membership', 'name', 'website', 'email', 'phone', 'city', 'country', 'registrationDate']);
   const [tempVisibleColumns, setTempVisibleColumns] = useState(visibleColumns);
 
-  const getFileUrl = (url) => {
-    const backendUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : 'http://localhost:5000';
-    return `${backendUrl}${url}`;
-  };
+
 
 
 
@@ -187,7 +182,6 @@ export default function ClientList() {
                   {visibleColumns.includes('currency') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Currency</th>}
                   {visibleColumns.includes('registrationDate') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Date of Registration</th>}
                   {visibleColumns.includes('createdBy') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Added By</th>}
-                  {visibleColumns.includes('documents') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Documents</th>}
                   <th className="px-6 py-4 font-semibold text-slate-500 text-xs text-center sticky right-0 bg-slate-50/80">Action</th>
                 </tr>
               </thead>
@@ -305,30 +299,6 @@ export default function ClientList() {
                       </td>
                     )}
 
-                    {visibleColumns.includes('documents') && (
-                      <td className="px-6 py-4">
-                        {client.documents && client.documents.length > 0 ? (
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {client.documents.map((doc, i) => (
-                              <a
-                                key={i}
-                                href={getFileUrl(doc.url)}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition-colors whitespace-nowrap border border-indigo-100"
-                                title={doc.name}
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <Paperclip className="w-3.5 h-3.5" />
-                                <span className="truncate max-w-[80px]">{doc.name}</span>
-                              </a>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-slate-400 text-xs">-</span>
-                        )}
-                      </td>
-                    )}
                     <td className="px-6 py-4 text-center sticky right-0 bg-white group-hover:bg-slate-50/50 transition-colors border-l border-slate-50 z-10">
                       <div className="relative flex justify-center">
                         <button

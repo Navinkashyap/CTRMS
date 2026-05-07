@@ -30,11 +30,12 @@ export default function ViewClient() {
   const [error, setError] = useState(null);
   
   useEffect(() => {
-    if (!client && id) {
+    if (id) {
       const loadClient = async () => {
         try {
           setLoading(true);
           const data = await fetchClientById(id);
+          console.log('Fetched client data:', data);
           setClient(data);
         } catch (err) {
           setError(err.response?.data?.message || 'Failed to load client details.');
@@ -44,7 +45,7 @@ export default function ViewClient() {
       };
       loadClient();
     }
-  }, [id, client]);
+  }, [id]);
 
   const getFileUrl = (url) => {
     const backendUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : 'http://localhost:5000';
@@ -159,7 +160,7 @@ export default function ViewClient() {
                 <Phone className="w-5 h-5 text-emerald-500" />
                 Contact Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <DetailItem icon={Mail} label="Email Address" value={client.email} />
                 <DetailItem icon={Phone} label="Phone Number" value={client.phone} />
                 <DetailItem icon={Globe} label="Website" value={
@@ -199,8 +200,10 @@ export default function ViewClient() {
                 <CircleDollarSign className="w-5 h-5 text-amber-500" />
                 Financial Information
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <DetailItem icon={CircleDollarSign} label="Preferred Currency" value={client.currency} />
+                <DetailItem icon={Award} label="GSTIN" value={client.gstIn} />
+                <DetailItem icon={Award} label="VAT Number" value={client.vat} />
               </div>
             </div>
 

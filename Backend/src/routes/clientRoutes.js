@@ -38,6 +38,8 @@ const formatClient = (client) => ({
   zip: client.zip,
   country: client.country,
   currency: client.currency,
+  gstIn: client.gstIn || "",
+  vat: client.vat || "",
   registrationDate: client.registrationDate
     ? new Date(client.registrationDate).toISOString().split("T")[0]
     : "",

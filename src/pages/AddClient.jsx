@@ -43,6 +43,8 @@ const getInitialFormData = () => ({
   zip: '',
   country: '',
   currency: 'USD',
+  gstIn: '',
+  vat: '',
   registrationDate: new Date().toISOString().split('T')[0],
   createdBy: 'System Admin',
 });
@@ -80,6 +82,8 @@ const normalizeClientForForm = (client) => {
       ? new Date(client.registrationDate).toISOString().split('T')[0]
       : getInitialFormData().registrationDate,
     existingDocuments: client?.documents || [],
+    gstIn: client?.gstIn || '',
+    vat: client?.vat || '',
   };
 };
 
@@ -297,6 +301,8 @@ export default function AddClient() {
       if (formData.zip) formDataToSend.append('zip', formData.zip.trim());
       formDataToSend.append('country', formData.country.trim());
       formDataToSend.append('currency', formData.currency);
+      formDataToSend.append('gstIn', formData.gstIn.trim());
+      formDataToSend.append('vat', formData.vat.trim());
       formDataToSend.append('registrationDate', formData.registrationDate);
       formDataToSend.append('createdBy', formData.createdBy || 'System Admin');
 
@@ -381,7 +387,7 @@ export default function AddClient() {
                 </div>
               </div>
 
-              {/* Row 2: Website | Phone | Email */}
+              {/* Row 2: Website | Email | Phone */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Website</label>
@@ -393,6 +399,20 @@ export default function AddClient() {
                       placeholder="https://..."
                       value={formData.website}
                       onChange={(e) => updateField('website', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Email <span className="text-red-500">*</span></label>
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                    <input
+                      type="email"
+                      required
+                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                      placeholder="Email"
+                      value={formData.email}
+                      onChange={(e) => updateField('email', e.target.value)}
                     />
                   </div>
                 </div>
@@ -429,24 +449,10 @@ export default function AddClient() {
                     </div>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Email <span className="text-red-500">*</span></label>
-                  <div className="relative group">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                    <input
-                      type="email"
-                      required
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                      placeholder="Email"
-                      value={formData.email}
-                      onChange={(e) => updateField('email', e.target.value)}
-                    />
-                  </div>
-                </div>
               </div>
 
               {/* Row 3: Address */}
-              <div className="space-y-2 md:max-w-2xl">
+              <div className="space-y-2 w-full">
                 <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Address</label>
                 <div className="relative group">
                   <MapPin className="absolute left-4 top-4 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
@@ -597,6 +603,30 @@ export default function AddClient() {
                       <option value="GBP">GBP</option>
                       <option value="INR">INR (Rs.)</option>
                     </select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">GSTIN</label>
+                  <div className="relative group">
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                      placeholder="GST Number"
+                      value={formData.gstIn}
+                      onChange={(e) => updateField('gstIn', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">VAT Number</label>
+                  <div className="relative group">
+                    <input
+                      type="text"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                      placeholder="VAT Number"
+                      value={formData.vat}
+                      onChange={(e) => updateField('vat', e.target.value)}
+                    />
                   </div>
                 </div>
               </div>

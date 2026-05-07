@@ -21,7 +21,9 @@ import {
   Calendar,
   Layers,
   Heart,
-  Loader2
+  Loader2,
+  MoreVertical,
+  Pencil
 } from 'lucide-react';
 import { getContacts, deleteContact } from '../lib/contactApi';
 
@@ -60,6 +62,14 @@ export default function ContactList() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(location.state?.clientName || '');
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [activeMenuId, setActiveMenuId] = useState(null);
+
+  // Close menu on click outside
+  useEffect(() => {
+    const handleClickOutside = () => setActiveMenuId(null);
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     fetchContacts();
@@ -243,20 +253,41 @@ export default function ContactList() {
                       {visibleColumns.includes('city') && <td className="px-6 py-5 font-bold">{contact.city}</td>}
 
                       <td className="px-6 py-5 text-center sticky right-0 bg-white/95 backdrop-blur-sm group-hover:bg-indigo-50/40 transition-all border-l border-slate-50">
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="relative flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
                           <button
-                            onClick={() => handleEdit(contact)}
-                            className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white hover:scale-105 transition-all shadow-sm font-bold text-xs"
+                            onClick={() => setActiveMenuId(activeMenuId === contact._id ? null : contact._id)}
+                            className={`p-2 rounded-xl transition-all duration-300 ${activeMenuId === contact._id ? 'bg-indigo-600 text-white shadow-lg' : 'hover:bg-indigo-50 text-slate-400 hover:text-indigo-600'}`}
                           >
-                            <Edit3 className="w-4 h-4" />
-                            Edit
+                            <MoreVertical className="w-5 h-5" />
                           </button>
-                          <button
-                            onClick={() => handleDelete(contact._id)}
-                            className="p-2 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white hover:scale-105 transition-all shadow-sm border border-rose-100"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+
+                          {activeMenuId === contact._id && (
+                            <div className="absolute right-full mr-2 top-0 w-40 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[100] animate-in slide-in-from-right-2 fade-in duration-200">
+                              <div className="p-1.5">
+                                <button
+                                  onClick={() => {
+                                    handleEdit(contact);
+                                    setActiveMenuId(null);
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors group/item"
+                                >
+                                  <Pencil className="w-4 h-4 text-slate-400 group-hover/item:text-indigo-600 transition-colors" />
+                                  Edit
+                                </button>
+                                <div className="h-px bg-slate-50 my-1" />
+                                <button
+                                  onClick={() => {
+                                    handleDelete(contact._id);
+                                    setActiveMenuId(null);
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors group/item"
+                                >
+                                  <Trash2 className="w-4 h-4 text-rose-300 group-hover/item:text-rose-600 transition-colors" />
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </td>
                     </tr>

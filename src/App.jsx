@@ -31,6 +31,7 @@ import AddAdmin from "./pages/AddAdmin";
 import AddClient from "./pages/AddClient";
 import ViewClient from "./pages/ViewClient";
 import AddContact from "./pages/AddContact";
+import AddProject from "./pages/AddProject";
 
 // Generic placeholder for other pages
 const PagePlaceholder = ({ title, icon }) => (
@@ -127,7 +128,10 @@ const App = () => {
           </Route>
           <Route path="contacts" element={<ContactList />} />
           <Route path="contacts/add-contact" element={<AddContact />} />
-          <Route path="projects" element={<ProjectsList />} />
+          <Route path="projects">
+            <Route index element={<ProjectsList />} />
+            <Route path="add-project" element={<AddProject />} />
+          </Route>
           <Route path="invoice" element={<InvoiceList />} />
           <Route path="report" element={<PagePlaceholder title="Analytics & Reports" icon="fa-chart-pie" />} />
           <Route path="logout" element={<PagePlaceholder title="Sign Out" icon="fa-arrow-right-from-bracket" />} />

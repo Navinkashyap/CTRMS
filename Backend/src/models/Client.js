@@ -74,6 +74,16 @@ const clientSchema = new mongoose.Schema(
       trim: true,
       default: "USD",
     },
+    gstIn: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    vat: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     registrationDate: {
       type: Date,
       default: Date.now,
