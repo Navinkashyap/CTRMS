@@ -135,18 +135,15 @@ export default function ProjectsList() {
       window.removeEventListener('click', handleClickOutside);
   }, []);
 
-  const filteredProjects = projects.filter(
-    (project) =>
-      project.projectName
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      project.client
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      project.service
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase())
-  );
+  const filteredProjects = React.useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    return projects.filter(
+      (project) =>
+        project.projectName.toLowerCase().includes(query) ||
+        project.client.toLowerCase().includes(query) ||
+        project.service.toLowerCase().includes(query)
+    );
+  }, [projects, searchQuery]);
 
   const handleDelete = (id) => {
     if (

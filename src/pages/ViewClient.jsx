@@ -28,7 +28,7 @@ export default function ViewClient() {
   const [client, setClient] = useState(location.state?.client || null);
   const [loading, setLoading] = useState(!client);
   const [error, setError] = useState(null);
-  
+
   useEffect(() => {
     if (id) {
       const loadClient = async () => {
@@ -144,9 +144,23 @@ export default function ViewClient() {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <DetailItem icon={Building2} label="Company Name" value={client.name} />
-                <DetailItem icon={Award} label="Membership Code" value={client.membershipCode?.replace('MEM-', '')} />
+                <DetailItem icon={Award} label="Client Code" value={client.membershipCode?.replace('CLI-', '')} />
                 <DetailItem icon={Globe} label="Domain" value={client.domain} />
-                <DetailItem icon={Award} label="Membership Type" value={client.membership} />
+                <DetailItem
+                  icon={Award}
+                  label="Membership"
+                  value={
+                    Array.isArray(client.membership) && client.membership.length > 0 ? (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {client.membership.map((m, i) => (
+                          <span key={i} className="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded text-[10px] font-bold">
+                            {m}
+                          </span>
+                        ))}
+                      </div>
+                    ) : client.membership || '-'
+                  }
+                />
                 <DetailItem icon={Calendar} label="Registration Date" value={client.registrationDate} />
                 <DetailItem icon={User} label="Created By" value={client.createdBy} />
               </div>

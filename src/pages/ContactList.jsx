@@ -39,11 +39,8 @@ const initialContacts = [
 ];
 
 const allColumns = [
-  { id: 'clientId', label: 'Client id' },
-  { id: 'clientCode', label: 'Client code' },
   { id: 'fullName', label: 'Full Name' },
   { id: 'countryCode', label: 'Country code' },
-  { id: 'isoCode', label: 'Iso code' },
   { id: 'phone', label: 'Phone no' },
   { id: 'email', label: 'Email' },
   { id: 'dob', label: 'Dob' },
@@ -101,12 +98,15 @@ export default function ContactList() {
   const [visibleColumns, setVisibleColumns] = useState(['fullName', 'phone', 'email', 'designation']);
   const [tempVisibleColumns, setTempVisibleColumns] = useState(visibleColumns);
 
-  const filteredContacts = contacts.filter(contact =>
-    (contact.firstName?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-    (contact.lastName?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-    (contact.email?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-    (contact.company?.toLowerCase() || '').includes(searchQuery.toLowerCase())
-  );
+  const filteredContacts = React.useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    return contacts.filter(contact =>
+      (contact.firstName?.toLowerCase() || '').includes(query) ||
+      (contact.lastName?.toLowerCase() || '').includes(query) ||
+      (contact.email?.toLowerCase() || '').includes(query) ||
+      (contact.company?.toLowerCase() || '').includes(query)
+    );
+  }, [contacts, searchQuery]);
 
   const handleEdit = (contact) => {
     navigate('/contacts/add-contact', { state: { contact } });
@@ -182,11 +182,8 @@ export default function ContactList() {
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-100">
                   
-                  {visibleColumns.includes('clientId') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Client Id</th>}
-                  {visibleColumns.includes('clientCode') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Client Code</th>}
                   {visibleColumns.includes('fullName') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Full Name</th>}
                   {visibleColumns.includes('countryCode') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Code</th>}
-                  {visibleColumns.includes('isoCode') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">ISO</th>}
                   {visibleColumns.includes('phone') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Phone No</th>}
                   {visibleColumns.includes('email') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">Email</th>}
                   {visibleColumns.includes('dob') && <th className="px-6 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px]">DOB</th>}
@@ -219,15 +216,12 @@ export default function ContactList() {
                 ) : (
                   filteredContacts.map((contact, idx) => (
                     <tr key={contact._id} className="group hover:bg-indigo-50/20 transition-all duration-200">
-                      {visibleColumns.includes('clientId') && <td className="px-6 py-5 font-bold">{contact.clientId}</td>}
-                      {visibleColumns.includes('clientCode') && <td className="px-6 py-5 font-mono text-[11px] bg-slate-50 rounded px-1">{contact.clientCode?.replace('MEM-', '')}</td>}
                       {visibleColumns.includes('fullName') && (
                         <td className="px-6 py-5 font-extrabold text-slate-900 capitalize">
                           {contact.firstName} {contact.lastName}
                         </td>
                       )}
                       {visibleColumns.includes('countryCode') && <td className="px-6 py-5 text-slate-500">{contact.countryCode}</td>}
-                      {visibleColumns.includes('isoCode') && <td className="px-6 py-5 font-mono text-indigo-600">{contact.isoCode}</td>}
                       {visibleColumns.includes('phone') && (
                         <td className="px-6 py-5">
                           <div className="flex items-center gap-2 text-slate-500 font-bold tabular-nums">

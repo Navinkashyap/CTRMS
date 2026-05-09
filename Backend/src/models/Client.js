@@ -13,9 +13,8 @@ const clientSchema = new mongoose.Schema(
       default: "Active",
     },
     membership: {
-      type: String,
-      trim: true,
-      default: "",
+      type: [String],
+      default: [],
     },
     membershipCode: {
       type: String,

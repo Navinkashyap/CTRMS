@@ -30,7 +30,7 @@ import { getCities, createCity } from '../lib/cityApi';
 const getInitialFormData = () => ({
   domain: '',
   status: 'Client',
-  membership: '',
+  membership: [],
   membershipCode: '',
   name: '',
   website: '',
@@ -75,7 +75,7 @@ const normalizeClientForForm = (client) => {
     ...client,
     countryCode,
     phone,
-    membership: client?.membership || '',
+    membership: Array.isArray(client?.membership) ? client.membership : client?.membership ? [client.membership] : [],
     state: client?.state || '',
     zip: client?.zip || '',
     registrationDate: client?.registrationDate
@@ -129,7 +129,7 @@ export default function AddClient() {
           setFormData(prev => ({
             ...prev,
             domain: typesData[0]?.type || '',
-            membership: membershipsData[0]?.name || '',
+            membership: membershipsData[0]?.name ? [membershipsData[0].name] : [],
           }));
         }
       } catch (error) {
@@ -286,7 +286,11 @@ export default function AddClient() {
       
       formDataToSend.append('domain', formData.domain.trim());
       formDataToSend.append('status', formData.status);
-      formDataToSend.append('membership', formData.membership || '');
+      if (Array.isArray(formData.membership)) {
+        formData.membership.forEach(m => formDataToSend.append('membership', m));
+      } else {
+        formDataToSend.append('membership', formData.membership || '');
+      }
       formDataToSend.append('membershipCode', formData.membershipCode.trim());
       formDataToSend.append('name', formData.name.trim());
       formDataToSend.append('website', formData.website.trim());
@@ -566,27 +570,39 @@ export default function AddClient() {
                     </select>
                   </div>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                   <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Membership</label>
-                  <div className="relative group">
-                    <Award className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                    <select
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                      value={formData.membership}
-                      onChange={(e) => updateField('membership', e.target.value)}
-                    >
-                      {loadingOptions ? (
-                        <option>Loading...</option>
-                      ) : memberships.length > 0 ? (
-                        memberships.map((m) => (
-                          <option key={m.id} value={m.name}>
-                            {m.name}
-                          </option>
-                        ))
-                      ) : (
-                        <option>No memberships found</option>
-                      )}
-                    </select>
+                  <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-3">
+                    {loadingOptions ? (
+                      <p className="text-xs text-slate-400 animate-pulse">Loading memberships...</p>
+                    ) : memberships.length > 0 ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {memberships.map((m) => (
+                          <label key={m.id || m._id} className="flex items-center gap-3 cursor-pointer group">
+                            <div className="relative flex items-center">
+                              <input
+                                type="checkbox"
+                                className="peer h-5 w-5 appearance-none rounded border-2 border-slate-200 checked:bg-indigo-600 checked:border-indigo-600 transition-all cursor-pointer"
+                                checked={formData.membership.includes(m.name)}
+                                onChange={(e) => {
+                                  const checked = e.target.checked;
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    membership: checked 
+                                      ? [...prev.membership, m.name]
+                                      : prev.membership.filter(name => name !== m.name)
+                                  }));
+                                }}
+                              />
+                              <CircleCheckBig className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-0.5" />
+                            </div>
+                            <span className="text-sm font-bold text-slate-600 group-hover:text-slate-900 transition-colors">{m.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400">No memberships found</p>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-2">

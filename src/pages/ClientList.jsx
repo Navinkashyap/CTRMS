@@ -51,6 +51,11 @@ export default function ClientList() {
 
 
 
+  useEffect(() => {
+    const handleClickOutside = () => setOpenActionId(null);
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, []);
 
 
   useEffect(() => {
@@ -73,13 +78,16 @@ export default function ClientList() {
 
 
 
-  const filteredClients = clients.filter((client) => {
+  const filteredClients = useMemo(() => {
     const query = searchQuery.toLowerCase();
-    return (
-      (client.name || '').toLowerCase().includes(query) ||
-      (client.domain || '').toLowerCase().includes(query)
-    );
-  });
+    return clients.filter((client) => {
+      return (
+        (client.name || '').toLowerCase().includes(query) ||
+        (client.domain || '').toLowerCase().includes(query) ||
+        (client.membershipCode || '').toLowerCase().includes(query)
+      );
+    });
+  }, [clients, searchQuery]);
 
 
 
@@ -182,7 +190,7 @@ export default function ClientList() {
                   {visibleColumns.includes('currency') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Currency</th>}
                   {visibleColumns.includes('registrationDate') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Date of Registration</th>}
                   {visibleColumns.includes('createdBy') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Added By</th>}
-                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs text-center sticky right-0 bg-slate-50/80">Action</th>
+                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs text-center sticky right-0 bg-slate-50 z-30 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] border-l border-slate-100">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100/80">
@@ -252,9 +260,19 @@ export default function ClientList() {
                     )}
                     {visibleColumns.includes('membership') && (
                       <td className="px-6 py-4">
-                        <span className="font-medium text-slate-700 bg-slate-100 border border-slate-200/60 px-2 py-0.5 rounded text-xs">
-                          {client.membership || 'PROZ'}
-                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {Array.isArray(client.membership) && client.membership.length > 0 ? (
+                            client.membership.map((m, i) => (
+                              <span key={i} className="font-medium text-slate-700 bg-slate-100 border border-slate-200/60 px-2 py-0.5 rounded text-[10px] whitespace-nowrap">
+                                {m}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="font-medium text-slate-700 bg-slate-100 border border-slate-200/60 px-2 py-0.5 rounded text-[10px]">
+                              {client.membership || 'PROZ'}
+                            </span>
+                          )}
+                        </div>
                       </td>
                     )}
                     {visibleColumns.includes('name') && (
@@ -299,8 +317,8 @@ export default function ClientList() {
                       </td>
                     )}
 
-                    <td className="px-6 py-4 text-center sticky right-0 bg-white group-hover:bg-slate-50/50 transition-colors border-l border-slate-50 z-10">
-                      <div className="relative flex justify-center">
+                    <td className={`px-6 py-4 text-center sticky right-0 bg-white group-hover:bg-slate-50 transition-colors border-l border-slate-100 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] ${openActionId === client._id ? 'z-40' : 'z-20'}`}>
+                      <div className="relative flex justify-center" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => setOpenActionId(openActionId === client._id ? null : client._id)}
                           className={`p-2 rounded-xl transition-all ${openActionId === client._id
@@ -312,53 +330,47 @@ export default function ClientList() {
                         </button>
 
                         {openActionId === client._id && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-20"
-                              onClick={() => setOpenActionId(null)}
-                            />
-                            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100 py-2 z-30 animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200">
-                              <div className="px-4 py-1.5 mb-1 border-b border-slate-50">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Actions</p>
-                              </div>
-                              <button
-                                onClick={() => {
-                                  setOpenActionId(null);
-                                  navigate(`view-client/${client._id}`);
-                                }}
-                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all group"
-                              >
-                                <div className="w-8 h-8 rounded-lg bg-slate-50 group-hover:bg-white flex items-center justify-center transition-colors">
-                                  <Eye className="w-4 h-4" />
-                                </div>
-                                View Details
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setOpenActionId(null);
-                                  navigate('/contacts', { state: { clientName: client.name } });
-                                }}
-                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all group"
-                              >
-                                <div className="w-8 h-8 rounded-lg bg-slate-50 group-hover:bg-white flex items-center justify-center transition-colors">
-                                  <Users className="w-4 h-4" />
-                                </div>
-                                View Contacts
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setOpenActionId(null);
-                                  handleEdit(client);
-                                }}
-                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all group"
-                              >
-                                <div className="w-8 h-8 rounded-lg bg-slate-50 group-hover:bg-white flex items-center justify-center transition-colors">
-                                  <Edit3 className="w-4 h-4" />
-                                </div>
-                                Edit Client
-                              </button>
+                          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100 py-2 z-30 animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200">
+                            <div className="px-4 py-1.5 mb-1 border-b border-slate-50">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Actions</p>
                             </div>
-                          </>
+                            <button
+                              onClick={() => {
+                                setOpenActionId(null);
+                                navigate(`view-client/${client._id}`);
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all group"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-slate-50 group-hover:bg-white flex items-center justify-center transition-colors">
+                                <Eye className="w-4 h-4" />
+                              </div>
+                              View Details
+                            </button>
+                            <button
+                              onClick={() => {
+                                setOpenActionId(null);
+                                navigate('/contacts', { state: { clientName: client.name } });
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all group"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-slate-50 group-hover:bg-white flex items-center justify-center transition-colors">
+                                <Users className="w-4 h-4" />
+                              </div>
+                              View Contacts
+                            </button>
+                            <button
+                              onClick={() => {
+                                setOpenActionId(null);
+                                handleEdit(client);
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all group"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-slate-50 group-hover:bg-white flex items-center justify-center transition-colors">
+                                <Edit3 className="w-4 h-4" />
+                              </div>
+                              Edit Client
+                            </button>
+                          </div>
                         )}
                       </div>
                     </td>
