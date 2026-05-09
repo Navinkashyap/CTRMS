@@ -21,3 +21,8 @@ export const deleteContact = async (id) => {
   const response = await axios.delete(`${API_BASE_URL}/${id}`);
   return response.data;
 };
+
+export const getContact = async (id) => {
+  const response = await axios.get(`${API_BASE_URL}/${id}`);
+  return response.data;
+};

@@ -31,6 +31,7 @@ import AddAdmin from "./pages/AddAdmin";
 import AddClient from "./pages/AddClient";
 import ViewClient from "./pages/ViewClient";
 import AddContact from "./pages/AddContact";
+import ViewContact from "./pages/ViewContact";
 import AddProject from "./pages/AddProject";
 
 // Generic placeholder for other pages
@@ -128,6 +129,7 @@ const App = () => {
           </Route>
           <Route path="contacts" element={<ContactList />} />
           <Route path="contacts/add-contact" element={<AddContact />} />
+          <Route path="contacts/view-contact/:id" element={<ViewContact />} />
           <Route path="projects">
             <Route index element={<ProjectsList />} />
             <Route path="add-project" element={<AddProject />} />

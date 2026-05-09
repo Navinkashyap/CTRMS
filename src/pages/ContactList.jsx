@@ -23,7 +23,10 @@ import {
   Heart,
   Loader2,
   MoreVertical,
-  Pencil
+  Pencil,
+  Eye,
+  Briefcase,
+  Users
 } from 'lucide-react';
 import { getContacts, deleteContact } from '../lib/contactApi';
 
@@ -267,6 +270,16 @@ export default function ContactList() {
                                 >
                                   <Pencil className="w-4 h-4 text-slate-400 group-hover/item:text-indigo-600 transition-colors" />
                                   Edit
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setActiveMenuId(null);
+                                    navigate(`view-contact/${contact._id}`, { state: { contact } });
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors group/item"
+                                >
+                                  <Eye className="w-4 h-4 text-slate-400 group-hover/item:text-indigo-600 transition-colors" />
+                                  View
                                 </button>
                                 <div className="h-px bg-slate-50 my-1" />
                                 <button
