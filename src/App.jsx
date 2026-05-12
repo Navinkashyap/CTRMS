@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { HashRouter as Router, Routes, Route } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Country from "./pages/Country";
@@ -34,6 +34,7 @@ import AddContact from "./pages/AddContact";
 import ViewContact from "./pages/ViewContact";
 import AddProject from "./pages/AddProject";
 import ViewProject from "./pages/ViewProject";
+import Login from "./pages/Login";
 
 // Generic placeholder for other pages
 const PagePlaceholder = ({ title, icon }) => (
@@ -91,6 +92,7 @@ const App = () => {
   return (
     <Router>
       <Routes>
+        <Route path="/login" element={<Login />} />
         <Route path="/" element={<Layout />}>
 
           <Route index element={<Dashboard />} />
@@ -138,7 +140,7 @@ const App = () => {
           </Route>
           <Route path="invoice" element={<InvoiceList />} />
           <Route path="report" element={<PagePlaceholder title="Analytics & Reports" icon="fa-chart-pie" />} />
-          <Route path="logout" element={<PagePlaceholder title="Sign Out" icon="fa-arrow-right-from-bracket" />} />
+          <Route path="logout" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<PagePlaceholder title="Page Not Found" icon="fa-circle-exclamation" />} />
         </Route>
       </Routes>

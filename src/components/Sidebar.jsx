@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import brandLogo from "../assets/logo.jpeg";
+import { logout } from "../lib/authApi";
 import {
   LayoutDashboard,
   Database,
@@ -114,6 +115,7 @@ const toSubmenuId = (label) => `submenu-${label.toLowerCase().replace(/\s+/g, "-
 
 const Sidebar = ({ isCollapsed = false }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [openMenus, setOpenMenus] = useState(() => getActiveParentMenus(location.pathname));
 
   useEffect(() => {
@@ -125,6 +127,11 @@ const Sidebar = ({ isCollapsed = false }) => {
 
   const toggle = (label) => {
     setOpenMenus((prev) => ({ ...prev, [label]: !prev[label] }));
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
   };
 
   const menuItems = useMemo(() => navItems, []);
@@ -323,7 +330,10 @@ const Sidebar = ({ isCollapsed = false }) => {
             <button className="p-2 text-slate-500 hover:text-white transition-colors">
               <Settings size={18} className="hover:rotate-45 transition-transform duration-500" />
             </button>
-            <button className="p-2 text-red-500/70 hover:text-red-400 transition-colors">
+            <button 
+              onClick={handleLogout}
+              className="p-2 text-red-500/70 hover:text-red-400 transition-colors"
+            >
               <LogOut size={18} />
             </button>
           </div>
@@ -354,7 +364,11 @@ const Sidebar = ({ isCollapsed = false }) => {
               <p className="text-[10px] font-medium text-slate-500 uppercase">Super Admin</p>
               <div className="mt-2 pt-2 border-t border-white/5 flex gap-2">
                 <Settings size={14} className="text-slate-500 hover:text-white cursor-pointer" />
-                <LogOut size={14} className="text-red-500/70 hover:text-red-400 cursor-pointer" />
+                <LogOut 
+                  size={14} 
+                  className="text-red-500/70 hover:text-red-400 cursor-pointer" 
+                  onClick={handleLogout}
+                />
               </div>
             </div>
           )}
