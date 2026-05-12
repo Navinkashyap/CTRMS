@@ -16,6 +16,7 @@ import {
   Trash2,
   Pencil,
   Building2,
+  Eye,
 } from 'lucide-react';
 
 const initialProjects = [
@@ -158,6 +159,12 @@ export default function ProjectsList() {
 
   const handleEdit = (project) => {
     navigate('/projects/add-project', {
+      state: { project },
+    });
+  };
+
+  const handleView = (project) => {
+    navigate(`/projects/view-project/${project.id}`, {
       state: { project },
     });
   };
@@ -505,6 +512,17 @@ export default function ProjectsList() {
                               >
                                 <Pencil className="w-4 h-4" />
                                 Edit
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  handleView(project);
+                                  setActiveMenuId(null);
+                                }}
+                                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg transition-all"
+                              >
+                                <Eye className="w-4 h-4" />
+                                View
                               </button>
 
                               <button

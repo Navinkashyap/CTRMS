@@ -33,6 +33,7 @@ import ViewClient from "./pages/ViewClient";
 import AddContact from "./pages/AddContact";
 import ViewContact from "./pages/ViewContact";
 import AddProject from "./pages/AddProject";
+import ViewProject from "./pages/ViewProject";
 
 // Generic placeholder for other pages
 const PagePlaceholder = ({ title, icon }) => (
@@ -133,6 +134,7 @@ const App = () => {
           <Route path="projects">
             <Route index element={<ProjectsList />} />
             <Route path="add-project" element={<AddProject />} />
+            <Route path="view-project/:id" element={<ViewProject />} />
           </Route>
           <Route path="invoice" element={<InvoiceList />} />
           <Route path="report" element={<PagePlaceholder title="Analytics & Reports" icon="fa-chart-pie" />} />

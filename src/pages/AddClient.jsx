@@ -18,6 +18,8 @@ import {
   UploadCloud,
   FileText,
   X,
+  Briefcase,
+  Paperclip,
 } from 'lucide-react';
 
 import { createClient, getNextMembershipCode, updateClient } from '../lib/clientApi';
@@ -374,282 +376,332 @@ export default function AddClient() {
               </div>
             )}
 
-            <div className="space-y-6">
-              {/* Row 1: Company Name */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Company Name <span className="text-red-500">*</span></label>
-                <div className="relative group">
-                  <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                  <input
-                    type="text"
-                    required
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    placeholder="Company Name"
-                    value={formData.name}
-                    onChange={(e) => updateField('name', e.target.value)}
-                  />
+                        <div className="space-y-10">
+              {/* Section 1: Primary Info */}
+              <div>
+                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                  <Briefcase className="w-5 h-5 text-indigo-500" />
+                  Primary Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* Company Name */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Company Name <span className="text-red-500">*</span></label>
+                    <div className="relative group">
+                      <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                      <input
+                        type="text"
+                        required
+                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                        placeholder="Company Name"
+                        value={formData.name}
+                        onChange={(e) => updateField('name', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  {/* Domain */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Domain</label>
+                    <div className="relative group">
+                      <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                      <select
+                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
+                        value={formData.domain}
+                        onChange={(e) => updateField('domain', e.target.value)}
+                      >
+                        {loadingOptions ? (
+                          <option>Loading domains...</option>
+                        ) : domains.length > 0 ? (
+                          domains.map((d) => (
+                            <option key={d.id} value={d.type}>
+                              {d.type}
+                            </option>
+                          ))
+                        ) : (
+                          <option>No domains found</option>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+                  {/* Status */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Status <span className="text-red-500">*</span></label>
+                    <select
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
+                      value={formData.status}
+                      onChange={(e) => updateField('status', e.target.value)}
+                      required
+                    >
+                      <option value="" disabled>Select Status</option>
+                      <option value="Client">Client</option>
+                      <option value="Prospect Warm">Prospect Warm</option>
+                      <option value="Prospect Cold">Prospect Cold</option>
+                    </select>
+                  </div>
+                  {/* Membership */}
+                  <div className="space-y-2 lg:col-span-3">
+                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Membership</label>
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-3">
+                      {loadingOptions ? (
+                        <p className="text-xs text-slate-400 animate-pulse">Loading memberships...</p>
+                      ) : memberships.length > 0 ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+                          {memberships.map((m) => (
+                            <label key={m.id || m._id} className="flex items-center gap-3 cursor-pointer group">
+                              <div className="relative flex items-center">
+                                <input
+                                  type="checkbox"
+                                  className="peer h-5 w-5 appearance-none rounded border-2 border-slate-200 checked:bg-indigo-600 checked:border-indigo-600 transition-all cursor-pointer"
+                                  checked={formData.membership.includes(m.name)}
+                                  onChange={(e) => {
+                                    const checked = e.target.checked;
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      membership: checked 
+                                        ? [...prev.membership, m.name]
+                                        : prev.membership.filter(name => name !== m.name)
+                                    }));
+                                  }}
+                                />
+                                <CircleCheckBig className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-0.5" />
+                              </div>
+                              <span className="text-sm font-bold text-slate-600 group-hover:text-slate-900 transition-colors">{m.name}</span>
+                            </label>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-400">No memberships found</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Row 2: Website | Email | Phone */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Website</label>
-                  <div className="relative group">
-                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                    <input
-                      type="url"
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                      placeholder="https://..."
-                      value={formData.website}
-                      onChange={(e) => updateField('website', e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Email <span className="text-red-500">*</span></label>
-                  <div className="relative group">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                    <input
-                      type="email"
-                      required
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                      placeholder="Email"
-                      value={formData.email}
-                      onChange={(e) => updateField('email', e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Phone</label>
-                  <div className="relative group flex gap-2">
-                    <div className="relative w-1/3">
-                      <select
-                        className="w-full px-2 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                        value={formData.countryCode}
-                        onChange={(e) => updateField('countryCode', e.target.value)}
-                      >
-                        <option value="+91">+91 (IN)</option>
-                        <option value="+1">+1 (US/CA)</option>
-                        <option value="+44">+44 (UK)</option>
-                        <option value="+61">+61 (AU)</option>
-                        <option value="+971">+971 (AE)</option>
-                        <option value="+65">+65 (SG)</option>
-                        <option value="+86">+86 (CN)</option>
-                        <option value="+81">+81 (JP)</option>
-                        <option value="+49">+49 (DE)</option>
-                        <option value="+33">+33 (FR)</option>
-                      </select>
-                    </div>
-                    <div className="relative w-2/3">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+              <hr className="border-slate-100" />
+
+              {/* Section 2: Contact Info */}
+              <div>
+                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                  <Phone className="w-5 h-5 text-emerald-500" />
+                  Contact Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Email <span className="text-red-500">*</span></label>
+                    <div className="relative group">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
                       <input
-                        type="tel"
+                        type="email"
+                        required
                         className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                        placeholder="Phone"
-                        value={formData.phone}
-                        onChange={(e) => updateField('phone', e.target.value)}
+                        placeholder="Email"
+                        value={formData.email}
+                        onChange={(e) => updateField('email', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  {/* Phone */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Phone</label>
+                    <div className="relative group flex gap-2">
+                      <div className="relative w-1/3">
+                        <select
+                          className="w-full px-2 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
+                          value={formData.countryCode}
+                          onChange={(e) => updateField('countryCode', e.target.value)}
+                        >
+                          <option value="+91">+91 (IN)</option>
+                          <option value="+1">+1 (US/CA)</option>
+                          <option value="+44">+44 (UK)</option>
+                          <option value="+61">+61 (AU)</option>
+                          <option value="+971">+971 (AE)</option>
+                          <option value="+65">+65 (SG)</option>
+                          <option value="+86">+86 (CN)</option>
+                          <option value="+81">+81 (JP)</option>
+                          <option value="+49">+49 (DE)</option>
+                          <option value="+33">+33 (FR)</option>
+                        </select>
+                      </div>
+                      <div className="relative w-2/3">
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                        <input
+                          type="tel"
+                          className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                          placeholder="Phone"
+                          value={formData.phone}
+                          onChange={(e) => updateField('phone', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {/* Website */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Website</label>
+                    <div className="relative group">
+                      <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                      <input
+                        type="url"
+                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                        placeholder="https://..."
+                        value={formData.website}
+                        onChange={(e) => updateField('website', e.target.value)}
                       />
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Row 3: Address */}
-              <div className="space-y-2 w-full">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Address</label>
-                <div className="relative group">
-                  <MapPin className="absolute left-4 top-4 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                  <textarea
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none min-h-[100px]"
-                    placeholder="Full Address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  />
+              <hr className="border-slate-100" />
+
+              {/* Section 3: Location Details */}
+              <div>
+                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-rose-500" />
+                  Location Details
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  {/* Address */}
+                  <div className="space-y-2 w-full md:col-span-4">
+                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Address</label>
+                    <div className="relative group">
+                      <MapPin className="absolute left-4 top-4 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                      <textarea
+                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none min-h-[100px]"
+                        placeholder="Full Address"
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  {/* City */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">City</label>
+                    <div className="relative group">
+                      <Map className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                      <select
+                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
+                        value={formData.city}
+                        onChange={handleCityChange}
+                      >
+                        <option value="" disabled>Select City</option>
+                        {cities.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                        <option value="add_new" className="text-indigo-600 font-bold">+ Add New City</option>
+                      </select>
+                    </div>
+                  </div>
+                  {/* State */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">State</label>
+                    <div className="relative group">
+                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                      <select
+                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
+                        value={formData.state || ''}
+                        onChange={handleStateChange}
+                      >
+                        <option value="" disabled>Select State</option>
+                        {states.map(s => <option key={s._id} value={s.name}>{s.name}</option>)}
+                        <option value="add_new" className="text-indigo-600 font-bold">+ Add New State</option>
+                      </select>
+                    </div>
+                  </div>
+                  {/* Country */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Country</label>
+                    <div className="relative group">
+                      <Flag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                      <select
+                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
+                        value={formData.country}
+                        onChange={handleCountryChange}
+                      >
+                        <option value="" disabled>Select Country</option>
+                        {countries.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                        <option value="add_new" className="text-indigo-600 font-bold">+ Add New Country</option>
+                      </select>
+                    </div>
+                  </div>
+                  {/* ZIP */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">ZIP</label>
+                    <div className="relative group">
+                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                      <input
+                        type="text"
+                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                        placeholder="ZIP"
+                        value={formData.zip || ''}
+                        onChange={(e) => updateField('zip', e.target.value)}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Row 4: City | State | Country | ZIP */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">City</label>
-                  <div className="relative group">
-                    <Map className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                    <select
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                      value={formData.city}
-                      onChange={handleCityChange}
-                    >
-                      <option value="" disabled>Select City</option>
-                      {cities.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
-                      <option value="add_new" className="text-indigo-600 font-bold">+ Add New City</option>
-                    </select>
+              <hr className="border-slate-100" />
+
+              {/* Section 4: Financial Info */}
+              <div>
+                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                  <CircleDollarSign className="w-5 h-5 text-amber-500" />
+                  Financial Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Currency */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Currency</label>
+                    <div className="relative group">
+                      <CircleDollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
+                      <select
+                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
+                        value={formData.currency}
+                        onChange={(e) => updateField('currency', e.target.value)}
+                      >
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="GBP">GBP</option>
+                        <option value="INR">INR (Rs.)</option>
+                      </select>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">State</label>
-                  <div className="relative group">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                    <select
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                      value={formData.state || ''}
-                      onChange={handleStateChange}
-                    >
-                      <option value="" disabled>Select State</option>
-                      {states.map(s => <option key={s._id} value={s.name}>{s.name}</option>)}
-                      <option value="add_new" className="text-indigo-600 font-bold">+ Add New State</option>
-                    </select>
+                  {/* GSTIN */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">GSTIN</label>
+                    <div className="relative group">
+                      <input
+                        type="text"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                        placeholder="GST Number"
+                        value={formData.gstIn}
+                        onChange={(e) => updateField('gstIn', e.target.value)}
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Country</label>
-                  <div className="relative group">
-                    <Flag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                    <select
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                      value={formData.country}
-                      onChange={handleCountryChange}
-                    >
-                      <option value="" disabled>Select Country</option>
-                      {countries.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
-                      <option value="add_new" className="text-indigo-600 font-bold">+ Add New Country</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">ZIP</label>
-                  <div className="relative group">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                    <input
-                      type="text"
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                      placeholder="ZIP"
-                      value={formData.zip || ''}
-                      onChange={(e) => updateField('zip', e.target.value)}
-                    />
+                  {/* VAT */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">VAT Number</label>
+                    <div className="relative group">
+                      <input
+                        type="text"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                        placeholder="VAT Number"
+                        value={formData.vat}
+                        onChange={(e) => updateField('vat', e.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Row 5: Status | Domain | Membership | Currency */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Status <span className="text-red-500">*</span></label>
-                  <select
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                    value={formData.status}
-                    onChange={(e) => updateField('status', e.target.value)}
-                    required
-                  >
-                    <option value="" disabled>Select Status</option>
-                    <option value="Client">Client</option>
-                    <option value="Prospect Warm">Prospect Warm</option>
-                    <option value="Prospect Cold">Prospect Cold</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Domain</label>
-                  <div className="relative group">
-                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                    <select
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                      value={formData.domain}
-                      onChange={(e) => updateField('domain', e.target.value)}
-                    >
-                      {loadingOptions ? (
-                        <option>Loading domains...</option>
-                      ) : domains.length > 0 ? (
-                        domains.map((d) => (
-                          <option key={d.id} value={d.type}>
-                            {d.type}
-                          </option>
-                        ))
-                      ) : (
-                        <option>No domains found</option>
-                      )}
-                    </select>
-                  </div>
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Membership</label>
-                  <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-3">
-                    {loadingOptions ? (
-                      <p className="text-xs text-slate-400 animate-pulse">Loading memberships...</p>
-                    ) : memberships.length > 0 ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {memberships.map((m) => (
-                          <label key={m.id || m._id} className="flex items-center gap-3 cursor-pointer group">
-                            <div className="relative flex items-center">
-                              <input
-                                type="checkbox"
-                                className="peer h-5 w-5 appearance-none rounded border-2 border-slate-200 checked:bg-indigo-600 checked:border-indigo-600 transition-all cursor-pointer"
-                                checked={formData.membership.includes(m.name)}
-                                onChange={(e) => {
-                                  const checked = e.target.checked;
-                                  setFormData(prev => ({
-                                    ...prev,
-                                    membership: checked 
-                                      ? [...prev.membership, m.name]
-                                      : prev.membership.filter(name => name !== m.name)
-                                  }));
-                                }}
-                              />
-                              <CircleCheckBig className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-0.5" />
-                            </div>
-                            <span className="text-sm font-bold text-slate-600 group-hover:text-slate-900 transition-colors">{m.name}</span>
-                          </label>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-slate-400">No memberships found</p>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Currency</label>
-                  <div className="relative group">
-                    <CircleDollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                    <select
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                      value={formData.currency}
-                      onChange={(e) => updateField('currency', e.target.value)}
-                    >
-                      <option value="USD">USD</option>
-                      <option value="EUR">EUR</option>
-                      <option value="GBP">GBP</option>
-                      <option value="INR">INR (Rs.)</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">GSTIN</label>
-                  <div className="relative group">
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                      placeholder="GST Number"
-                      value={formData.gstIn}
-                      onChange={(e) => updateField('gstIn', e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">VAT Number</label>
-                  <div className="relative group">
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                      placeholder="VAT Number"
-                      value={formData.vat}
-                      onChange={(e) => updateField('vat', e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Row 6: Document Upload */}
-              <div className="space-y-4">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Documents</label>
+              <hr className="border-slate-100" />
+
+              {/* Section 5: Documents */}
+              <div>
+                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                  <Paperclip className="w-5 h-5 text-indigo-500" />
+                  Uploaded Documents
+                </h3>
                 <div className="flex flex-col gap-4">
                   <div className="relative border-2 border-dashed border-slate-200 rounded-2xl p-8 hover:bg-slate-50 transition-colors group cursor-pointer">
                     <input
