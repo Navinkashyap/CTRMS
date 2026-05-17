@@ -12,6 +12,10 @@ import {
   Shield,
   TrendingUp
 } from 'lucide-react';
+import { getClients } from '../lib/clientApi';
+import { getServices } from '../lib/serviceApi';
+import { getContacts } from '../lib/contactApi';
+import { createProject, updateProject } from '../lib/projectApi';
 
 export default function AddProject() {
   const navigate = useNavigate();
@@ -21,7 +25,7 @@ export default function AddProject() {
   const [formData, setFormData] = useState({
     projectName: '',
     client: '',
-    service: 'Translation',
+    service: '',
     manager: '',
     budget: '',
     priority: 'Medium',
@@ -30,20 +34,55 @@ export default function AddProject() {
     status: 'Not Started'
   });
 
+  const [clients, setClients] = useState([]);
+  const [services, setServices] = useState([]);
+  const [contacts, setContacts] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [clientsRes, servicesRes, contactsRes] = await Promise.all([
+          getClients(),
+          getServices(),
+          getContacts()
+        ]);
+        setClients(clientsRes);
+        setServices(servicesRes);
+        setContacts(contactsRes);
+      } catch (error) {
+        console.error("Error fetching master data:", error);
+      }
+    };
+    fetchData();
+  }, []);
+
   useEffect(() => {
     if (editingProject) {
-      setFormData({ ...editingProject });
+      setFormData({ 
+        ...editingProject,
+        client: editingProject.client?._id || editingProject.client || '',
+        service: editingProject.service?._id || editingProject.service || '',
+        manager: editingProject.manager?._id || editingProject.manager || '',
+        deadline: editingProject.deadline ? new Date(editingProject.deadline).toISOString().split('T')[0] : ''
+      });
     }
   }, [editingProject]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // In a real app, you would call an API here
-    console.log('Submitting Project:', formData);
-    
-    // Simulate successful submission and go back
-    alert(editingProject ? 'Project updated successfully!' : 'Project created successfully!');
-    navigate('/projects');
+    try {
+      if (editingProject) {
+        await updateProject(editingProject._id, formData);
+        alert('Project updated successfully!');
+      } else {
+        await createProject(formData);
+        alert('Project created successfully!');
+      }
+      navigate('/projects');
+    } catch (error) {
+      console.error('Error saving project:', error);
+      alert('Failed to save project.');
+    }
   };
 
   return (
@@ -54,6 +93,7 @@ export default function AddProject() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/60 shadow-sm">
           <div className="flex items-center gap-4">
             <button 
+              type="button"
               onClick={() => navigate('/projects')}
               className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm group"
             >
@@ -107,14 +147,17 @@ export default function AddProject() {
                     <Shield className="w-3 h-3" />
                     Client Name
                   </label>
-                  <input
-                    type="text"
+                  <select
                     required
-                    placeholder="Assign to client..."
-                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none shadow-sm"
+                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none shadow-sm cursor-pointer"
                     value={formData.client}
                     onChange={(e) => setFormData({ ...formData, client: e.target.value })}
-                  />
+                  >
+                    <option value="">Select a Client</option>
+                    {clients.map(c => (
+                      <option key={c._id} value={c._id}>{c.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -129,11 +172,10 @@ export default function AddProject() {
                     value={formData.service}
                     onChange={(e) => setFormData({ ...formData, service: e.target.value })}
                   >
-                    <option>Translation</option>
-                    <option>Localization</option>
-                    <option>Interpretation</option>
-                    <option>Subtitling</option>
-                    <option>DTP</option>
+                    <option value="">Select Service</option>
+                    {services.map(s => (
+                      <option key={s._id} value={s._id}>{s.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="space-y-2 group">
@@ -172,13 +214,16 @@ export default function AddProject() {
                     <User className="w-3 h-3" />
                     Project Manager
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Assign manager..."
-                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none shadow-sm"
+                  <select
+                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none shadow-sm cursor-pointer"
                     value={formData.manager}
                     onChange={(e) => setFormData({ ...formData, manager: e.target.value })}
-                  />
+                  >
+                    <option value="">Select Manager</option>
+                    {contacts.map(c => (
+                      <option key={c._id} value={c._id}>{c.firstName} {c.lastName}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-2 group">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-2 group-focus-within:text-indigo-600 transition-colors">

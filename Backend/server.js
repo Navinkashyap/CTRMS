@@ -23,6 +23,7 @@ import deadlineRoutes from "./src/routes/deadlineRoutes.js";
 import departmentRoutes from "./src/routes/departmentRoutes.js";
 import contactRoutes from "./src/routes/contactRoutes.js";
 import authRoutes from "./src/routes/authRoutes.js";
+import projectRoutes from "./src/routes/projectRoutes.js";
 
 dotenv.config();
 
@@ -69,6 +70,7 @@ app.use("/api/deadlines", deadlineRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/contacts", contactRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/projects", projectRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
