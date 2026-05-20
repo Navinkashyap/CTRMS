@@ -3,6 +3,24 @@ import Project from "../models/Project.js";
 
 const router = express.Router();
 
+const OBJECT_ID_FIELDS = [
+  "client",
+  "service",
+  "projectManager",
+  "clientContact",
+  "sourceLanguage",
+];
+
+function sanitizeProjectBody(body) {
+  const data = { ...body };
+  for (const field of OBJECT_ID_FIELDS) {
+    if (data[field] === "" || data[field] == null) {
+      delete data[field];
+    }
+  }
+  return data;
+}
+
 // Get all projects
 router.get("/", async (req, res) => {
   try {
@@ -41,7 +59,7 @@ router.get("/:id", async (req, res) => {
 
 // Create project
 router.post("/", async (req, res) => {
-  const project = new Project(req.body);
+  const project = new Project(sanitizeProjectBody(req.body));
   try {
     const newProject = await project.save();
     res.status(201).json(newProject);
@@ -53,7 +71,7 @@ router.post("/", async (req, res) => {
 // Update project
 router.put("/:id", async (req, res) => {
   try {
-    const project = await Project.findByIdAndUpdate(req.params.id, req.body, {
+    const project = await Project.findByIdAndUpdate(req.params.id, sanitizeProjectBody(req.body), {
       new: true,
       runValidators: true,
     });

@@ -7,19 +7,19 @@ import {
   CircleAlert,
   CircleCheckBig,
   CircleDollarSign,
+  Calendar,
   Flag,
   Globe,
-  LoaderCircle,
   Mail,
   Map,
   MapPin,
   Phone,
-  Save,
   UploadCloud,
   FileText,
   X,
   Briefcase,
   Paperclip,
+  User,
 } from 'lucide-react';
 
 import { createClient, getNextMembershipCode, updateClient } from '../lib/clientApi';
@@ -340,28 +340,74 @@ export default function AddClient() {
     }
   };
 
+  const getFileUrl = (url) => {
+    const backendUrl = import.meta.env.VITE_API_BASE_URL
+      ? import.meta.env.VITE_API_BASE_URL.replace('/api', '')
+      : 'http://localhost:5000';
+    return `${backendUrl}${url}`;
+  };
+
+  const inputClass =
+    'w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all';
+
+  const FormField = ({ icon: Icon, label, required, children, className = '' }) => (
+    <div className={`flex items-start gap-4 p-4 rounded-2xl bg-slate-50/50 hover:bg-white border border-transparent hover:border-slate-100 focus-within:border-indigo-100 focus-within:bg-white transition-colors ${className}`}>
+      <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
+        <Icon className="w-5 h-5 text-indigo-500" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+          {label}
+          {required && <span className="text-red-500 ml-0.5">*</span>}
+        </p>
+        {children}
+      </div>
+    </div>
+  );
+
+  const getStatusBadgeClass = (status) => {
+    if (['Active', 'Client'].includes(status)) {
+      return 'text-emerald-700 bg-emerald-50 border border-emerald-200';
+    }
+    if (['Onboarding', 'Prospect Warm'].includes(status)) {
+      return 'text-amber-700 bg-amber-50 border border-amber-200';
+    }
+    if (status === 'Prospect Cold') {
+      return 'text-blue-700 bg-blue-50 border border-blue-200';
+    }
+    return 'text-slate-600 bg-slate-100 border border-slate-200';
+  };
+
   return (
-    <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
-      <div className="max-w-[1000px] mx-auto space-y-8">
-        <div className="flex items-center justify-between bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/60 shadow-sm">
+    <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8">
+      <div className="max-w-[1000px] mx-auto space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white p-6 sm:px-8 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
           <div className="flex items-center gap-4">
             <button
+              type="button"
               onClick={() => navigate('/clients')}
-              className="p-3 bg-white text-slate-600 hover:text-indigo-600 rounded-2xl shadow-sm hover:shadow-md transition-all group"
+              className="p-2.5 bg-slate-50 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors shrink-0"
             >
-              <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent italic">
-                {isEditMode ? 'Edit Client' : 'Add New Client'}
+              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 flex items-center gap-3 flex-wrap">
+                {isEditMode ? formData.name || 'Edit Client' : 'Add New Client'}
+                {isEditMode && formData.status && (
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getStatusBadgeClass(formData.status)}`}>
+                    {formData.status}
+                  </span>
+                )}
               </h1>
-              <p className="text-slate-500 font-medium tracking-wide">Client Identity Management</p>
+              <p className="text-slate-500 text-sm font-medium tracking-wide">
+                {isEditMode ? 'Edit Client Profile & Details' : 'Client Profile & Details'}
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
-          <form onSubmit={handleSubmit} className="p-5 sm:p-8 lg:p-12 space-y-6">
+        <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden">
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-8">
             {errorMessage && (
               <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
                 <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
@@ -376,404 +422,381 @@ export default function AddClient() {
               </div>
             )}
 
-                        <div className="space-y-10">
-              {/* Section 1: Primary Info */}
-              <div>
-                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 text-indigo-500" />
-                  Primary Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Company Name */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Company Name <span className="text-red-500">*</span></label>
-                    <div className="relative group">
-                      <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                      <input
-                        type="text"
-                        required
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                        placeholder="Company Name"
-                        value={formData.name}
-                        onChange={(e) => updateField('name', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  {/* Domain */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Domain</label>
-                    <div className="relative group">
-                      <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                      <select
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                        value={formData.domain}
-                        onChange={(e) => updateField('domain', e.target.value)}
-                      >
-                        {loadingOptions ? (
-                          <option>Loading domains...</option>
-                        ) : domains.length > 0 ? (
-                          domains.map((d) => (
-                            <option key={d.id} value={d.type}>
-                              {d.type}
-                            </option>
-                          ))
-                        ) : (
-                          <option>No domains found</option>
-                        )}
-                      </select>
-                    </div>
-                  </div>
-                  {/* Status */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Status <span className="text-red-500">*</span></label>
-                    <select
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                      value={formData.status}
-                      onChange={(e) => updateField('status', e.target.value)}
-                      required
-                    >
-                      <option value="" disabled>Select Status</option>
-                      <option value="Client">Client</option>
-                      <option value="Prospect Warm">Prospect Warm</option>
-                      <option value="Prospect Cold">Prospect Cold</option>
-                    </select>
-                  </div>
-                  {/* Membership */}
-                  <div className="space-y-2 lg:col-span-3">
-                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Membership</label>
-                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-3">
-                      {loadingOptions ? (
-                        <p className="text-xs text-slate-400 animate-pulse">Loading memberships...</p>
-                      ) : memberships.length > 0 ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-                          {memberships.map((m) => (
-                            <label key={m.id || m._id} className="flex items-center gap-3 cursor-pointer group">
-                              <div className="relative flex items-center">
-                                <input
-                                  type="checkbox"
-                                  className="peer h-5 w-5 appearance-none rounded border-2 border-slate-200 checked:bg-indigo-600 checked:border-indigo-600 transition-all cursor-pointer"
-                                  checked={formData.membership.includes(m.name)}
-                                  onChange={(e) => {
-                                    const checked = e.target.checked;
-                                    setFormData(prev => ({
-                                      ...prev,
-                                      membership: checked 
-                                        ? [...prev.membership, m.name]
-                                        : prev.membership.filter(name => name !== m.name)
-                                    }));
-                                  }}
-                                />
-                                <CircleCheckBig className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-0.5" />
-                              </div>
-                              <span className="text-sm font-bold text-slate-600 group-hover:text-slate-900 transition-colors">{m.name}</span>
-                            </label>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-xs text-slate-400">No memberships found</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-indigo-500" />
+                Primary Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <FormField icon={Building2} label="Company Name" required>
+                  <input
+                    type="text"
+                    required
+                    className={inputClass}
+                    placeholder="Company Name"
+                    value={formData.name}
+                    onChange={(e) => updateField('name', e.target.value)}
+                  />
+                </FormField>
 
-              <hr className="border-slate-100" />
+                <FormField icon={Award} label="Client Code">
+                  <input
+                    type="text"
+                    readOnly
+                    className={`${inputClass} bg-slate-50 text-slate-500 cursor-not-allowed`}
+                    value={loadingCode ? 'Loading...' : formData.membershipCode?.replace('CLI-', '') || formData.membershipCode || ''}
+                  />
+                </FormField>
 
-              {/* Section 2: Contact Info */}
-              <div>
-                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                  <Phone className="w-5 h-5 text-emerald-500" />
-                  Contact Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Email */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Email <span className="text-red-500">*</span></label>
-                    <div className="relative group">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                      <input
-                        type="email"
-                        required
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                        placeholder="Email"
-                        value={formData.email}
-                        onChange={(e) => updateField('email', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  {/* Phone */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Phone</label>
-                    <div className="relative group flex gap-2">
-                      <div className="relative w-1/3">
-                        <select
-                          className="w-full px-2 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                          value={formData.countryCode}
-                          onChange={(e) => updateField('countryCode', e.target.value)}
-                        >
-                          <option value="+91">+91 (IN)</option>
-                          <option value="+1">+1 (US/CA)</option>
-                          <option value="+44">+44 (UK)</option>
-                          <option value="+61">+61 (AU)</option>
-                          <option value="+971">+971 (AE)</option>
-                          <option value="+65">+65 (SG)</option>
-                          <option value="+86">+86 (CN)</option>
-                          <option value="+81">+81 (JP)</option>
-                          <option value="+49">+49 (DE)</option>
-                          <option value="+33">+33 (FR)</option>
-                        </select>
-                      </div>
-                      <div className="relative w-2/3">
-                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                        <input
-                          type="tel"
-                          className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                          placeholder="Phone"
-                          value={formData.phone}
-                          onChange={(e) => updateField('phone', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  {/* Website */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Website</label>
-                    <div className="relative group">
-                      <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                      <input
-                        type="url"
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                        placeholder="https://..."
-                        value={formData.website}
-                        onChange={(e) => updateField('website', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
+                <FormField icon={Globe} label="Domain">
+                  <select
+                    className={inputClass}
+                    value={formData.domain}
+                    onChange={(e) => updateField('domain', e.target.value)}
+                  >
+                    {loadingOptions ? (
+                      <option>Loading domains...</option>
+                    ) : domains.length > 0 ? (
+                      domains.map((d) => (
+                        <option key={d.id} value={d.type}>
+                          {d.type}
+                        </option>
+                      ))
+                    ) : (
+                      <option>No domains found</option>
+                    )}
+                  </select>
+                </FormField>
 
-              <hr className="border-slate-100" />
+                <FormField icon={Award} label="Status" required>
+                  <select
+                    className={inputClass}
+                    value={formData.status}
+                    onChange={(e) => updateField('status', e.target.value)}
+                    required
+                  >
+                    <option value="" disabled>Select Status</option>
+                    <option value="Client">Client</option>
+                    <option value="Prospect Warm">Prospect Warm</option>
+                    <option value="Prospect Cold">Prospect Cold</option>
+                  </select>
+                </FormField>
 
-              {/* Section 3: Location Details */}
-              <div>
-                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-rose-500" />
-                  Location Details
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                  {/* Address */}
-                  <div className="space-y-2 w-full md:col-span-4">
-                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Address</label>
-                    <div className="relative group">
-                      <MapPin className="absolute left-4 top-4 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                      <textarea
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none min-h-[100px]"
-                        placeholder="Full Address"
-                        value={formData.address}
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  {/* City */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">City</label>
-                    <div className="relative group">
-                      <Map className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                      <select
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                        value={formData.city}
-                        onChange={handleCityChange}
-                      >
-                        <option value="" disabled>Select City</option>
-                        {cities.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
-                        <option value="add_new" className="text-indigo-600 font-bold">+ Add New City</option>
-                      </select>
-                    </div>
-                  </div>
-                  {/* State */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">State</label>
-                    <div className="relative group">
-                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                      <select
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                        value={formData.state || ''}
-                        onChange={handleStateChange}
-                      >
-                        <option value="" disabled>Select State</option>
-                        {states.map(s => <option key={s._id} value={s.name}>{s.name}</option>)}
-                        <option value="add_new" className="text-indigo-600 font-bold">+ Add New State</option>
-                      </select>
-                    </div>
-                  </div>
-                  {/* Country */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Country</label>
-                    <div className="relative group">
-                      <Flag className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                      <select
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                        value={formData.country}
-                        onChange={handleCountryChange}
-                      >
-                        <option value="" disabled>Select Country</option>
-                        {countries.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
-                        <option value="add_new" className="text-indigo-600 font-bold">+ Add New Country</option>
-                      </select>
-                    </div>
-                  </div>
-                  {/* ZIP */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">ZIP</label>
-                    <div className="relative group">
-                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                      <input
-                        type="text"
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                        placeholder="ZIP"
-                        value={formData.zip || ''}
-                        onChange={(e) => updateField('zip', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
+                <FormField icon={Calendar} label="Registration Date">
+                  <input
+                    type="date"
+                    className={inputClass}
+                    value={formData.registrationDate}
+                    onChange={(e) => updateField('registrationDate', e.target.value)}
+                  />
+                </FormField>
 
-              <hr className="border-slate-100" />
+                <FormField icon={User} label="Created By">
+                  <input
+                    type="text"
+                    className={inputClass}
+                    placeholder="Created By"
+                    value={formData.createdBy}
+                    onChange={(e) => updateField('createdBy', e.target.value)}
+                  />
+                </FormField>
 
-              {/* Section 4: Financial Info */}
-              <div>
-                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                  <CircleDollarSign className="w-5 h-5 text-amber-500" />
-                  Financial Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Currency */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Currency</label>
-                    <div className="relative group">
-                      <CircleDollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-indigo-500" />
-                      <select
-                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none"
-                        value={formData.currency}
-                        onChange={(e) => updateField('currency', e.target.value)}
-                      >
-                        <option value="USD">USD</option>
-                        <option value="EUR">EUR</option>
-                        <option value="GBP">GBP</option>
-                        <option value="INR">INR (Rs.)</option>
-                      </select>
-                    </div>
-                  </div>
-                  {/* GSTIN */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">GSTIN</label>
-                    <div className="relative group">
-                      <input
-                        type="text"
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                        placeholder="GST Number"
-                        value={formData.gstIn}
-                        onChange={(e) => updateField('gstIn', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  {/* VAT */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">VAT Number</label>
-                    <div className="relative group">
-                      <input
-                        type="text"
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                        placeholder="VAT Number"
-                        value={formData.vat}
-                        onChange={(e) => updateField('vat', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <hr className="border-slate-100" />
-
-              {/* Section 5: Documents */}
-              <div>
-                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                  <Paperclip className="w-5 h-5 text-indigo-500" />
-                  Uploaded Documents
-                </h3>
-                <div className="flex flex-col gap-4">
-                  <div className="relative border-2 border-dashed border-slate-200 rounded-2xl p-8 hover:bg-slate-50 transition-colors group cursor-pointer">
-                    <input
-                      type="file"
-                      multiple
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      onChange={handleFileChange}
-                    />
-                    <div className="flex flex-col items-center justify-center text-slate-500 group-hover:text-indigo-500 transition-colors">
-                      <UploadCloud className="w-8 h-8 mb-3" />
-                      <p className="text-sm font-bold">Click to upload or drag and drop</p>
-                      <p className="text-xs font-medium text-slate-400 mt-1">PDF, DOCX, JPG, PNG up to 10MB each</p>
-                    </div>
-                  </div>
-
-                  {((formData.existingDocuments && formData.existingDocuments.length > 0) || selectedFiles.length > 0) && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
-                      {formData.existingDocuments && formData.existingDocuments.map((doc, idx) => (
-                        <div key={`existing-${idx}`} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                          <div className="flex items-center gap-3 overflow-hidden">
-                            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
-                              <FileText className="w-4 h-4" />
+                <FormField icon={Award} label="Membership" className="md:col-span-2 lg:col-span-3">
+                  <div className="p-3 bg-white border border-slate-200 rounded-xl">
+                    {loadingOptions ? (
+                      <p className="text-xs text-slate-400">Loading memberships...</p>
+                    ) : memberships.length > 0 ? (
+                      <div className="flex flex-wrap gap-3">
+                        {memberships.map((m) => (
+                          <label key={m.id || m._id} className="flex items-center gap-2 cursor-pointer group">
+                            <div className="relative flex items-center">
+                              <input
+                                type="checkbox"
+                                className="peer h-4 w-4 appearance-none rounded border-2 border-slate-200 checked:bg-indigo-600 checked:border-indigo-600 transition-all cursor-pointer"
+                                checked={formData.membership.includes(m.name)}
+                                onChange={(e) => {
+                                  const checked = e.target.checked;
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    membership: checked
+                                      ? [...prev.membership, m.name]
+                                      : prev.membership.filter((name) => name !== m.name),
+                                  }));
+                                }}
+                              />
+                              <CircleCheckBig className="absolute h-3 w-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-0.5" />
                             </div>
-                            <span className="text-sm font-bold text-slate-700 truncate">{doc.name}</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeExistingDocument(idx)}
-                            className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                      
-                      {selectedFiles.map((file, idx) => (
-                        <div key={`new-${idx}`} className="flex items-center justify-between p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl">
-                          <div className="flex items-center gap-3 overflow-hidden">
-                            <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg shrink-0">
-                              <FileText className="w-4 h-4" />
-                            </div>
-                            <span className="text-sm font-bold text-slate-700 truncate">{file.name}</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeSelectedFile(idx)}
-                            className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded text-xs font-semibold">
+                              {m.name}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400">No memberships found</p>
+                    )}
+                  </div>
+                </FormField>
               </div>
             </div>
 
-            <div className="pt-6 border-t border-slate-100 flex gap-4 justify-end">
+            <hr className="border-slate-100" />
+
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <Phone className="w-5 h-5 text-emerald-500" />
+                Contact Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField icon={Mail} label="Email Address" required>
+                  <input
+                    type="email"
+                    required
+                    className={inputClass}
+                    placeholder="Email Address"
+                    value={formData.email}
+                    onChange={(e) => updateField('email', e.target.value)}
+                  />
+                </FormField>
+
+                <FormField icon={Phone} label="Phone Number">
+                  <div className="flex gap-2">
+                    <select
+                      className={`${inputClass} w-28 shrink-0`}
+                      value={formData.countryCode}
+                      onChange={(e) => updateField('countryCode', e.target.value)}
+                    >
+                      <option value="+91">+91</option>
+                      <option value="+1">+1</option>
+                      <option value="+44">+44</option>
+                      <option value="+61">+61</option>
+                      <option value="+971">+971</option>
+                      <option value="+65">+65</option>
+                      <option value="+86">+86</option>
+                      <option value="+81">+81</option>
+                      <option value="+49">+49</option>
+                      <option value="+33">+33</option>
+                    </select>
+                    <input
+                      type="tel"
+                      className={inputClass}
+                      placeholder="Phone Number"
+                      value={formData.phone}
+                      onChange={(e) => updateField('phone', e.target.value)}
+                    />
+                  </div>
+                </FormField>
+
+                <FormField icon={Globe} label="Website">
+                  <input
+                    type="url"
+                    className={inputClass}
+                    placeholder="https://..."
+                    value={formData.website}
+                    onChange={(e) => updateField('website', e.target.value)}
+                  />
+                </FormField>
+              </div>
+            </div>
+
+            <hr className="border-slate-100" />
+
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-rose-500" />
+                Location Details
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <FormField icon={MapPin} label="Full Address" className="md:col-span-2">
+                  <textarea
+                    className={`${inputClass} min-h-[88px] resize-y`}
+                    placeholder="Full Address"
+                    value={formData.address}
+                    onChange={(e) => updateField('address', e.target.value)}
+                  />
+                </FormField>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <FormField icon={Map} label="City">
+                  <select className={inputClass} value={formData.city} onChange={handleCityChange}>
+                    <option value="" disabled>Select City</option>
+                    {cities.map((c) => (
+                      <option key={c._id} value={c.name}>{c.name}</option>
+                    ))}
+                    <option value="add_new" className="text-indigo-600 font-semibold">+ Add New City</option>
+                  </select>
+                </FormField>
+
+                <FormField icon={MapPin} label="State">
+                  <select className={inputClass} value={formData.state || ''} onChange={handleStateChange}>
+                    <option value="" disabled>Select State</option>
+                    {states.map((s) => (
+                      <option key={s._id} value={s.name}>{s.name}</option>
+                    ))}
+                    <option value="add_new" className="text-indigo-600 font-semibold">+ Add New State</option>
+                  </select>
+                </FormField>
+
+                <FormField icon={Flag} label="Country">
+                  <select className={inputClass} value={formData.country} onChange={handleCountryChange}>
+                    <option value="" disabled>Select Country</option>
+                    {countries.map((c) => (
+                      <option key={c._id} value={c.name}>{c.name}</option>
+                    ))}
+                    <option value="add_new" className="text-indigo-600 font-semibold">+ Add New Country</option>
+                  </select>
+                </FormField>
+
+                <FormField icon={MapPin} label="ZIP Code">
+                  <input
+                    type="text"
+                    className={inputClass}
+                    placeholder="ZIP Code"
+                    value={formData.zip || ''}
+                    onChange={(e) => updateField('zip', e.target.value)}
+                  />
+                </FormField>
+              </div>
+            </div>
+
+            <hr className="border-slate-100" />
+
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <CircleDollarSign className="w-5 h-5 text-amber-500" />
+                Financial Information
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <FormField icon={CircleDollarSign} label="Preferred Currency">
+                  <select className={inputClass} value={formData.currency} onChange={(e) => updateField('currency', e.target.value)}>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="INR">INR (Rs.)</option>
+                  </select>
+                </FormField>
+
+                <FormField icon={Award} label="GSTIN">
+                  <input
+                    type="text"
+                    className={inputClass}
+                    placeholder="GST Number"
+                    value={formData.gstIn}
+                    onChange={(e) => updateField('gstIn', e.target.value)}
+                  />
+                </FormField>
+
+                <FormField icon={Award} label="VAT Number">
+                  <input
+                    type="text"
+                    className={inputClass}
+                    placeholder="VAT Number"
+                    value={formData.vat}
+                    onChange={(e) => updateField('vat', e.target.value)}
+                  />
+                </FormField>
+              </div>
+            </div>
+
+            <hr className="border-slate-100" />
+
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <Paperclip className="w-5 h-5 text-indigo-500" />
+                Uploaded Documents
+              </h3>
+
+              <div className="relative border-2 border-dashed border-slate-200 rounded-2xl p-8 hover:bg-slate-50/50 transition-colors group cursor-pointer mb-4">
+                <input
+                  type="file"
+                  multiple
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  onChange={handleFileChange}
+                />
+                <div className="flex flex-col items-center justify-center text-slate-500 group-hover:text-indigo-500 transition-colors">
+                  <UploadCloud className="w-8 h-8 mb-3" />
+                  <p className="text-sm font-semibold">Click to upload or drag and drop</p>
+                  <p className="text-xs font-medium text-slate-400 mt-1">PDF, DOCX, JPG, PNG up to 10MB each</p>
+                </div>
+              </div>
+
+              {(formData.existingDocuments?.length > 0 || selectedFiles.length > 0) ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {formData.existingDocuments?.map((doc, idx) => (
+                    <div
+                      key={`existing-${idx}`}
+                      className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 hover:bg-white border border-transparent hover:border-indigo-100 hover:shadow-md transition-all group"
+                    >
+                      <a
+                        href={getFileUrl(doc.url)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-3 overflow-hidden flex-1 min-w-0"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-indigo-50 group-hover:bg-indigo-100 flex items-center justify-center shrink-0 transition-colors">
+                          <FileText className="w-5 h-5 text-indigo-500" />
+                        </div>
+                        <div className="overflow-hidden">
+                          <p className="font-semibold text-slate-800 text-sm truncate" title={doc.name}>{doc.name}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Click to view</p>
+                        </div>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => removeExistingDocument(idx)}
+                        className="p-1.5 ml-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+
+                  {selectedFiles.map((file, idx) => (
+                    <div
+                      key={`new-${idx}`}
+                      className="flex items-center justify-between p-4 rounded-2xl bg-indigo-50/30 border border-indigo-100 transition-all"
+                    >
+                      <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
+                          <FileText className="w-5 h-5 text-indigo-500" />
+                        </div>
+                        <div className="overflow-hidden">
+                          <p className="font-semibold text-slate-800 text-sm truncate" title={file.name}>{file.name}</p>
+                          <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">New upload</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeSelectedFile(idx)}
+                        className="p-1.5 ml-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 bg-slate-50/30 rounded-3xl border border-dashed border-slate-200">
+                  <Paperclip className="w-8 h-8 text-slate-200 mb-2" />
+                  <p className="text-sm font-medium text-slate-400">No documents uploaded for this client.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 flex flex-col-reverse sm:flex-row gap-3 justify-end">
               <button
                 type="button"
                 onClick={() => navigate('/clients')}
-                className="px-8 py-4 bg-slate-50 text-slate-600 rounded-2xl font-black text-sm uppercase tracking-widest border border-slate-200 hover:bg-slate-100 transition-all"
+                className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50 rounded-xl text-sm font-bold transition-all"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="px-8 py-4 bg-white text-slate-900 border-2 border-slate-900 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-slate-50 transition-all"
+                className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-60"
               >
-                {saving ? 'Saving...' : 'Save'}
+                {saving ? 'Saving...' : isEditMode ? 'Save Changes' : 'Create Client'}
               </button>
             </div>
           </form>

@@ -14,13 +14,18 @@ export const getProject = async (id) => {
   return response.data;
 };
 
+const sanitizePayload = (payload) =>
+  Object.fromEntries(
+    Object.entries(payload).filter(([, value]) => value !== '' && value != null)
+  );
+
 export const createProject = async (payload) => {
-  const response = await api.post('/projects', payload);
+  const response = await api.post('/projects', sanitizePayload(payload));
   return response.data;
 };
 
 export const updateProject = async (id, payload) => {
-  const response = await api.put(`/projects/${id}`, payload);
+  const response = await api.put(`/projects/${id}`, sanitizePayload(payload));
   return response.data;
 };
 

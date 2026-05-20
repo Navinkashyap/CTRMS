@@ -18,81 +18,25 @@ import {
   Building2,
   Eye,
 } from 'lucide-react';
+import { getProjects, deleteProject } from '../lib/projectApi';
+import { getContacts } from '../lib/contactApi';
 
-const initialProjects = [
-  {
-    id: 1,
-    projectName: 'Global Reach Website',
-    client: 'Lionsbridge Technologies',
-    service: 'Translation',
-    deadline: '2026-05-15',
-    status: 'In Progress',
-    progress: 65,
-    priority: 'High',
-    manager: 'John Doe',
-    budget: '$10,000',
-  },
-  {
-    id: 2,
-    projectName: 'Q2 Marketing Campaign',
-    client: 'ADK Fortune',
-    service: 'Localization',
-    deadline: '2026-04-10',
-    status: 'Completed',
-    progress: 100,
-    priority: 'Medium',
-    manager: 'Jane Smith',
-    budget: '$5,000',
-  },
-  {
-    id: 3,
-    projectName: 'Legal Contracts Review',
-    client: 'Mayflower Services',
-    service: 'Interpretation',
-    deadline: '2026-06-20',
-    status: 'On Hold',
-    progress: 15,
-    priority: 'High',
-    manager: 'Mike Ross',
-    budget: '$15,000',
-  },
-  {
-    id: 4,
-    projectName: 'App UI Translation',
-    client: 'TechNova',
-    service: 'Translation',
-    deadline: '2026-08-01',
-    status: 'Not Started',
-    progress: 0,
-    priority: 'Low',
-    manager: 'Sarah Connor',
-    budget: '$8,000',
-  },
-  {
-    id: 5,
-    projectName: 'User Manual Localization',
-    client: 'Samsung Corp',
-    service: 'DTP',
-    deadline: '2026-05-30',
-    status: 'In Progress',
-    progress: 40,
-    priority: 'Medium',
-    manager: 'David Kim',
-    budget: '$12,000',
-  },
-  {
-    id: 6,
-    projectName: 'Subtitling Promo Video',
-    client: 'Netflix Asia',
-    service: 'Subtitling',
-    deadline: '2026-04-25',
-    status: 'In Progress',
-    progress: 80,
-    priority: 'High',
-    manager: 'Emily Chen',
-    budget: '$7,500',
-  },
-];
+const formatProject = (project, managerMap = {}) => ({
+  ...project,
+  id: project._id,
+  client:
+    typeof project.client === 'object'
+      ? project.client?.name
+      : project.client || '—',
+  service:
+    typeof project.service === 'object'
+      ? project.service?.name
+      : project.service || '—',
+  manager: managerMap[project.manager] || project.manager || '—',
+  deadline: project.deadline
+    ? new Date(project.deadline).toISOString().split('T')[0]
+    : '—',
+});
 
 const allColumns = [
   { id: 'projectName', label: 'Project Name' },
@@ -109,7 +53,9 @@ const allColumns = [
 export default function ProjectsList() {
   const navigate = useNavigate();
 
-  const [projects, setProjects] = useState(initialProjects);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSettingsModalOpen, setIsSettingsModalOpen] =
     useState(false);
@@ -136,17 +82,51 @@ export default function ProjectsList() {
       window.removeEventListener('click', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const loadProjects = async () => {
+      setLoading(true);
+      setErrorMessage('');
+
+      try {
+        const [projectsData, contactsData] = await Promise.all([
+          getProjects(),
+          getContacts(),
+        ]);
+
+        const managerMap = Object.fromEntries(
+          contactsData.map((c) => [
+            c._id,
+            `${c.firstName} ${c.lastName}`.trim(),
+          ])
+        );
+
+        setProjects(
+          projectsData.map((p) => formatProject(p, managerMap))
+        );
+      } catch (error) {
+        setErrorMessage(
+          error.response?.data?.message || 'Could not load projects.'
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProjects();
+  }, []);
+
   const filteredProjects = React.useMemo(() => {
     const query = searchQuery.toLowerCase();
     return projects.filter(
       (project) =>
-        project.projectName.toLowerCase().includes(query) ||
-        project.client.toLowerCase().includes(query) ||
-        project.service.toLowerCase().includes(query)
+        (project.projectName || '').toLowerCase().includes(query) ||
+        (project.client || '').toLowerCase().includes(query) ||
+        (project.service || '').toLowerCase().includes(query) ||
+        (project.projectId || '').toLowerCase().includes(query)
     );
   }, [projects, searchQuery]);
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (
       !window.confirm(
         'Are you sure you want to delete this project?'
@@ -154,7 +134,14 @@ export default function ProjectsList() {
     )
       return;
 
-    setProjects(projects.filter((p) => p.id !== id));
+    try {
+      await deleteProject(id);
+      setProjects((prev) => prev.filter((p) => p.id !== id));
+    } catch (error) {
+      alert(
+        error.response?.data?.message || 'Failed to delete project.'
+      );
+    }
   };
 
   const handleEdit = (project) => {
@@ -211,56 +198,47 @@ export default function ProjectsList() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/40 text-slate-900 pb-10">
-      <div className="max-w-[1400px] mx-auto space-y-8 p-4 md:p-6">
+    <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8">
+      <div className="max-w-[1400px] mx-auto space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 sm:px-8 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+          <div className="space-y-1.5">
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+              Projects List
+            </h1>
+            <p className="text-slate-500 text-sm font-medium flex items-center gap-2">
+              <FolderGit2 className="w-4 h-4 text-indigo-500" />
+              Manage ongoing projects and monitor progress.
+            </p>
+          </div>
 
-        {/* HEADER */}
-        <div className="bg-white border border-slate-200/70 p-6 rounded-3xl shadow-sm">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">
-                Projects List
-              </h1>
-
-              <p className="mt-2 text-sm text-slate-500 flex items-center gap-2">
-                <FolderGit2 className="w-4 h-4 text-indigo-500" />
-                Manage ongoing projects and monitor progress.
-              </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative group w-full md:w-64">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+              <input
+                type="text"
+                placeholder="Search projects..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all focus:bg-white"
+              />
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-
-              {/* SEARCH */}
-              <div className="relative w-full sm:w-[320px]">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-
-                <input
-                  type="text"
-                  placeholder="Search projects..."
-                  value={searchQuery}
-                  onChange={(e) =>
-                    setSearchQuery(e.target.value)
-                  }
-                  className="w-full pl-11 pr-4 h-11 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
-                />
-              </div>
-
-              {/* SETTINGS */}
+            <div className="flex items-center gap-3 w-full md:w-auto">
               <button
                 onClick={() => {
                   setTempVisibleColumns(visibleColumns);
                   setIsSettingsModalOpen(true);
                 }}
-                className="h-11 w-11 flex items-center justify-center bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-100 transition-all"
+                className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-all flex items-center justify-center"
               >
                 <Settings className="w-5 h-5" />
               </button>
 
-              {/* ADD BUTTON */}
+              <div className="w-px h-6 bg-slate-200 hidden md:block" />
+
               <button
                 onClick={handleAdd}
-                className="flex items-center justify-center gap-2 px-5 h-11 bg-indigo-600 text-white rounded-xl text-sm font-semibold shadow-md hover:bg-indigo-700 transition-all"
+                className="flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold shadow-[0_4px_12px_-2px_rgba(79,70,229,0.3)] hover:bg-indigo-700 transition-all active:scale-95"
               >
                 <Plus className="w-4 h-4" />
                 Add Project
@@ -269,107 +247,60 @@ export default function ProjectsList() {
           </div>
         </div>
 
-        {/* TABLE */}
-        <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+        {errorMessage && (
+          <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-700 shadow-sm">
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
+        <div className="bg-white border border-slate-100 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative">
 
           <div className="overflow-x-auto custom-scrollbarThin">
-            <table className="w-full min-w-[900px] lg:min-w-full text-sm">
-
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-
-                  <th className="px-6 py-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                    S.No.
-                  </th>
-
-                  {visibleColumns.includes('projectName') && (
-                    <th className="px-6 py-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                      Project Name
-                    </th>
-                  )}
-
-                  {visibleColumns.includes('client') && (
-                    <th className="px-6 py-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                      Client
-                    </th>
-                  )}
-
-                  {visibleColumns.includes('service') && (
-                    <th className="px-6 py-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                      Service
-                    </th>
-                  )}
-
-                  {visibleColumns.includes('manager') && (
-                    <th className="px-6 py-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                      Manager
-                    </th>
-                  )}
-
-                  {visibleColumns.includes('budget') && (
-                    <th className="px-6 py-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                      Budget
-                    </th>
-                  )}
-
-                  {visibleColumns.includes('priority') && (
-                    <th className="px-6 py-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                      Priority
-                    </th>
-                  )}
-
-                  {visibleColumns.includes('deadline') && (
-                    <th className="px-6 py-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                      Deadline
-                    </th>
-                  )}
-
-                  {visibleColumns.includes('progress') && (
-                    <th className="px-6 py-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                      Progress
-                    </th>
-                  )}
-
-                  {visibleColumns.includes('status') && (
-                    <th className="px-6 py-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                  )}
-
-                  <th className="px-6 py-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider text-center">
-                    Action
-                  </th>
+            <table className="w-full text-left text-sm border-collapse min-w-[900px]">
+              <thead>
+                <tr className="bg-slate-50/80 border-b border-slate-100/80">
+                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">S.No.</th>
+                  {visibleColumns.includes('projectName') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Project Name</th>}
+                  {visibleColumns.includes('client') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Client</th>}
+                  {visibleColumns.includes('service') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Service</th>}
+                  {visibleColumns.includes('manager') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Manager</th>}
+                  {visibleColumns.includes('budget') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Budget</th>}
+                  {visibleColumns.includes('priority') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Priority</th>}
+                  {visibleColumns.includes('deadline') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Deadline</th>}
+                  {visibleColumns.includes('progress') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Progress</th>}
+                  {visibleColumns.includes('status') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Status</th>}
+                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider text-center sticky right-0 bg-slate-50 z-30 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] border-l border-slate-100">Action</th>
                 </tr>
               </thead>
 
-              <tbody>
-
-                {filteredProjects.length === 0 && (
+              <tbody className="divide-y divide-slate-100/80">
+                {loading && (
                   <tr>
-                    <td
-                      colSpan={visibleColumns.length + 2}
-                      className="py-20 text-center"
-                    >
-                      <div className="flex flex-col items-center gap-3">
-                        <FolderGit2 className="w-10 h-10 text-slate-300" />
-                        <p className="text-slate-500 font-medium">
-                          No projects found
-                        </p>
+                    <td colSpan={visibleColumns.length + 2} className="px-8 py-16 text-center">
+                      <div className="flex flex-col items-center justify-center text-slate-600 space-y-3">
+                        <div className="w-10 h-10 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                        <p className="font-medium text-slate-500">Loading projects...</p>
                       </div>
                     </td>
                   </tr>
                 )}
 
-                {filteredProjects.map((project, idx) => (
-                  <tr
-                    key={project.id}
-                    className="border-b border-slate-100 hover:bg-slate-50 transition-all duration-200 ease-out"
-                  >
+                {!loading && filteredProjects.length === 0 && (
+                  <tr>
+                    <td colSpan={visibleColumns.length + 2} className="px-8 py-16 text-center">
+                      <div className="flex flex-col items-center justify-center text-slate-600 space-y-3">
+                        <Search className="w-12 h-12 text-slate-200" />
+                        <p className="font-medium text-slate-500">No projects found matching your search.</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+
+                {!loading && filteredProjects.map((project, idx) => (
+                  <tr key={project.id} className="group hover:bg-slate-50/50 transition-colors">
 
                     <td className="px-6 py-4">
-                      <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-sm font-semibold text-slate-700">
-                        {idx + 1}
-                      </div>
+                      <span className="text-slate-400 font-medium text-sm">{idx + 1}</span>
                     </td>
 
                     {visibleColumns.includes('projectName') && (
@@ -380,9 +311,16 @@ export default function ProjectsList() {
                             <FolderGit2 className="w-5 h-5" />
                           </div>
 
-                          <span className="font-semibold text-slate-900">
-                            {project.projectName}
-                          </span>
+                          <div>
+                            <span className="font-semibold text-slate-900 block">
+                              {project.projectName}
+                            </span>
+                            {project.projectId && (
+                              <span className="text-[11px] text-slate-400 font-medium">
+                                {project.projectId}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
                     )}
@@ -474,68 +412,59 @@ export default function ProjectsList() {
                       </td>
                     )}
 
-                    {/* ACTION */}
-                    <td className="px-6 py-4 text-center">
-
-                      <div
-                        className="relative flex justify-center"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-
+                    <td className={`px-6 py-4 text-center sticky right-0 bg-white group-hover:bg-slate-50 transition-colors border-l border-slate-100 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] ${activeMenuId === project.id ? 'z-40' : 'z-20'}`}>
+                      <div className="relative flex justify-center" onClick={(e) => e.stopPropagation()}>
                         <button
-                          onClick={() =>
-                            setActiveMenuId(
-                              activeMenuId === project.id
-                                ? null
-                                : project.id
-                            )
-                          }
+                          onClick={() => setActiveMenuId(activeMenuId === project.id ? null : project.id)}
                           className={`p-2 rounded-xl transition-all ${activeMenuId === project.id
-                              ? 'bg-indigo-600 text-white'
-                              : 'hover:bg-slate-100 text-slate-500'
+                            ? 'bg-indigo-50 text-indigo-600 shadow-inner'
+                            : 'hover:bg-slate-100 text-slate-400 hover:text-slate-600'
                             }`}
                         >
                           <MoreVertical className="w-5 h-5" />
                         </button>
 
                         {activeMenuId === project.id && (
-                          <div className="absolute right-12 top-0 w-40 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden z-50">
-
-                            <div className="p-2">
-
-                              <button
-                                onClick={() => {
-                                  handleEdit(project);
-                                  setActiveMenuId(null);
-                                }}
-                                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg transition-all"
-                              >
-                                <Pencil className="w-4 h-4" />
-                                Edit
-                              </button>
-
-                              <button
-                                onClick={() => {
-                                  handleView(project);
-                                  setActiveMenuId(null);
-                                }}
-                                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg transition-all"
-                              >
-                                <Eye className="w-4 h-4" />
-                                View
-                              </button>
-
-                              <button
-                                onClick={() => {
-                                  handleDelete(project.id);
-                                  setActiveMenuId(null);
-                                }}
-                                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                                Delete
-                              </button>
+                          <div className="absolute right-0 top-full mt-2 w-44 bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100 py-2 z-30">
+                            <div className="px-4 py-1.5 mb-1 border-b border-slate-50">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Actions</p>
                             </div>
+                            <button
+                              onClick={() => {
+                                handleView(project);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all group/item"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-slate-50 group-hover/item:bg-white flex items-center justify-center transition-colors">
+                                <Eye className="w-4 h-4" />
+                              </div>
+                              View Details
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleEdit(project);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all group/item"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-slate-50 group-hover/item:bg-white flex items-center justify-center transition-colors">
+                                <Pencil className="w-4 h-4" />
+                              </div>
+                              Edit Project
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleDelete(project.id);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-all group/item"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-rose-50 group-hover/item:bg-white flex items-center justify-center transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                              </div>
+                              Delete
+                            </button>
                           </div>
                         )}
                       </div>
@@ -546,32 +475,16 @@ export default function ProjectsList() {
             </table>
           </div>
 
-          {/* PAGINATION */}
-          <div className="px-6 py-4 bg-white border-t border-slate-200 flex items-center justify-between">
-
-            <p className="text-sm text-slate-500">
-              Showing{' '}
-              <span className="font-semibold text-slate-900">
-                {filteredProjects.length}
-              </span>{' '}
-              of{' '}
-              <span className="font-semibold text-slate-900">
-                {projects.length}
-              </span>{' '}
-              projects
+          <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+            <p className="text-sm font-medium text-slate-500">
+              Showing <span className="text-slate-900 font-semibold">{filteredProjects.length}</span> of <span className="text-slate-900 font-semibold">{projects.length}</span> projects
             </p>
-
-            <div className="flex items-center gap-2">
-
-              <button className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-all">
+            <div className="flex items-center gap-1">
+              <button className="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors disabled:opacity-30 cursor-not-allowed">
                 <ChevronLeft className="w-5 h-5" />
               </button>
-
-              <button className="w-10 h-10 rounded-xl bg-indigo-600 text-white text-sm font-semibold">
-                1
-              </button>
-
-              <button className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-all">
+              <button className="w-8 h-8 rounded-lg bg-indigo-600 text-white font-semibold text-sm shadow-sm shadow-indigo-200">1</button>
+              <button className="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors">
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
@@ -579,72 +492,43 @@ export default function ProjectsList() {
         </div>
       </div>
 
-      {/* SETTINGS MODAL */}
       {isSettingsModalOpen && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsSettingsModalOpen(false)} />
 
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={() => setIsSettingsModalOpen(false)}
-          />
-
-          <div className="relative bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden border border-slate-200">
-
-            <div className="bg-gradient-to-r from-slate-900 to-indigo-900 px-6 py-5 flex items-center justify-between">
-
-              <h2 className="text-white text-lg font-semibold">
-                Choose Columns
-              </h2>
-
-              <button
-                onClick={() =>
-                  setIsSettingsModalOpen(false)
-                }
-                className="text-white/70 hover:text-white"
-              >
+          <div className="relative bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden border border-slate-100">
+            <div className="bg-slate-900 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-white text-lg font-semibold tracking-tight">Choose Columns</h2>
+              <button onClick={() => setIsSettingsModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
-
-              <div className="space-y-1">
-
+            <div className="p-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
+              <div className="space-y-0.5">
                 {allColumns.map((col) => (
-                  <label
-                    key={col.id}
-                    className="flex items-center gap-4 px-4 py-3 hover:bg-slate-50 rounded-xl cursor-pointer transition-all"
-                  >
-
-                    <div className="relative">
-
+                  <label key={col.id} className="flex items-center gap-3 px-6 py-3 hover:bg-slate-50 cursor-pointer transition-colors group">
+                    <div className="relative flex items-center">
                       <input
                         type="checkbox"
-                        checked={tempVisibleColumns.includes(
-                          col.id
-                        )}
-                        onChange={() =>
-                          toggleColumnSelection(col.id)
-                        }
-                        className="peer h-5 w-5 appearance-none rounded-md border border-slate-300 checked:bg-indigo-600 checked:border-indigo-600 transition-all"
+                        className="peer h-5 w-5 appearance-none rounded border-2 border-slate-200 checked:bg-indigo-600 checked:border-indigo-600 transition-all cursor-pointer"
+                        checked={tempVisibleColumns.includes(col.id)}
+                        onChange={() => toggleColumnSelection(col.id)}
                       />
-
-                      <CheckCircle2 className="absolute w-3.5 h-3.5 text-white left-[3px] top-[3px] opacity-0 peer-checked:opacity-100 pointer-events-none" />
+                      <svg className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
                     </div>
-
-                    <span className="text-sm font-medium text-slate-700">
-                      {col.label}
-                    </span>
+                    <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">{col.label}</span>
                   </label>
                 ))}
               </div>
             </div>
 
-            <div className="p-5 border-t border-slate-200">
-
+            <div className="p-6 pt-2 border-t border-slate-100 flex justify-end">
               <button
                 onClick={applyColumnSettings}
-                className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition-all"
+                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm transition-all active:scale-95 shadow-lg shadow-indigo-500/10"
               >
                 Apply
               </button>
@@ -654,29 +538,10 @@ export default function ProjectsList() {
       )}
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-        * {
-          font-family: 'Inter', sans-serif;
-        }
-
-        .custom-scrollbarThin::-webkit-scrollbar {
-          height: 6px;
-        }
-
-        .custom-scrollbarThin::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
-          border-radius: 20px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
-          border-radius: 20px;
-        }
+        .custom-scrollbarThin::-webkit-scrollbar { height: 4px; }
+        .custom-scrollbarThin::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
       `}</style>
     </div>
   );

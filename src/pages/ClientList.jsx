@@ -113,11 +113,11 @@ export default function ClientList() {
 
 
   return (
-    <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8 animate-in fade-in duration-700">
+    <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8">
       <div className="max-w-[1400px] mx-auto space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 sm:px-8 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 sm:px-8 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
           <div className="space-y-1.5">
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
               Client List
             </h1>
             <p className="text-slate-500 text-sm font-medium tracking-wide flex items-center gap-2">
@@ -132,7 +132,7 @@ export default function ClientList() {
               <input
                 type="text"
                 placeholder="Search clients..."
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all focus:bg-white"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all focus:bg-white"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -146,7 +146,7 @@ export default function ClientList() {
                   setTempVisibleColumns(visibleColumns);
                   setIsSettingsModalOpen(true);
                 }}
-                className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 transition-all flex items-center justify-center"
+                className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-all flex items-center justify-center"
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -155,7 +155,7 @@ export default function ClientList() {
 
               <button
                 onClick={handleAdd}
-                className="flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-semibold shadow-[0_4px_12px_-2px_rgba(79,70,229,0.3)] hover:bg-indigo-700 transition-all active:scale-95"
+                className="flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold shadow-[0_4px_12px_-2px_rgba(79,70,229,0.3)] hover:bg-indigo-700 transition-all active:scale-95"
               >
                 <UserPlus className="w-4 h-4" />
                 Add Client
@@ -171,26 +171,26 @@ export default function ClientList() {
           </div>
         )}
 
-        <div className="bg-white border border-slate-100 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative">
+        <div className="bg-white border border-slate-100 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative">
           <div className="overflow-x-auto custom-scrollbarThin">
             <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-100/80">
-                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Client Code</th>
-                  {visibleColumns.includes('domain') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Domain</th>}
-                  {visibleColumns.includes('status') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Status</th>}
-                  {visibleColumns.includes('membership') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Membership</th>}
-                  {visibleColumns.includes('name') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Name</th>}
-                  {visibleColumns.includes('website') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Website</th>}
-                  {visibleColumns.includes('email') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Email</th>}
-                  {visibleColumns.includes('phone') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Phone</th>}
-                  {visibleColumns.includes('address') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Address</th>}
-                  {visibleColumns.includes('city') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">City</th>}
-                  {visibleColumns.includes('country') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Country</th>}
-                  {visibleColumns.includes('currency') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Currency</th>}
-                  {visibleColumns.includes('registrationDate') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Date of Registration</th>}
-                  {visibleColumns.includes('createdBy') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs">Added By</th>}
-                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs text-center sticky right-0 bg-slate-50 z-30 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] border-l border-slate-100">Action</th>
+                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Client Code</th>
+                  {visibleColumns.includes('domain') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Domain</th>}
+                  {visibleColumns.includes('status') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Status</th>}
+                  {visibleColumns.includes('membership') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Membership</th>}
+                  {visibleColumns.includes('name') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Name</th>}
+                  {visibleColumns.includes('website') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Website</th>}
+                  {visibleColumns.includes('email') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Email</th>}
+                  {visibleColumns.includes('phone') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Phone</th>}
+                  {visibleColumns.includes('address') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Address</th>}
+                  {visibleColumns.includes('city') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">City</th>}
+                  {visibleColumns.includes('country') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Country</th>}
+                  {visibleColumns.includes('currency') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Currency</th>}
+                  {visibleColumns.includes('registrationDate') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Date of Registration</th>}
+                  {visibleColumns.includes('createdBy') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Added By</th>}
+                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider text-center sticky right-0 bg-slate-50 z-30 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] border-l border-slate-100">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100/80">
@@ -404,10 +404,10 @@ export default function ClientList() {
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsSettingsModalOpen(false)} />
 
-          <div className="relative bg-white rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white">
-            <div className="bg-[#1a1c31] px-6 py-4 flex items-center justify-between">
-              <h2 className="text-white text-lg font-bold tracking-tight">Choose Columns</h2>
-              <button onClick={() => setIsSettingsModalOpen(false)} className="text-slate-600 hover:text-white transition-colors">
+          <div className="relative bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden border border-slate-100">
+            <div className="bg-slate-900 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-white text-lg font-semibold tracking-tight">Choose Columns</h2>
+              <button onClick={() => setIsSettingsModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -419,7 +419,7 @@ export default function ClientList() {
                     <div className="relative flex items-center">
                       <input
                         type="checkbox"
-                        className="peer h-5 w-5 appearance-none rounded border-2 border-slate-200 checked:bg-blue-600 checked:border-blue-600 transition-all cursor-pointer"
+                        className="peer h-5 w-5 appearance-none rounded border-2 border-slate-200 checked:bg-indigo-600 checked:border-indigo-600 transition-all cursor-pointer"
                         checked={tempVisibleColumns.includes(col.id)}
                         onChange={() => toggleColumnSelection(col.id)}
                       />
@@ -427,7 +427,7 @@ export default function ClientList() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <span className="text-[14px] font-bold text-slate-700 group-hover:text-slate-900">{col.label}</span>
+                    <span className="text-sm font-medium text-slate-700 group-hover:text-slate-900">{col.label}</span>
                   </label>
                 ))}
               </div>
@@ -436,7 +436,7 @@ export default function ClientList() {
             <div className="p-6 pt-2 border-t border-slate-100 flex justify-end">
               <button
                 onClick={applyColumnSettings}
-                className="w-full py-3 bg-[#3382c4] hover:bg-[#286ba3] text-white rounded-xl font-bold text-base transition-all active:scale-95 shadow-lg shadow-blue-500/10"
+                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-sm transition-all active:scale-95 shadow-lg shadow-indigo-500/10"
               >
                 Apply
               </button>
