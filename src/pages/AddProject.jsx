@@ -37,42 +37,76 @@ export default function AddProject() {
   const [clients, setClients] = useState([]);
   const [services, setServices] = useState([]);
   const [contacts, setContacts] = useState([]);
+  const [loadingMasters, setLoadingMasters] = useState(true);
+
+  const resolveMasterId = (value, items, matchKey = 'name') => {
+    if (!value) return '';
+    if (typeof value === 'object') return value._id || value.id || '';
+    const byId = items.find((item) => item._id === value || item.id === value);
+    if (byId) return byId._id || byId.id || '';
+    const byLabel = items.find((item) => item[matchKey] === value);
+    return byLabel?._id || byLabel?.id || '';
+  };
+
+  const resolveContactId = (value, contactList) => {
+    if (!value) return '';
+    if (typeof value === 'object') return value._id || value.id || '';
+    const byId = contactList.find((c) => c._id === value || c.id === value);
+    if (byId) return byId._id || byId.id || '';
+    const byName = contactList.find(
+      (c) => `${c.firstName || ''} ${c.lastName || ''}`.trim() === value
+    );
+    return byName?._id || byName?.id || '';
+  };
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoadingMasters(true);
       try {
         const [clientsRes, servicesRes, contactsRes] = await Promise.all([
           getClients(),
           getServices(),
-          getContacts()
+          getContacts(),
         ]);
         setClients(clientsRes);
-        setServices(servicesRes);
+        setServices(
+          servicesRes
+            .filter((s) => s.status === 'Active')
+            .sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0) || a.name.localeCompare(b.name))
+        );
         setContacts(contactsRes);
       } catch (error) {
-        console.error("Error fetching master data:", error);
+        console.error('Error fetching master data:', error);
+      } finally {
+        setLoadingMasters(false);
       }
     };
     fetchData();
   }, []);
 
   useEffect(() => {
-    if (editingProject) {
-      setFormData({ 
-        ...editingProject,
-        client: editingProject.client?._id || editingProject.client || '',
-        service: editingProject.service?._id || editingProject.service || '',
-        manager: editingProject.manager?._id || editingProject.manager || '',
-        deadline: editingProject.deadline ? new Date(editingProject.deadline).toISOString().split('T')[0] : ''
-      });
-    }
-  }, [editingProject]);
+    if (!editingProject || loadingMasters) return;
+
+    setFormData({
+      projectName: editingProject.projectName || '',
+      client: resolveMasterId(editingProject.client, clients),
+      service: resolveMasterId(editingProject.service, services),
+      manager: resolveContactId(editingProject.manager, contacts),
+      budget: editingProject.budget || '',
+      priority: editingProject.priority || 'Medium',
+      deadline: editingProject.deadline
+        ? new Date(editingProject.deadline).toISOString().split('T')[0]
+        : '',
+      progress: editingProject.progress ?? 0,
+      status: editingProject.status || 'Not Started',
+    });
+  }, [editingProject, loadingMasters, clients, services, contacts]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (editingProject) {
-        await updateProject(editingProject._id, formData);
+        await updateProject(editingProject._id || editingProject.id, formData);
         alert('Project updated successfully!');
       } else {
         await createProject(formData);
@@ -168,14 +202,26 @@ export default function AddProject() {
                     Service Type
                   </label>
                   <select
-                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none shadow-sm cursor-pointer"
+                    required
+                    disabled={loadingMasters}
+                    className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none shadow-sm cursor-pointer disabled:opacity-60"
                     value={formData.service}
                     onChange={(e) => setFormData({ ...formData, service: e.target.value })}
                   >
-                    <option value="">Select Service</option>
-                    {services.map(s => (
-                      <option key={s._id} value={s._id}>{s.name}</option>
+                    <option value="">
+                      {loadingMasters ? 'Loading services...' : 'Select Service Type'}
+                    </option>
+                    {services.map((s) => (
+                      <option key={s._id} value={s._id}>
+                        {s.name}
+                        {s.shortName ? ` (${s.shortName})` : ''}
+                      </option>
                     ))}
+                    {!loadingMasters && services.length === 0 && (
+                      <option value="" disabled>
+                        No services in master — add from Master → Services
+                      </option>
+                    )}
                   </select>
                 </div>
                 <div className="space-y-2 group">
