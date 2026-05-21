@@ -4,8 +4,11 @@ const TaskSchema = new mongoose.Schema({
   taskName: { type: String, trim: true },
   startDate: { type: Date },
   endDate: { type: Date },
-  unit: { type: String, trim: true },
+  unit: { type: String, trim: true, default: "Words" },
   quantity: { type: Number, default: 0 },
+  rate: { type: Number, default: 0 },
+  currency: { type: String, trim: true },
+  fees: { type: Number, default: 0 },
   status: { type: String, default: "Not Started" },
 });
 
@@ -43,8 +46,19 @@ const ProjectSchema = new mongoose.Schema(
     clientContact: { type: mongoose.Schema.Types.ObjectId, ref: "Contact" },
     clientPO: { type: String, trim: true },
     clientProjectCode: { type: String, trim: true },
+    isProgramGroup: { type: Boolean, default: false },
+    programName: { type: String, trim: true },
+    amount: { type: String, trim: true },
+    description: { type: String, trim: true },
 
     // ViewProject - Translations Tab
+    translationTool: { type: String, trim: true },
+    subjectMatter: { type: String, trim: true },
+    deliverable: { type: String, trim: true },
+    gstEnabled: { type: Boolean, default: false },
+    gstPercent: { type: Number, default: 18 },
+    otherCharges: { type: Number, default: 0 },
+    otherChargesLabel: { type: String, trim: true, default: "None" },
     sourceLanguage: { type: mongoose.Schema.Types.ObjectId, ref: "Language" },
     targets: [TargetSchema],
 

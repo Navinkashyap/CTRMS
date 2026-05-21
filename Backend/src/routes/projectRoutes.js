@@ -18,6 +18,9 @@ function sanitizeProjectBody(body) {
       delete data[field];
     }
   }
+  if (!data.isProgramGroup) {
+    data.programName = "";
+  }
   return data;
 }
 
