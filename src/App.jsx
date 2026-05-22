@@ -35,6 +35,7 @@ import ViewContact from "./pages/ViewContact";
 import AddProject from "./pages/AddProject";
 import ViewProject from "./pages/ViewProject";
 import Login from "./pages/Login";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Generic placeholder for other pages
 const PagePlaceholder = ({ title, icon }) => (
@@ -93,7 +94,7 @@ const App = () => {
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Layout />}>
+        <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
 
           <Route index element={<Dashboard />} />
           <Route path="add-admin" element={<AddAdmin />} />

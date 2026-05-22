@@ -62,6 +62,10 @@ const ProjectSchema = new mongoose.Schema(
     sourceLanguage: { type: mongoose.Schema.Types.ObjectId, ref: "Language" },
     targets: [TargetSchema],
 
+    // Upload files
+    referenceFiles: [{ type: String, trim: true }],
+    workingFiles: [{ type: String, trim: true }],
+
     // ViewProject - Remark Tab
     remark: { type: String, trim: true },
   },

@@ -28,7 +28,7 @@ function sanitizeProjectBody(body) {
 router.get("/", async (req, res) => {
   try {
     const projects = await Project.find()
-      .populate("client", "name")
+      .populate("client", "name currency")
       .populate("service", "name")
       .populate("clientContact", "firstName lastName email")
       .populate("projectManager", "firstName lastName email")
@@ -46,7 +46,7 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const project = await Project.findById(req.params.id)
-      .populate("client", "name")
+      .populate("client", "name currency")
       .populate("service", "name")
       .populate("clientContact", "firstName lastName email")
       .populate("projectManager", "firstName lastName email")
