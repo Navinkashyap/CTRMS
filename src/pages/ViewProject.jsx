@@ -90,6 +90,7 @@ export default function ViewProject() {
     projectStatus: 'In Progress',
     receivingDate: '',
     dueDate: '',
+    dueTime: '',
     dateOfDelivery: '',
     client: '',
     clientContact: '',
@@ -157,6 +158,7 @@ export default function ViewProject() {
           projectStatus: projRes.projectStatus || 'In Progress',
           receivingDate: toDatetimeLocal(projRes.receivingDate),
           dueDate: toDatetimeLocal(projRes.dueDate),
+          dueTime: projRes.dueTime || '',
           dateOfDelivery: toDatetimeLocal(projRes.dateOfDelivery),
           client: projRes.client?._id || projRes.client || '',
           clientContact: projRes.clientContact?._id || projRes.clientContact || '',
@@ -170,6 +172,9 @@ export default function ViewProject() {
           subjectMatter: projRes.subjectMatter || '',
           deliverable: projRes.deliverable || '',
           gstEnabled: Boolean(projRes.gstEnabled),
+          cgstPercent: projRes.cgstPercent ?? 9,
+          sgstPercent: projRes.sgstPercent ?? 9,
+          igstPercent: projRes.igstPercent ?? 18,
           otherCharges: projRes.otherCharges ?? 0,
           otherChargesLabel: projRes.otherChargesLabel || 'None',
           sourceLanguage: projRes.sourceLanguage?._id || projRes.sourceLanguage || '',
@@ -214,6 +219,8 @@ export default function ViewProject() {
 
   const selectedClient = clients.find((c) => c._id === formData.client);
   const clientCurrency = selectedClient?.currency || 'INR';
+  const clientState = selectedClient?.state?.trim().toLowerCase() || '';
+  const isUP = clientState === 'up' || clientState === 'uttar pradesh';
 
   const sourceCode = getLangCode(formData.sourceLanguage, languages);
   const targetSummary = formData.targets
@@ -230,7 +237,14 @@ export default function ViewProject() {
     0
   );
   const subTotal = allTaskFees;
-  const taxAmount = formData.gstEnabled ? subTotal * 0.18 : 0;
+  let taxAmount = 0;
+  if (formData.gstEnabled) {
+    if (isUP) {
+      taxAmount = subTotal * ((Number(formData.cgstPercent) + Number(formData.sgstPercent)) / 100);
+    } else {
+      taxAmount = subTotal * (Number(formData.igstPercent) / 100);
+    }
+  }
   const grandTotal = subTotal + taxAmount + (Number(formData.otherCharges) || 0);
 
   const addFileField = (field) => {
@@ -254,12 +268,14 @@ export default function ViewProject() {
   };
 
   const addTarget = () => {
+    const mrIN = languages.find((l) => l.localeCode === 'mr-IN' || l.name === 'Marathi');
+
     setFormData((prev) => ({
       ...prev,
       targets: [
         ...prev.targets,
         {
-          targetLanguage: '',
+          targetLanguage: mrIN ? mrIN._id : '',
           service: '',
           tasks: createDefaultTasks(
             clients.find((c) => c._id === prev.client)?.currency || 'INR'
@@ -389,8 +405,8 @@ export default function ViewProject() {
                 ))}
               </select>
             </div>
-            <div className="flex">
-              <span className="w-40 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">Number of Source</span>
+            <div className="flex border-b md:border-b-0 border-slate-300">
+              <span className="w-36 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">Source Language</span>
               <select
                 value={formData.sourceLanguage}
                 onChange={(e) => handleInputChange('sourceLanguage', e.target.value)}
@@ -405,8 +421,14 @@ export default function ViewProject() {
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 border-b border-slate-300">
             <div className="flex border-b md:border-b-0 md:border-r border-slate-300">
+              <span className="w-36 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">Number of Source</span>
+              <div className="flex-1 px-3 py-2 text-sm bg-white text-slate-800 font-medium">
+                1
+              </div>
+            </div>
+            <div className="flex">
               <span className="w-36 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">No. of Targets</span>
               <div className="flex-1 px-3 py-2 text-sm bg-white text-slate-800 font-medium">
                 {formData.targets.length === 0
@@ -414,23 +436,19 @@ export default function ViewProject() {
                   : `${formData.targets.length} (${targetSummary.join(', ') || '—'})`}
               </div>
             </div>
-            <div className="flex">
-              <span className="w-28 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">Deliverable</span>
-              <input
-                type="text"
-                value={formData.deliverable}
-                onChange={(e) => handleInputChange('deliverable', e.target.value)}
-                className={`flex-1 ${cellInput}`}
-                placeholder="Enter deliverable details"
-              />
-            </div>
+          </div>
+          <div className="flex">
+            <span className="w-36 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">Deliverable</span>
+            <input
+              type="text"
+              value={formData.deliverable}
+              onChange={(e) => handleInputChange('deliverable', e.target.value)}
+              className={`flex-1 ${cellInput}`}
+              placeholder="Enter deliverable details"
+            />
           </div>
         </div>
 
-        <p className="text-xs text-slate-500 italic">
-          Client currency ({clientCurrency}) and default rates apply automatically when adding targets.
-          Set client in the Company tab to change currency.
-        </p>
 
         {/* Task tables per target */}
         <div className="space-y-6">
@@ -442,20 +460,38 @@ export default function ViewProject() {
               <div key={idx} className="border border-slate-300 rounded overflow-hidden">
                 <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 border-b border-slate-300 px-4 py-2">
                   <div className="flex flex-wrap items-center gap-4 text-sm font-bold text-slate-800">
-                    <span>Source: <span className="text-indigo-700">{sourceCode || '—'}</span></span>
-                    <span>Target:</span>
-                    <select
-                      value={target.targetLanguage}
-                      onChange={(e) => handleTargetChange(idx, 'targetLanguage', e.target.value)}
-                      className="px-2 py-1 border border-slate-300 rounded bg-white text-sm font-semibold"
-                    >
-                      <option value="">Select Target Language</option>
-                      {languages.map((l) => (
-                        <option key={l._id} value={l._id}>{l.name}</option>
-                      ))}
-                    </select>
+                    <div className="flex items-center gap-2">
+                      <span>Source:</span>
+                      <select
+                        value={formData.sourceLanguage}
+                        onChange={(e) => handleInputChange('sourceLanguage', e.target.value)}
+                        className="px-2 py-1 border border-slate-300 rounded bg-white text-sm font-semibold text-indigo-700"
+                      >
+                        <option value="">Select Source</option>
+                        {languages.map((l) => (
+                          <option key={l._id} value={l._id}>
+                            {l.localeCode || l.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>Target:</span>
+                      <select
+                        value={target.targetLanguage}
+                        onChange={(e) => handleTargetChange(idx, 'targetLanguage', e.target.value)}
+                        className="px-2 py-1 border border-slate-300 rounded bg-white text-sm font-semibold"
+                      >
+                        <option value="">Select Target</option>
+                        {languages.map((l) => (
+                          <option key={l._id} value={l._id}>
+                            {l.localeCode || l.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                     {targetName && (
-                      <span className="text-slate-500 font-medium">({targetCode})</span>
+                      <span className="text-slate-500 font-medium">({targetName})</span>
                     )}
                   </div>
                   <button
@@ -530,8 +566,14 @@ export default function ViewProject() {
                               className={`${cellInput} text-center`}
                             />
                           </td>
-                          <td className={`${td} text-center font-semibold text-slate-700 bg-slate-50/30`}>
-                            {task.currency || clientCurrency}
+                          <td className={td}>
+                            <input
+                              type="text"
+                              value={task.currency || ''}
+                              onChange={(e) => handleTaskChange(idx, tIdx, 'currency', e.target.value.toUpperCase())}
+                              className={`${cellInput} text-center font-semibold text-slate-700`}
+                              placeholder={clientCurrency}
+                            />
                           </td>
                           <td className={`${td} text-center font-bold text-slate-800 bg-amber-50/40`}>
                             {calcTaskFees(task.quantity, task.rate).toFixed(2)}
@@ -578,7 +620,7 @@ export default function ViewProject() {
         {/* Totals footer */}
         <div className="flex flex-col lg:flex-row gap-8 justify-between items-start pt-4 border-t border-slate-200">
           <div className="space-y-3">
-            <label className="block text-sm font-bold text-slate-700">GST (Yes/No), if yes add 18%</label>
+            <label className="block text-sm font-bold text-slate-700">GST (Yes/No),</label>
             <div className="flex items-center gap-6">
               <label className="flex items-center gap-2">
                 <input
@@ -601,6 +643,45 @@ export default function ViewProject() {
                 <span className="text-sm font-medium">No</span>
               </label>
             </div>
+            {formData.gstEnabled && (
+              <div className="flex items-center gap-4 mt-2">
+                {isUP ? (
+                  <>
+                    <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                      CGST (%):
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.cgstPercent}
+                        onChange={(e) => handleInputChange('cgstPercent', e.target.value)}
+                        className="w-16 px-2 py-1 border border-slate-300 rounded text-center"
+                      />
+                    </label>
+                    <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                      SGST (%):
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.sgstPercent}
+                        onChange={(e) => handleInputChange('sgstPercent', e.target.value)}
+                        className="w-16 px-2 py-1 border border-slate-300 rounded text-center"
+                      />
+                    </label>
+                  </>
+                ) : (
+                  <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                    IGST (%):
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.igstPercent}
+                      onChange={(e) => handleInputChange('igstPercent', e.target.value)}
+                      className="w-16 px-2 py-1 border border-slate-300 rounded text-center"
+                    />
+                  </label>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="w-full max-w-sm border border-slate-300 rounded overflow-hidden text-sm ml-auto">
@@ -612,7 +693,7 @@ export default function ViewProject() {
                 </tr>
                 <tr>
                   <td className="border border-slate-300 bg-slate-50 px-4 py-2 font-bold text-slate-700">
-                    Tax {formData.gstEnabled ? '(GST - 18%)' : ''}
+                    Tax {formData.gstEnabled ? (isUP ? `(CGST - ${formData.cgstPercent}% & SGST - ${formData.sgstPercent}%)` : `(IGST - ${formData.igstPercent}%)`) : ''}
                   </td>
                   <td className="border border-slate-300 px-4 py-2 text-right font-semibold">
                     {formData.gstEnabled ? taxAmount.toFixed(2) : '0.00'}
@@ -749,20 +830,20 @@ export default function ViewProject() {
             </select>
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-slate-700">Client PO</label>
-            <input
-              type="text"
-              value={formData.clientPO}
-              onChange={(e) => handleInputChange('clientPO', e.target.value)}
-              className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
-            />
-          </div>
-          <div className="space-y-2">
             <label className="block text-sm font-bold text-slate-700">Client Project Code</label>
             <input
               type="text"
               value={formData.clientProjectCode}
               onChange={(e) => handleInputChange('clientProjectCode', e.target.value)}
+              className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-slate-700">Client PO</label>
+            <input
+              type="text"
+              value={formData.clientPO}
+              onChange={(e) => handleInputChange('clientPO', e.target.value)}
               className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
             />
           </div>
@@ -776,14 +857,25 @@ export default function ViewProject() {
               className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
             />
           </div>
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-slate-700">Due Date</label>
-            <input
-              type="date"
-              value={formData.dueDate ? formData.dueDate.slice(0, 10) : ''}
-              onChange={(e) => handleInputChange('dueDate', e.target.value)}
-              className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-700">Due Date</label>
+              <input
+                type="date"
+                value={formData.dueDate ? formData.dueDate.slice(0, 10) : ''}
+                onChange={(e) => handleInputChange('dueDate', e.target.value)}
+                className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-700">Due Time</label>
+              <input
+                type="time"
+                value={formData.dueTime || ''}
+                onChange={(e) => handleInputChange('dueTime', e.target.value)}
+                className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
+              />
+            </div>
           </div>
           <div className="space-y-2 md:col-span-2">
             <label className="block text-sm font-bold text-slate-700">Description</label>

@@ -40,6 +40,7 @@ const ProjectSchema = new mongoose.Schema(
     projectStatus: { type: String, default: "In Progress" },
     receivingDate: { type: Date },
     dueDate: { type: Date },
+    dueTime: { type: String, trim: true },
     dateOfDelivery: { type: Date },
 
     // ViewProject - Company Tab
@@ -56,6 +57,9 @@ const ProjectSchema = new mongoose.Schema(
     subjectMatter: { type: String, trim: true },
     deliverable: { type: String, trim: true },
     gstEnabled: { type: Boolean, default: false },
+    cgstPercent: { type: Number, default: 9 },
+    sgstPercent: { type: Number, default: 9 },
+    igstPercent: { type: Number, default: 18 },
     gstPercent: { type: Number, default: 18 },
     otherCharges: { type: Number, default: 0 },
     otherChargesLabel: { type: String, trim: true, default: "None" },
