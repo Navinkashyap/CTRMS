@@ -21,6 +21,7 @@ import {
 import { getDepartments } from '../lib/departmentApi';
 import { createContact, updateContact } from '../lib/contactApi';
 import { getClients } from '../lib/clientApi';
+import { countryCodes } from '../lib/countryCodes';
 
 export default function AddContact() {
   const navigate = useNavigate();
@@ -203,30 +204,28 @@ export default function AddContact() {
                     <span className="text-[9px] font-bold">WhatsApp</span>
                   </label>
                 </label>
-                <div className="relative group flex gap-2">
-                  <div className="relative w-[30%]">
+                <div className="relative group flex gap-2 w-full">
+                  <div className="relative w-[90px] shrink-0">
                     <select
-                      className="w-full px-2 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
+                      className="w-full px-2 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none cursor-pointer"
                       value={formData.countryCode}
                       onChange={(e) => updateField('countryCode', e.target.value)}
+                      title={countryCodes.find(c => c.code === formData.countryCode)?.label || 'Country Code'}
                     >
-                      <option value="+91">+91 (IN)</option>
-                      <option value="+1">+1 (US/CA)</option>
-                      <option value="+44">+44 (UK)</option>
-                      <option value="+971">+971 (AE)</option>
-                      <option value="+61">+61 (AU)</option>
-                      <option value="+49">+49 (DE)</option>
-                      <option value="+33">+33 (FR)</option>
+                      {countryCodes.map((c) => (
+                        <option key={c.label} value={c.code}>{c.code} {c.label}</option>
+                      ))}
                     </select>
                   </div>
-                  <div className="relative flex-1">
+                  <div className="relative flex-1 min-w-0">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                     <input
-                      type="text"
+                      type="tel"
+                      maxLength={10}
                       className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
                       placeholder="Enter phone number"
                       value={formData.phone}
-                      onChange={(e) => updateField('phone', e.target.value)}
+                      onChange={(e) => updateField('phone', e.target.value.replace(/\D/g, '').slice(0, 10))}
                     />
                   </div>
                 </div>

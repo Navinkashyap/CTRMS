@@ -10,8 +10,6 @@ import { getSpecializations } from '../lib/specializationApi';
 
 const DEFAULT_TRANSLATION_TASKS = [
   { taskName: 'Translation', rate: 1 },
-  { taskName: 'Editing', rate: 0.5 },
-  { taskName: 'Proofreading', rate: 0.25 },
 ];
 
 const getLangCode = (langId, languageList) => {
@@ -66,7 +64,7 @@ export default function AddProject() {
     clientContact: '',
     clientPO: '',
     clientProjectCode: '',
-    projectStatus: 'Project being created',
+    projectStatus: 'In Progress',
     isProgramGroup: false,
     programName: '',
     amount: '',
@@ -329,7 +327,7 @@ export default function AddProject() {
                 onChange={(e) => handleInputChange('subjectMatter', e.target.value)}
                 className={`flex-1 ${cellSelect}`}
               >
-                <option value="">Select Subject</option>
+                <option value="">Specializaiton</option>
                 {specializations.map((s) => (
                   <option key={s._id} value={s.name}>{s.name}</option>
                 ))}
@@ -743,9 +741,10 @@ export default function AddProject() {
               onChange={(e) => handleInputChange('projectStatus', e.target.value)}
               className={inputClass}
             >
+              <option value="In Progress">In Progress</option>
               <option value="Project being created">Project being created</option>
               <option value="Not Started">Not Started</option>
-              <option value="In Progress">In Progress</option>
+
               <option value="On Hold">On Hold</option>
               <option value="Completed">Completed</option>
             </select>

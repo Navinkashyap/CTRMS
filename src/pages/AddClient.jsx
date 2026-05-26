@@ -28,6 +28,7 @@ import { getMemberships } from '../lib/membershipApi';
 import { getCountries, createCountry } from '../lib/countryApi';
 import { getStates, createState } from '../lib/stateApi';
 import { getCities, createCity } from '../lib/cityApi';
+import { countryCodes } from '../lib/countryCodes';
 
 const getInitialFormData = () => ({
   domain: '',
@@ -87,6 +88,37 @@ const normalizeClientForForm = (client) => {
     gstIn: client?.gstIn || '',
     vat: client?.vat || '',
   };
+};
+
+const inputClass =
+  'w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all';
+
+const FormField = ({ icon: Icon, label, required, children, className = '' }) => (
+  <div className={`flex items-start gap-4 p-4 rounded-2xl bg-slate-50/50 hover:bg-white border border-transparent hover:border-slate-100 focus-within:border-indigo-100 focus-within:bg-white transition-colors ${className}`}>
+    <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
+      <Icon className="w-5 h-5 text-indigo-500" />
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+        {label}
+        {required && <span className="text-red-500 ml-0.5">*</span>}
+      </p>
+      {children}
+    </div>
+  </div>
+);
+
+const getStatusBadgeClass = (status) => {
+  if (['Active', 'Client'].includes(status)) {
+    return 'text-emerald-700 bg-emerald-50 border border-emerald-200';
+  }
+  if (['Onboarding', 'Prospect Warm'].includes(status)) {
+    return 'text-amber-700 bg-amber-50 border border-amber-200';
+  }
+  if (status === 'Prospect Cold') {
+    return 'text-blue-700 bg-blue-50 border border-blue-200';
+  }
+  return 'text-slate-600 bg-slate-100 border border-slate-200';
 };
 
 export default function AddClient() {
@@ -347,36 +379,6 @@ export default function AddClient() {
     return `${backendUrl}${url}`;
   };
 
-  const inputClass =
-    'w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all';
-
-  const FormField = ({ icon: Icon, label, required, children, className = '' }) => (
-    <div className={`flex items-start gap-4 p-4 rounded-2xl bg-slate-50/50 hover:bg-white border border-transparent hover:border-slate-100 focus-within:border-indigo-100 focus-within:bg-white transition-colors ${className}`}>
-      <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
-        <Icon className="w-5 h-5 text-indigo-500" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">
-          {label}
-          {required && <span className="text-red-500 ml-0.5">*</span>}
-        </p>
-        {children}
-      </div>
-    </div>
-  );
-
-  const getStatusBadgeClass = (status) => {
-    if (['Active', 'Client'].includes(status)) {
-      return 'text-emerald-700 bg-emerald-50 border border-emerald-200';
-    }
-    if (['Onboarding', 'Prospect Warm'].includes(status)) {
-      return 'text-amber-700 bg-amber-50 border border-amber-200';
-    }
-    if (status === 'Prospect Cold') {
-      return 'text-blue-700 bg-blue-50 border border-blue-200';
-    }
-    return 'text-slate-600 bg-slate-100 border border-slate-200';
-  };
 
   return (
     <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8">
@@ -547,7 +549,7 @@ export default function AddClient() {
                 <Phone className="w-5 h-5 text-emerald-500" />
                 Contact Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField icon={Mail} label="Email Address" required>
                   <input
                     type="email"
@@ -560,29 +562,24 @@ export default function AddClient() {
                 </FormField>
 
                 <FormField icon={Phone} label="Phone Number">
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 w-full">
                     <select
-                      className={`${inputClass} w-28 shrink-0`}
+                      className="px-2 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all w-[100px] shrink-0"
                       value={formData.countryCode}
                       onChange={(e) => updateField('countryCode', e.target.value)}
+                      title={countryCodes.find(c => c.code === formData.countryCode)?.label || 'Country Code'}
                     >
-                      <option value="+91">+91</option>
-                      <option value="+1">+1</option>
-                      <option value="+44">+44</option>
-                      <option value="+61">+61</option>
-                      <option value="+971">+971</option>
-                      <option value="+65">+65</option>
-                      <option value="+86">+86</option>
-                      <option value="+81">+81</option>
-                      <option value="+49">+49</option>
-                      <option value="+33">+33</option>
+                      {countryCodes.map((c) => (
+                        <option key={c.label} value={c.code}>{c.code} {c.label}</option>
+                      ))}
                     </select>
                     <input
                       type="tel"
-                      className={inputClass}
+                      maxLength={10}
+                      className="flex-1 min-w-0 px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                       placeholder="Phone Number"
                       value={formData.phone}
-                      onChange={(e) => updateField('phone', e.target.value)}
+                      onChange={(e) => updateField('phone', e.target.value.replace(/\D/g, '').slice(0, 10))}
                     />
                   </div>
                 </FormField>

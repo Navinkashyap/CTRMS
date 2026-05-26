@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
+  ArrowUpDown,
   Building2,
   CheckCircle2,
   ChevronDown,
@@ -49,6 +50,8 @@ export default function ClientList() {
   const [visibleColumns, setVisibleColumns] = useState(['domain', 'status', 'membership', 'name', 'website', 'email', 'phone', 'city', 'country', 'registrationDate']);
   const [tempVisibleColumns, setTempVisibleColumns] = useState(visibleColumns);
 
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
 
 
   useEffect(() => {
@@ -78,16 +81,44 @@ export default function ClientList() {
 
 
 
-  const filteredClients = useMemo(() => {
+  const sortedAndFilteredClients = useMemo(() => {
+    let result = [...clients];
     const query = searchQuery.toLowerCase();
-    return clients.filter((client) => {
-      return (
-        (client.name || '').toLowerCase().includes(query) ||
-        (client.domain || '').toLowerCase().includes(query) ||
-        (client.membershipCode || '').toLowerCase().includes(query)
-      );
-    });
-  }, [clients, searchQuery]);
+    
+    if (query) {
+      result = result.filter((client) => {
+        return (
+          (client.name || '').toLowerCase().includes(query) ||
+          (client.domain || '').toLowerCase().includes(query) ||
+          (client.membershipCode || '').toLowerCase().includes(query) ||
+          (client.country || '').toLowerCase().includes(query) ||
+          (client.city || '').toLowerCase().includes(query) ||
+          (client.email || '').toLowerCase().includes(query) ||
+          (client.phone || '').toLowerCase().includes(query)
+        );
+      });
+    }
+
+    if (sortConfig.key) {
+      result.sort((a, b) => {
+        const aVal = (a[sortConfig.key] || '').toString().toLowerCase();
+        const bVal = (b[sortConfig.key] || '').toString().toLowerCase();
+        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return result;
+  }, [clients, searchQuery, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
 
 
 
@@ -180,7 +211,17 @@ export default function ClientList() {
                   {visibleColumns.includes('domain') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Domain</th>}
                   {visibleColumns.includes('status') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Status</th>}
                   {visibleColumns.includes('membership') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Membership</th>}
-                  {visibleColumns.includes('name') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Name</th>}
+                  {visibleColumns.includes('name') && (
+                    <th 
+                      className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 transition-colors"
+                      onClick={() => requestSort('name')}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        Name
+                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      </div>
+                    </th>
+                  )}
                   {visibleColumns.includes('website') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Website</th>}
                   {visibleColumns.includes('email') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Email</th>}
                   {visibleColumns.includes('phone') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Phone</th>}
@@ -205,7 +246,7 @@ export default function ClientList() {
                   </tr>
                 )}
 
-                {!loading && filteredClients.length === 0 && (
+                {!loading && sortedAndFilteredClients.length === 0 && (
                   <tr>
                     <td colSpan={visibleColumns.length + 2} className="px-8 py-16 text-center">
                       <div className="flex flex-col items-center justify-center text-slate-600 space-y-3">
@@ -216,7 +257,7 @@ export default function ClientList() {
                   </tr>
                 )}
 
-                {!loading && filteredClients.map((client, idx) => (
+                {!loading && sortedAndFilteredClients.map((client, idx) => (
                   <tr key={client._id} className="group hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4">
                       <span className="text-slate-400 font-medium text-sm">
@@ -382,7 +423,7 @@ export default function ClientList() {
 
           <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
             <p className="text-sm font-medium text-slate-500">
-              Showing <span className="text-slate-900 font-semibold">{filteredClients.length}</span> of <span className="text-slate-900 font-semibold">{clients.length}</span> Clients
+              Showing <span className="text-slate-900 font-semibold">{sortedAndFilteredClients.length}</span> of <span className="text-slate-900 font-semibold">{clients.length}</span> Clients
             </p>
             <div className="flex items-center gap-1">
               <button className="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors disabled:opacity-30 cursor-not-allowed">
