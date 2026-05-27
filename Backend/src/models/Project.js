@@ -13,6 +13,7 @@ const TaskSchema = new mongoose.Schema({
 });
 
 const TargetSchema = new mongoose.Schema({
+  sourceLanguage: { type: mongoose.Schema.Types.ObjectId, ref: "Language" },
   targetLanguage: { type: mongoose.Schema.Types.ObjectId, ref: "Language" },
   service: { type: mongoose.Schema.Types.ObjectId, ref: "Service" },
   tasks: [TaskSchema],
@@ -22,6 +23,7 @@ const ProjectSchema = new mongoose.Schema(
   {
     // Common / AddProject Info
     projectName: { type: String, required: true, trim: true },
+    projectCode: { type: String, trim: true },
     client: { type: mongoose.Schema.Types.ObjectId, ref: "Client" },
     service: { type: mongoose.Schema.Types.ObjectId, ref: "Service" },
     manager: { type: String, trim: true }, // Usually from Contacts or Admins
