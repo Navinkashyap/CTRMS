@@ -106,7 +106,6 @@ export default function ViewProject() {
     gstEnabled: false,
     otherCharges: 0,
     otherChargesLabel: 'None',
-    sourceLanguage: '',
     targets: [],
     referenceFiles: [''],
     workingFiles: [''],
@@ -177,7 +176,6 @@ export default function ViewProject() {
           igstPercent: projRes.igstPercent ?? 18,
           otherCharges: projRes.otherCharges ?? 0,
           otherChargesLabel: projRes.otherChargesLabel || 'None',
-          sourceLanguage: projRes.sourceLanguage?._id || projRes.sourceLanguage || '',
           targets: normalizeTargets(projRes.targets),
           referenceFiles: projRes.referenceFiles?.length ? projRes.referenceFiles : [''],
           workingFiles: projRes.workingFiles?.length ? projRes.workingFiles : [''],
@@ -222,7 +220,6 @@ export default function ViewProject() {
   const clientState = selectedClient?.state?.trim().toLowerCase() || '';
   const isUP = clientState === 'up' || clientState === 'uttar pradesh';
 
-  const sourceCode = getLangCode(formData.sourceLanguage, languages);
   const targetSummary = formData.targets
     .map((t) => getLangName(t.targetLanguage, languages))
     .filter(Boolean);
@@ -405,30 +402,10 @@ export default function ViewProject() {
                 ))}
               </select>
             </div>
-            <div className="flex border-b md:border-b-0 border-slate-300">
-              <span className="w-36 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">Source Language</span>
-              <select
-                value={formData.sourceLanguage}
-                onChange={(e) => handleInputChange('sourceLanguage', e.target.value)}
-                className={`flex-1 ${cellSelect}`}
-              >
-                <option value="">Select Source</option>
-                {languages.map((l) => (
-                  <option key={l._id} value={l._id}>
-                    {getLangCode(l._id, languages) || l.name} — {l.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <div className="hidden md:block"></div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 border-b border-slate-300">
             <div className="flex border-b md:border-b-0 md:border-r border-slate-300">
-              <span className="w-36 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">Number of Source</span>
-              <div className="flex-1 px-3 py-2 text-sm bg-white text-slate-800 font-medium">
-                1
-              </div>
-            </div>
-            <div className="flex">
               <span className="w-36 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">No. of Targets</span>
               <div className="flex-1 px-3 py-2 text-sm bg-white text-slate-800 font-medium">
                 {formData.targets.length === 0
@@ -436,6 +413,7 @@ export default function ViewProject() {
                   : `${formData.targets.length} (${targetSummary.join(', ') || '—'})`}
               </div>
             </div>
+            <div className="hidden md:block"></div>
           </div>
           <div className="flex">
             <span className="w-36 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">Deliverable</span>
@@ -460,21 +438,6 @@ export default function ViewProject() {
               <div key={idx} className="border border-slate-300 rounded overflow-hidden">
                 <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 border-b border-slate-300 px-4 py-2">
                   <div className="flex flex-wrap items-center gap-4 text-sm font-bold text-slate-800">
-                    <div className="flex items-center gap-2">
-                      <span>Source:</span>
-                      <select
-                        value={formData.sourceLanguage}
-                        onChange={(e) => handleInputChange('sourceLanguage', e.target.value)}
-                        className="px-2 py-1 border border-slate-300 rounded bg-white text-sm font-semibold text-indigo-700"
-                      >
-                        <option value="">Select Source</option>
-                        {languages.map((l) => (
-                          <option key={l._id} value={l._id}>
-                            {l.localeCode || l.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
                     <div className="flex items-center gap-2">
                       <span>Target:</span>
                       <select
@@ -508,7 +471,6 @@ export default function ViewProject() {
                     <thead>
                       <tr>
                         <th className={th}>Task</th>
-                        <th className={th}>Source</th>
                         <th className={th}>Target</th>
                         <th className={th}>Quantity</th>
                         <th className={th}>Unit (Words)</th>
@@ -529,9 +491,6 @@ export default function ViewProject() {
                               className={cellInput}
                               placeholder="Task name"
                             />
-                          </td>
-                          <td className={`${td} text-center font-semibold text-slate-600 bg-slate-50/50`}>
-                            {sourceCode || '—'}
                           </td>
                           <td className={`${td} text-center font-semibold text-slate-600 bg-slate-50/50`}>
                             {targetCode || '—'}

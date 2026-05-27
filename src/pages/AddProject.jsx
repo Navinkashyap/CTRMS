@@ -80,7 +80,6 @@ export default function AddProject() {
     igstPercent: 18,
     otherCharges: 0,
     otherChargesLabel: 'None',
-    sourceLanguage: '',
     targets: [],
     referenceFiles: [''],
     workingFiles: [''],
@@ -101,10 +100,6 @@ export default function AddProject() {
         setClients(clientsRes);
         setContacts(contactsRes);
         setLanguages(langsRes);
-        const enUS = langsRes.find((l) => l.localeCode === 'en-US' || l.name === 'English');
-        if (enUS) {
-          setFormData((prev) => ({ ...prev, sourceLanguage: enUS._id }));
-        }
         setTools(toolsRes.filter((t) => t.status === 'Active'));
         setSpecializations(specsRes.filter((s) => s.status === 'Active'));
 
@@ -140,7 +135,6 @@ export default function AddProject() {
   const clientState = selectedClient?.state?.trim().toLowerCase() || '';
   const isUP = clientState === 'up' || clientState === 'uttar pradesh';
 
-  const sourceCode = getLangCode(formData.sourceLanguage, languages);
   const targetSummary = formData.targets
     .map((t) => getLangName(t.targetLanguage, languages))
     .filter(Boolean);
@@ -333,29 +327,9 @@ export default function AddProject() {
                 ))}
               </select>
             </div>
-            <div className="flex border-b md:border-b-0 border-slate-300">
-              <span className="w-36 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">Source Language</span>
-              <select
-                value={formData.sourceLanguage}
-                onChange={(e) => handleInputChange('sourceLanguage', e.target.value)}
-                className={`flex-1 ${cellSelect}`}
-              >
-                <option value="">Select Source</option>
-                {languages.map((l) => (
-                  <option key={l._id} value={l._id}>
-                    {getLangCode(l._id, languages) || l.name} — {l.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <div className="hidden md:block"></div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 border-b border-slate-300">
-            <div className="flex border-b md:border-b-0 md:border-r border-slate-300">
-              <span className="w-36 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">Number of Source</span>
-              <div className="flex-1 px-3 py-2 text-sm bg-white text-slate-800 font-medium">
-                1
-              </div>
-            </div>
             <div className="flex">
               <span className="w-36 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">No. of Targets</span>
               <div className="flex-1 px-3 py-2 text-sm bg-white text-slate-800 font-medium">
@@ -389,21 +363,6 @@ export default function AddProject() {
                 <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 border-b border-slate-300 px-4 py-2">
                   <div className="flex flex-wrap items-center gap-4 text-sm font-bold text-slate-800">
                     <div className="flex items-center gap-2">
-                      <span>Source:</span>
-                      <select
-                        value={formData.sourceLanguage}
-                        onChange={(e) => handleInputChange('sourceLanguage', e.target.value)}
-                        className="px-2 py-1 border border-slate-300 rounded bg-white text-sm font-semibold text-indigo-700"
-                      >
-                        <option value="">Select Source</option>
-                        {languages.map((l) => (
-                          <option key={l._id} value={l._id}>
-                            {l.localeCode || l.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-2">
                       <span>Target:</span>
                       <select
                         value={target.targetLanguage}
@@ -436,7 +395,6 @@ export default function AddProject() {
                     <thead>
                       <tr>
                         <th className={th}>Task</th>
-                        <th className={th}>Source</th>
                         <th className={th}>Target</th>
                         <th className={th}>Quantity</th>
                         <th className={th}>Unit (Words)</th>
@@ -457,9 +415,6 @@ export default function AddProject() {
                               className={cellInput}
                               placeholder="Task name"
                             />
-                          </td>
-                          <td className={`${td} text-center font-semibold text-slate-600 bg-slate-50/50`}>
-                            {sourceCode || '—'}
                           </td>
                           <td className={`${td} text-center font-semibold text-slate-600 bg-slate-50/50`}>
                             {targetCode || '—'}
