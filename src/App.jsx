@@ -15,6 +15,7 @@ import Deadline from "./pages/Deadline";
 import Typelist from "./pages/Typelist";
 import Membership from "./pages/Membership";
 import Department from "./pages/Department";
+import Unit from "./pages/Unit";
 import RoleAction from "./pages/RoleAction";
 import Action from "./pages/Action";
 import MangerRole from "./pages/MangerRole";
@@ -23,6 +24,7 @@ import ClientList from "./pages/ClientList";
 import ContactList from "./pages/ContactList";
 import ProjectsList from "./pages/ProjectsList";
 import InvoiceList from "./pages/InvoiceList";
+import AddInvoice from "./pages/AddInvoice";
 import UsersList from "./pages/UsersList";
 import VendorList from "./pages/VendorList";
 import AddVendor from "./pages/AddVendor";
@@ -114,6 +116,7 @@ const App = () => {
           <Route path="master/type" element={<Typelist />} />
           <Route path="master/membership" element={<Membership />} />
           <Route path="master/department" element={<Department />} />
+          <Route path="master/unit" element={<Unit />} />
 
           <Route path="roles/manage-role" element={<MangerRole />} />
 
@@ -139,7 +142,10 @@ const App = () => {
             <Route path="add-project" element={<AddProject />} />
             <Route path="view-project/:id" element={<ViewProject />} />
           </Route>
-          <Route path="invoice" element={<InvoiceList />} />
+          <Route path="invoice">
+            <Route index element={<InvoiceList />} />
+            <Route path="add-invoice" element={<AddInvoice />} />
+          </Route>
           <Route path="report" element={<PagePlaceholder title="Analytics & Reports" icon="fa-chart-pie" />} />
           <Route path="logout" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<PagePlaceholder title="Page Not Found" icon="fa-circle-exclamation" />} />

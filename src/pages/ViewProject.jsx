@@ -7,6 +7,7 @@ import { getContacts } from '../lib/contactApi';
 import { getLanguages } from '../lib/languageApi';
 import { getTools } from '../lib/toolApi';
 import { getSpecializations } from '../lib/specializationApi';
+import { getUnits } from '../lib/unitApi';
 
 const DEFAULT_TRANSLATION_TASKS = [
   { taskName: 'Translation', rate: 1 },
@@ -47,10 +48,10 @@ const normalizeTargets = (targets = []) =>
     })),
   }));
 
-const createDefaultTasks = (currency = 'INR') =>
+const createDefaultTasks = (currency = 'INR', defaultUnit = 'Words') =>
   DEFAULT_TRANSLATION_TASKS.map((t) => ({
     taskName: t.taskName,
-    unit: 'Words',
+    unit: defaultUnit,
     quantity: 100,
     rate: t.rate,
     currency,
@@ -81,6 +82,7 @@ export default function ViewProject() {
   const [tools, setTools] = useState([]);
   const [specializations, setSpecializations] = useState([]);
   const [programNames, setProgramNames] = useState([]);
+  const [unitsList, setUnitsList] = useState([]);
 
   const [formData, setFormData] = useState({
     projectName: '',
@@ -118,7 +120,7 @@ export default function ViewProject() {
     const fetchAll = async () => {
       try {
         setLoading(true);
-        const [projRes, clientsRes, contactsRes, langsRes, allProjects, toolsRes, specsRes] = await Promise.all([
+        const [projRes, clientsRes, contactsRes, langsRes, allProjects, toolsRes, specsRes, unitsRes] = await Promise.all([
           getProject(id),
           getClients(),
           getContacts(),
@@ -126,6 +128,7 @@ export default function ViewProject() {
           getProjects(),
           getTools(),
           getSpecializations(),
+          getUnits(),
         ]);
 
         setProject(projRes);
@@ -134,6 +137,7 @@ export default function ViewProject() {
         setLanguages(langsRes);
         setTools(toolsRes.filter((t) => t.status === 'Active'));
         setSpecializations(specsRes.filter((s) => s.status === 'Active'));
+        setUnitsList(unitsRes.filter((u) => u.status !== 'Inactive'));
 
         const names = [
           ...new Set(
@@ -280,7 +284,8 @@ export default function ViewProject() {
           targetLanguage: hiIN ? hiIN._id : '',
           service: '',
           tasks: createDefaultTasks(
-            clients.find((c) => c._id === prev.client)?.currency || 'INR'
+            clients.find((c) => c._id === prev.client)?.currency || 'INR',
+            unitsList.length > 0 ? unitsList[0].name : 'Words'
           ),
         },
       ],
@@ -298,7 +303,7 @@ export default function ViewProject() {
     const newTargets = [...formData.targets];
     newTargets[index][field] = value;
     if (field === 'targetLanguage' && value && newTargets[index].tasks.length === 0) {
-      newTargets[index].tasks = createDefaultTasks(clientCurrency);
+      newTargets[index].tasks = createDefaultTasks(clientCurrency, unitsList.length > 0 ? unitsList[0].name : 'Words');
     }
     setFormData({ ...formData, targets: newTargets });
   };
@@ -307,7 +312,7 @@ export default function ViewProject() {
     const newTargets = [...formData.targets];
     newTargets[targetIndex].tasks.push({
       taskName: '',
-      unit: 'Words',
+      unit: unitsList.length > 0 ? unitsList[0].name : 'Words',
       quantity: 100,
       rate: 0,
       currency: clientCurrency,
@@ -493,7 +498,7 @@ export default function ViewProject() {
                       <tr>
                         <th className={th}>Task</th>
                         <th className={th}>Quantity</th>
-                        <th className={th}>Unit (Words)</th>
+                        <th className={th}>Unit</th>
                         <th className={th}>Rate</th>
                         <th className={th}>Currency</th>
                         <th className={th}>Fees</th>
@@ -527,9 +532,11 @@ export default function ViewProject() {
                               onChange={(e) => handleTaskChange(idx, tIdx, 'unit', e.target.value)}
                               className={cellSelect}
                             >
-                              <option value="Words">Words</option>
-                              <option value="Hour">Hour</option>
-                              <option value="Page">Page</option>
+                              {unitsList.length > 0 ? (
+                                unitsList.map(u => <option key={u._id} value={u.name}>{u.name}</option>)
+                              ) : (
+                                <option value="Words">Words</option>
+                              )}
                             </select>
                           </td>
                           <td className={td}>
