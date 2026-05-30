@@ -8,6 +8,7 @@ import { getLanguages } from '../lib/languageApi';
 import { getTools } from '../lib/toolApi';
 import { getSpecializations } from '../lib/specializationApi';
 import { getUnits } from '../lib/unitApi';
+import { getServices } from '../lib/serviceApi';
 
 const DEFAULT_TRANSLATION_TASKS = [
   { taskName: 'Translation', rate: 1 },
@@ -83,6 +84,7 @@ export default function ViewProject() {
   const [specializations, setSpecializations] = useState([]);
   const [programNames, setProgramNames] = useState([]);
   const [unitsList, setUnitsList] = useState([]);
+  const [services, setServices] = useState([]);
 
   const [formData, setFormData] = useState({
     projectName: '',
@@ -106,7 +108,6 @@ export default function ViewProject() {
     description: '',
     translationTool: '',
     subjectMatter: '',
-    deliverable: '',
     gstEnabled: false,
     otherCharges: 0,
     otherChargesLabel: 'None',
@@ -120,7 +121,7 @@ export default function ViewProject() {
     const fetchAll = async () => {
       try {
         setLoading(true);
-        const [projRes, clientsRes, contactsRes, langsRes, allProjects, toolsRes, specsRes, unitsRes] = await Promise.all([
+        const [projRes, clientsRes, contactsRes, langsRes, allProjects, toolsRes, specsRes, unitsRes, servicesRes] = await Promise.all([
           getProject(id),
           getClients(),
           getContacts(),
@@ -129,6 +130,7 @@ export default function ViewProject() {
           getTools(),
           getSpecializations(),
           getUnits(),
+          getServices(),
         ]);
 
         setProject(projRes);
@@ -138,6 +140,7 @@ export default function ViewProject() {
         setTools(toolsRes.filter((t) => t.status === 'Active'));
         setSpecializations(specsRes.filter((s) => s.status === 'Active'));
         setUnitsList(unitsRes.filter((u) => u.status !== 'Inactive'));
+        setServices(servicesRes.filter((s) => s.status === 'Active'));
 
         const names = [
           ...new Set(
@@ -176,7 +179,6 @@ export default function ViewProject() {
           description: projRes.description || '',
           translationTool: projRes.translationTool || '',
           subjectMatter: projRes.subjectMatter || '',
-          deliverable: projRes.deliverable || '',
           gstEnabled: Boolean(projRes.gstEnabled),
           cgstPercent: projRes.cgstPercent ?? 9,
           sgstPercent: projRes.sgstPercent ?? 9,
@@ -217,6 +219,19 @@ export default function ViewProject() {
       const next = { ...prev, [field]: value };
       if (field === 'isProgramGroup' && !value) {
         next.programName = '';
+      }
+      if (field === 'client') {
+        const clientObj = clients.find((c) => c._id === value);
+        const newCurrency = clientObj?.currency || 'INR';
+        if (next.targets && next.targets.length > 0) {
+          next.targets = next.targets.map((target) => ({
+            ...target,
+            tasks: target.tasks.map((task) => ({
+              ...task,
+              currency: newCurrency,
+            })),
+          }));
+        }
       }
       return next;
     });
@@ -386,7 +401,7 @@ export default function ViewProject() {
 
         {/* Header metadata */}
         <div className="border border-slate-300 rounded overflow-hidden text-sm">
-          <div className="grid grid-cols-1 md:grid-cols-3 border-b border-slate-300">
+          <div className="grid grid-cols-1 md:grid-cols-3">
             <div className="flex border-b md:border-b-0 md:border-r border-slate-300">
               <span className="w-36 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">Tool</span>
               <select
@@ -413,10 +428,7 @@ export default function ViewProject() {
                 ))}
               </select>
             </div>
-            <div className="hidden md:block"></div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 border-b border-slate-300">
-            <div className="flex border-b md:border-b-0 md:border-r border-slate-300">
+            <div className="flex">
               <span className="w-36 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">No. of Targets</span>
               <div className="flex-1 px-3 py-2 text-sm bg-white text-slate-800 font-medium">
                 {formData.targets.length === 0
@@ -424,17 +436,6 @@ export default function ViewProject() {
                   : `${formData.targets.length} (${targetSummary.join(', ') || '—'})`}
               </div>
             </div>
-            <div className="hidden md:block"></div>
-          </div>
-          <div className="flex">
-            <span className="w-36 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">Deliverable</span>
-            <textarea
-              rows={3}
-              value={formData.deliverable}
-              onChange={(e) => handleInputChange('deliverable', e.target.value)}
-              className={`flex-1 ${cellInput} resize-y`}
-              placeholder="Enter deliverable details"
-            />
           </div>
         </div>
 
@@ -509,13 +510,16 @@ export default function ViewProject() {
                       {target.tasks.map((task, tIdx) => (
                         <tr key={tIdx} className="bg-white">
                           <td className={td}>
-                            <input
-                              type="text"
+                            <select
                               value={task.taskName}
                               onChange={(e) => handleTaskChange(idx, tIdx, 'taskName', e.target.value)}
-                              className={cellInput}
-                              placeholder="Task name"
-                            />
+                              className={cellSelect}
+                            >
+                              <option value="">Select Service</option>
+                              {services.map((s) => (
+                                <option key={s._id} value={s.name}>{s.name}</option>
+                              ))}
+                            </select>
                           </td>
                           <td className={td}>
                             <input
@@ -822,24 +826,6 @@ export default function ViewProject() {
             </select>
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-slate-700">Client Project Code</label>
-            <input
-              type="text"
-              value={formData.clientProjectCode}
-              onChange={(e) => handleInputChange('clientProjectCode', e.target.value)}
-              className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-slate-700">Client PO</label>
-            <input
-              type="text"
-              value={formData.clientPO}
-              onChange={(e) => handleInputChange('clientPO', e.target.value)}
-              className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
-            />
-          </div>
-          <div className="space-y-2">
             <label className="block text-sm font-bold text-slate-700">Amount</label>
             <input
               type="text"
@@ -868,6 +854,24 @@ export default function ViewProject() {
                 className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
               />
             </div>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-slate-700">Client PO</label>
+            <input
+              type="text"
+              value={formData.clientPO}
+              onChange={(e) => handleInputChange('clientPO', e.target.value)}
+              className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-slate-700">Client Project Code</label>
+            <input
+              type="text"
+              value={formData.clientProjectCode}
+              onChange={(e) => handleInputChange('clientProjectCode', e.target.value)}
+              className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
+            />
           </div>
           <div className="space-y-2 md:col-span-2">
             <label className="block text-sm font-bold text-slate-700">Description</label>

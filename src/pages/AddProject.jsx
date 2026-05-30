@@ -8,6 +8,7 @@ import { getLanguages } from '../lib/languageApi';
 import { getTools } from '../lib/toolApi';
 import { getSpecializations } from '../lib/specializationApi';
 import { getUnits } from '../lib/unitApi';
+import { getServices } from '../lib/serviceApi';
 
 const DEFAULT_TRANSLATION_TASKS = [
   { taskName: 'Translation', rate: 1 },
@@ -59,6 +60,7 @@ export default function AddProject() {
   const [specializations, setSpecializations] = useState([]);
   const [programNames, setProgramNames] = useState([]);
   const [unitsList, setUnitsList] = useState([]);
+  const [services, setServices] = useState([]);
 
   const [formData, setFormData] = useState({
     projectName: '',
@@ -76,7 +78,6 @@ export default function AddProject() {
     description: '',
     translationTool: '',
     subjectMatter: '',
-    deliverable: '',
     gstEnabled: false,
     cgstPercent: 9,
     sgstPercent: 9,
@@ -92,7 +93,7 @@ export default function AddProject() {
     const fetchAll = async () => {
       try {
         setLoading(true);
-        const [clientsRes, contactsRes, langsRes, allProjects, toolsRes, specsRes, unitsRes] = await Promise.all([
+        const [clientsRes, contactsRes, langsRes, allProjects, toolsRes, specsRes, unitsRes, servicesRes] = await Promise.all([
           getClients(),
           getContacts(),
           getLanguages(),
@@ -100,6 +101,7 @@ export default function AddProject() {
           getTools(),
           getSpecializations(),
           getUnits(),
+          getServices(),
         ]);
         setClients(clientsRes);
         setContacts(contactsRes);
@@ -107,6 +109,7 @@ export default function AddProject() {
         setTools(toolsRes.filter((t) => t.status === 'Active'));
         setSpecializations(specsRes.filter((s) => s.status === 'Active'));
         setUnitsList(unitsRes.filter((u) => u.status !== 'Inactive'));
+        setServices(servicesRes.filter((s) => s.status === 'Active'));
 
         const names = [
           ...new Set(
@@ -120,7 +123,7 @@ export default function AddProject() {
         // Set default Target Language
         const hiIN = langsRes.find((l) => l.localeCode === 'hi-IN' || l.name === 'Hindi');
         const enUS = langsRes.find((l) => l.localeCode === 'en-US' || l.name === 'English' || l.name === 'English (US)');
-        
+
         setFormData((prev) => {
           if (prev.targets.length === 0) {
             return {
@@ -149,6 +152,19 @@ export default function AddProject() {
       const next = { ...prev, [field]: value };
       if (field === 'isProgramGroup' && !value) {
         next.programName = '';
+      }
+      if (field === 'client') {
+        const clientObj = clients.find((c) => c._id === value);
+        const newCurrency = clientObj?.currency || 'INR';
+        if (next.targets && next.targets.length > 0) {
+          next.targets = next.targets.map((target) => ({
+            ...target,
+            tasks: target.tasks.map((task) => ({
+              ...task,
+              currency: newCurrency,
+            })),
+          }));
+        }
       }
       return next;
     });
@@ -328,7 +344,7 @@ export default function AddProject() {
 
         {/* Header metadata */}
         <div className="border border-slate-300 rounded overflow-hidden text-sm">
-          <div className="grid grid-cols-1 md:grid-cols-3 border-b border-slate-300">
+          <div className="grid grid-cols-1 md:grid-cols-3">
             <div className="flex border-b md:border-b-0 md:border-r border-slate-300">
               <span className="w-36 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">Tool</span>
               <select
@@ -355,9 +371,6 @@ export default function AddProject() {
                 ))}
               </select>
             </div>
-            <div className="hidden md:block"></div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 border-b border-slate-300">
             <div className="flex">
               <span className="w-36 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">No. of Targets</span>
               <div className="flex-1 px-3 py-2 text-sm bg-white text-slate-800 font-medium">
@@ -366,16 +379,6 @@ export default function AddProject() {
                   : `${formData.targets.length} (${targetSummary.join(', ') || '—'})`}
               </div>
             </div>
-          </div>
-          <div className="flex">
-            <span className="w-36 shrink-0 px-3 py-2 text-sm bg-slate-50 font-bold text-slate-700 border-r border-slate-300">Deliverable</span>
-            <textarea
-              rows={3}
-              value={formData.deliverable}
-              onChange={(e) => handleInputChange('deliverable', e.target.value)}
-              className={`flex-1 ${cellInput} resize-y`}
-              placeholder="Enter deliverable details"
-            />
           </div>
         </div>
 
@@ -450,13 +453,16 @@ export default function AddProject() {
                       {target.tasks.map((task, tIdx) => (
                         <tr key={tIdx} className="bg-white">
                           <td className={td}>
-                            <input
-                              type="text"
+                            <select
                               value={task.taskName}
                               onChange={(e) => handleTaskChange(idx, tIdx, 'taskName', e.target.value)}
-                              className={cellInput}
-                              placeholder="Task name"
-                            />
+                              className={cellSelect}
+                            >
+                              <option value="">Select Service</option>
+                              {services.map((s) => (
+                                <option key={s._id} value={s.name}>{s.name}</option>
+                              ))}
+                            </select>
                           </td>
                           <td className={td}>
                             <input
@@ -767,14 +773,34 @@ export default function AddProject() {
             </select>
           </div>
           <div className="space-y-1.5">
-            <label className="block text-sm font-bold text-slate-700">Client Project Code (CPC)</label>
+            <label className="block text-sm font-bold text-slate-700">Amount ({clientCurrency})</label>
             <input
               type="text"
-              value={formData.clientProjectCode}
-              onChange={(e) => handleInputChange('clientProjectCode', e.target.value)}
+              placeholder="e.g. 120"
+              value={formData.amount}
+              onChange={(e) => handleInputChange('amount', e.target.value)}
               className={inputClass}
-              placeholder="e.g. MS-0076565"
             />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="block text-sm font-bold text-slate-700">Due Date</label>
+              <input
+                type="date"
+                value={formData.dueDate}
+                onChange={(e) => handleInputChange('dueDate', e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-bold text-slate-700">Due Time</label>
+              <input
+                type="time"
+                value={formData.dueTime}
+                onChange={(e) => handleInputChange('dueTime', e.target.value)}
+                className={inputClass}
+              />
+            </div>
           </div>
           <div className="space-y-1.5">
             <label className="block text-sm font-bold text-slate-700">Client PO#</label>
@@ -784,6 +810,26 @@ export default function AddProject() {
               onChange={(e) => handleInputChange('clientPO', e.target.value)}
               className={inputClass}
               placeholder="e.g. PO#12545"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-bold text-slate-700">Client Project Code (CPC)</label>
+            <input
+              type="text"
+              value={formData.clientProjectCode}
+              onChange={(e) => handleInputChange('clientProjectCode', e.target.value)}
+              className={inputClass}
+              placeholder="e.g. MS-0076565"
+            />
+          </div>
+          <div className="space-y-1 md:col-span-2">
+            <label className="block text-sm font-bold text-slate-700">Instruction</label>
+            <textarea
+              rows={6}
+              placeholder="Enter project instruction..."
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              className={`${inputClass} resize-y`}
             />
           </div>
           <div className="space-y-1.5">
@@ -832,46 +878,6 @@ export default function AddProject() {
               </datalist>
             </div>
           )}
-          <div className="space-y-1.5">
-            <label className="block text-sm font-bold text-slate-700">Amount ({clientCurrency})</label>
-            <input
-              type="text"
-              placeholder="e.g. 120"
-              value={formData.amount}
-              onChange={(e) => handleInputChange('amount', e.target.value)}
-              className={inputClass}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="block text-sm font-bold text-slate-700">Due Date</label>
-              <input
-                type="date"
-                value={formData.dueDate}
-                onChange={(e) => handleInputChange('dueDate', e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-sm font-bold text-slate-700">Due Time</label>
-              <input
-                type="time"
-                value={formData.dueTime}
-                onChange={(e) => handleInputChange('dueTime', e.target.value)}
-                className={inputClass}
-              />
-            </div>
-          </div>
-          <div className="space-y-1 md:col-span-2">
-            <label className="block text-sm font-bold text-slate-700">Description</label>
-            <textarea
-              rows={3}
-              placeholder="Enter project description..."
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              className={`${inputClass} resize-y`}
-            />
-          </div>
         </div>
       </div>
     );

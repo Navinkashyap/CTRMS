@@ -21,6 +21,31 @@ function sanitizeProjectBody(body) {
   if (!data.isProgramGroup) {
     data.programName = "";
   }
+
+  // Sanitize ObjectId / Date fields inside each target and its tasks
+  if (Array.isArray(data.targets)) {
+    data.targets = data.targets.map((target) => {
+      const t = { ...target };
+      for (const field of ["sourceLanguage", "targetLanguage", "service"]) {
+        if (t[field] === "" || t[field] == null) {
+          delete t[field];
+        }
+      }
+      if (Array.isArray(t.tasks)) {
+        t.tasks = t.tasks.map((task) => {
+          const tk = { ...task };
+          for (const field of ["startDate", "endDate"]) {
+            if (tk[field] === "" || tk[field] == null) {
+              delete tk[field];
+            }
+          }
+          return tk;
+        });
+      }
+      return t;
+    });
+  }
+
   return data;
 }
 
@@ -67,6 +92,7 @@ router.post("/", async (req, res) => {
     const newProject = await project.save();
     res.status(201).json(newProject);
   } catch (error) {
+    console.error("Create project error:", error.message, error.errors || "");
     res.status(400).json({ message: error.message });
   }
 });
