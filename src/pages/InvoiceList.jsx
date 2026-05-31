@@ -191,6 +191,13 @@ export default function InvoiceList() {
                         <td className="px-6 py-4 text-center">
                           <div className="flex items-center justify-center gap-2">
                             <button
+                              onClick={() => navigate(`/invoice/view-invoice/${invoice._id}`)}
+                              className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all outline-none"
+                              title="View Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
                               onClick={() => navigate('/invoice/add-invoice', { state: { invoiceId: invoice._id } })}
                               className="p-2 bg-slate-50 text-slate-600 rounded-xl hover:bg-slate-900 hover:text-white transition-all outline-none"
                               title="Edit"

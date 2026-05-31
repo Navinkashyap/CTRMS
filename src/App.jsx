@@ -25,6 +25,7 @@ import ContactList from "./pages/ContactList";
 import ProjectsList from "./pages/ProjectsList";
 import InvoiceList from "./pages/InvoiceList";
 import AddInvoice from "./pages/AddInvoice";
+import ViewInvoice from "./pages/ViewInvoice";
 import UsersList from "./pages/UsersList";
 import VendorList from "./pages/VendorList";
 import AddVendor from "./pages/AddVendor";
@@ -145,6 +146,7 @@ const App = () => {
           <Route path="invoice">
             <Route index element={<InvoiceList />} />
             <Route path="add-invoice" element={<AddInvoice />} />
+            <Route path="view-invoice/:id" element={<ViewInvoice />} />
           </Route>
           <Route path="report" element={<PagePlaceholder title="Analytics & Reports" icon="fa-chart-pie" />} />
           <Route path="logout" element={<Navigate to="/login" replace />} />
