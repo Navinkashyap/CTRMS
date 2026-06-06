@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   TrendingUp,
@@ -14,8 +14,13 @@ import {
   Settings,
   ChevronDown,
   ArrowRight,
-  Zap
+  Zap,
+  Briefcase,
+  UserCheck,
+  Clock,
+  AlertCircle
 } from "lucide-react";
+import { getDashboardData, getChartData } from "../lib/dashboardApi";
 
 // Sparkline SVG Component for Stat Cards
 const Sparkline = ({ color, data }) => (
@@ -34,44 +39,123 @@ const Sparkline = ({ color, data }) => (
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [activeMetric, setActiveMetric] = useState("Revenue");
+  const [activeMetric, setActiveMetric] = useState("Total Projects");
   const [dateRange, setDateRange] = useState("Last 30 Days");
   const [showDateDropdown, setShowDateDropdown] = useState(false);
 
+  const [dashboardData, setDashboardData] = useState({
+    projectsCount: 0,
+    pendingProjects: 0,
+    completedProjects: 0,
+    clientsCount: 0,
+    vendorsCount: 0,
+    invoicesCount: 0,
+    totalRevenue: 0,
+    upcomingDeadlines: [],
+    unpaidInvoices: [],
+    topClients: [],
+    activities: []
+  });
+  const [loading, setLoading] = useState(true);
+  const [chartGraphics, setChartGraphics] = useState({ path: "", stroke: "", dots: [], labels: [] });
+
+  const generateChartGraphics = (data) => {
+    if (!data || data.length === 0) return { path: "", stroke: "", dots: [], labels: [] };
+    const width = 800;
+    const height = 240;
+    const paddingY = 40; 
+    const drawHeight = height - paddingY * 2;
+    const maxVal = Math.max(...data.map(d => d.value), 1);
+    const stepX = width / Math.max(data.length - 1, 1);
+    
+    const points = data.map((d, i) => {
+      const x = i * stepX;
+      const y = paddingY + drawHeight - ((d.value / maxVal) * drawHeight);
+      return { x, y, val: d.value >= 1000 ? (d.value/1000).toFixed(1)+'k' : d.value.toString(), label: d.label };
+    });
+
+    let d = `M${points[0].x},${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
+      const cx = (prev.x + curr.x) / 2;
+      d += ` C${cx},${prev.y} ${cx},${curr.y} ${curr.x},${curr.y}`;
+    }
+
+    return { 
+      path: `${d} L${width},${height} L0,${height} Z`, 
+      stroke: d, 
+      dots: points, 
+      labels: points.map(p => p.label) 
+    };
+  };
+
+  useEffect(() => {
+    const fetchChartData = async () => {
+      try {
+        const res = await getChartData(activeMetric, dateRange);
+        if (res.success && res.data) {
+          setChartGraphics(generateChartGraphics(res.data));
+        }
+      } catch (err) {
+        console.error("Error fetching chart data", err);
+      }
+    };
+    fetchChartData();
+  }, [activeMetric, dateRange]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await getDashboardData(dateRange);
+        if (res.success && res.data) {
+          setDashboardData(res.data);
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [dateRange]);
+
   const stats = [
-    { label: "Revenue", value: "$124,500", trend: "+14.5%", isUp: true, color: "#6366f1", data: "M0 25 Q 15 20, 30 25 T 60 15 T 80 5 T 100 10", icon: DollarSign, gradient: "from-indigo-500 to-blue-600" },
-    { label: "Clients", value: "1,204", trend: "+8.4%", isUp: true, color: "#06b6d4", data: "M0 25 L 20 20 L 40 22 L 60 10 L 80 15 L 100 5", icon: Users, gradient: "from-cyan-500 to-blue-500" },
-    { label: "Performance", value: "98.2%", trend: "+1.2%", isUp: true, color: "#10b981", data: "M0 20 Q 20 5, 40 15 T 70 20 T 100 5", icon: Zap, gradient: "from-emerald-500 to-teal-600" },
-    { label: "Tasks", value: "24", trend: "-2.1%", isUp: false, color: "#f59e0b", data: "M0 5 Q 20 15, 40 5 T 70 20 T 100 25", icon: Activity, gradient: "from-amber-500 to-orange-600" },
+    { 
+      label: "Total Projects", 
+      value: dashboardData.projectsCount, 
+      subStats: { pending: dashboardData.pendingProjects, completed: dashboardData.completedProjects },
+      trend: "+14.5%", 
+      isUp: true, 
+      color: "#6366f1", 
+      data: "M0 25 Q 15 20, 30 25 T 60 15 T 80 5 T 100 10", 
+      icon: Briefcase, 
+      gradient: "from-indigo-500 to-blue-600" 
+    },
+    { label: "Total Clients", value: dashboardData.clientsCount, trend: "+8.4%", isUp: true, color: "#06b6d4", data: "M0 25 L 20 20 L 40 22 L 60 10 L 80 15 L 100 5", icon: Users, gradient: "from-cyan-500 to-blue-500" },
+    { 
+      label: "Total Revenue", 
+      value: `₹${(dashboardData.totalRevenue || 0).toLocaleString()}`, 
+      subStats: { invoicesCount: dashboardData.invoicesCount },
+      trend: "+1.2%", 
+      isUp: true, 
+      color: "#8b5cf6", 
+      data: "M0 20 Q 20 5, 40 15 T 70 20 T 100 5", 
+      icon: DollarSign, 
+      gradient: "from-purple-500 to-violet-600" 
+    },
+    { label: "Total Vendors", value: dashboardData.vendorsCount, trend: "+3.1%", isUp: true, color: "#ec4899", data: "M0 10 Q 20 25, 40 15 T 70 5 T 100 20", icon: UserCheck, gradient: "from-pink-500 to-rose-600" },
   ];
 
   const quickActions = [
     { name: "Add Client", icon: Plus, color: "bg-blue-600", shadow: "shadow-blue-200", path: "/clients/add-client" },
     { name: "Create Invoice", icon: FileText, color: "bg-purple-600", shadow: "shadow-purple-200", path: "/invoice" },
-    { name: "Analytics", icon: PieChart, color: "bg-indigo-600", shadow: "shadow-indigo-200", path: "/report" },
+    { name: "Add Project", icon: Briefcase, color: "bg-indigo-600", shadow: "shadow-indigo-200", path: "/projects/add-project" },
     { name: "Settings", icon: Settings, color: "bg-slate-700", shadow: "shadow-slate-300", path: "/menus" },
   ];
 
-  const activities = [
-    { title: "Invoice #INV-2026 Paid", desc: "TechCorp settled their outstanding balance.", time: "2h ago", dot: "bg-emerald-500" },
-    { title: "New Client Onboarded", desc: "Global Industries LLC added to CRM.", time: "5h ago", dot: "bg-blue-500" },
-    { title: "Milestone Approved", desc: "Website redesign phase 1 signed off.", time: "1d ago", dot: "bg-indigo-500" },
-    { title: "Server Maintenance", desc: "Routine backup and update completed.", time: "2d ago", dot: "bg-slate-400" },
-  ];
-
-  const chartPaths = {
-    Revenue: "M0,180 C100,180 150,60 250,90 C350,120 450,20 550,50 C650,80 750,10 800,30 L800,220 L0,220 Z",
-    Clients: "M0,200 C150,150 250,180 400,100 C500,60 650,120 800,40 L800,220 L0,220 Z",
-    Performance: "M0,100 C200,80 400,120 600,60 C700,40 750,50 800,30 L800,220 L0,220 Z",
-    Tasks: "M0,50 C100,80 250,40 400,120 C550,160 700,100 800,180 L800,220 L0,220 Z"
-  };
-
-  const chartStroke = {
-    Revenue: "M0,180 C100,180 150,60 250,90 C350,120 450,20 550,50 C650,80 750,10 800,30",
-    Clients: "M0,200 C150,150 250,180 400,100 C500,60 650,120 800,40",
-    Performance: "M0,100 C200,80 400,120 600,60 C700,40 750,50 800,30",
-    Tasks: "M0,50 C100,80 250,40 400,120 C550,160 700,100 800,180"
-  };
+  const { activities, upcomingDeadlines, unpaidInvoices, topClients } = dashboardData;
 
   const handleExport = () => {
     alert("System Intelligence Report is being generated. Your download will start shortly.");
@@ -107,7 +191,7 @@ const Dashboard = () => {
               {showDateDropdown && (
                 <div className="absolute right-0 top-[calc(100%+8px)] bg-white/90 backdrop-blur-2xl border border-white rounded-2xl min-w-[180px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="p-2 flex flex-col gap-1">
-                    {["Last 7 Days", "Last 30 Days", "Last 12 Months", "All Time"].map((range) => (
+                    {["Today", "Last 7 Days", "Last 30 Days", "Last 12 Months", "All Time"].map((range) => (
                       <button
                         key={range}
                         onClick={() => { setDateRange(range); setShowDateDropdown(false); }}
@@ -159,11 +243,33 @@ const Dashboard = () => {
                 </div>
                 <h3 className="text-slate-600 text-[11px] font-black uppercase tracking-[0.2em] mb-1 pl-1">{stat.label}</h3>
                 <div className="flex items-end justify-between px-1">
-                  <p className="text-3xl font-black text-slate-800 tracking-tight">{stat.value}</p>
+                  <p className="text-3xl font-black text-slate-800 tracking-tight">
+                    {loading ? "..." : stat.value}
+                  </p>
                   <div className={`transition-all duration-500 translate-x-2 group-hover:translate-x-0 ${activeMetric === stat.label ? 'opacity-100 translate-x-0 scale-110' : 'opacity-0 group-hover:opacity-100'}`}>
                     <Sparkline color={stat.color} data={stat.data} />
                   </div>
                 </div>
+                {stat.subStats && stat.subStats.pending !== undefined && !loading && (
+                  <div className="flex justify-between mt-4 px-1 pt-3 border-t border-slate-100/60">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{stat.subStats.completed} Completed</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{stat.subStats.pending} Pending</span>
+                    </div>
+                  </div>
+                )}
+                {stat.subStats && stat.subStats.invoicesCount !== undefined && !loading && (
+                  <div className="flex justify-between mt-4 px-1 pt-3 border-t border-slate-100/60">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{stat.subStats.invoicesCount} Invoices Generated</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -187,8 +293,16 @@ const Dashboard = () => {
                   <p className="text-slate-500 font-bold text-[13px] tracking-wide uppercase opacity-70">Metric tracking • {dateRange}</p>
                 </div>
                 <div className="flex bg-slate-100/50 backdrop-blur-sm p-1.5 rounded-2xl border border-slate-200/50">
-                  {['7D', '30D', '12M'].map((t) => (
-                    <button key={t} className={`px-5 py-2 text-[11px] font-black rounded-xl transition-all ${(t === '7D' && dateRange === 'Last 7 Days') || (t === '30D' && dateRange === 'Last 30 Days') || (t === '12M' && dateRange === 'Last 12 Months')
+                  {['1D', '7D', '30D', '12M'].map((t) => (
+                    <button 
+                      key={t} 
+                      onClick={() => {
+                        if (t === '1D') setDateRange('Today');
+                        else if (t === '7D') setDateRange('Last 7 Days');
+                        else if (t === '30D') setDateRange('Last 30 Days');
+                        else if (t === '12M') setDateRange('Last 12 Months');
+                      }}
+                      className={`px-5 py-2 text-[11px] font-black rounded-xl transition-all ${(t === '1D' && dateRange === 'Today') || (t === '7D' && dateRange === 'Last 7 Days') || (t === '30D' && dateRange === 'Last 30 Days') || (t === '12M' && dateRange === 'Last 12 Months')
                         ? 'bg-white text-indigo-600 shadow-md transform scale-[1.05]'
                         : 'text-slate-600 hover:text-slate-900'
                       }`}>
@@ -223,7 +337,7 @@ const Dashboard = () => {
 
                   <path
                     fill="url(#chartGradient)"
-                    d={chartPaths[activeMetric]}
+                    d={chartGraphics.path || ""}
                     className="transition-all duration-700 ease-in-out"
                   />
                   <path
@@ -232,17 +346,13 @@ const Dashboard = () => {
                     strokeWidth="5"
                     strokeLinecap="round"
                     filter="url(#chartGlow)"
-                    d={chartStroke[activeMetric]}
+                    d={chartGraphics.stroke || ""}
                     className="transition-all duration-700 ease-in-out"
                     strokeDasharray="1000"
                     strokeDashoffset="0"
                   />
 
-                  {[
-                    { x: 100, y: 150, val: "2,4k" },
-                    { x: 400, y: 80, val: "4.8k" },
-                    { x: 750, y: 20, val: "5.2k" }
-                  ].map((pt, i) => (
+                  {chartGraphics.dots.map((pt, i) => (
                     <g key={i} className="group/dot cursor-pointer">
                       <circle cx={pt.x} cy={pt.y} r="8" fill="#fff" stroke="#6366f1" strokeWidth="4" className="shadow-2xl" />
                       <circle cx={pt.x} cy={pt.y} r="14" fill="#6366f1" className="opacity-0 group-hover/dot:opacity-20 transition-all duration-300 transform group-hover/dot:scale-125" />
@@ -257,7 +367,7 @@ const Dashboard = () => {
                 </svg>
 
                 <div className="absolute bottom-0 left-8 right-0 flex justify-between text-[11px] font-black text-slate-600 uppercase tracking-widest px-4 translate-y-2">
-                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(m => <span key={m}>{m}</span>)}
+                  {chartGraphics.labels.map((label, i) => <span key={i}>{label}</span>)}
                 </div>
               </div>
             </div>
@@ -277,43 +387,75 @@ const Dashboard = () => {
                 </button>
               ))}
             </div>
+
+            {/* Upcoming Deadlines & Unpaid Invoices */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Upcoming Deadlines */}
+              <div className="bg-white/80 backdrop-blur-2xl rounded-[3rem] border border-white shadow-2xl shadow-slate-200/60 p-8 relative overflow-hidden group">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="p-3 bg-amber-100 text-amber-600 rounded-2xl shadow-inner">
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight italic">Upcoming Deadlines</h3>
+                </div>
+                {upcomingDeadlines.length === 0 ? (
+                  <p className="text-sm font-bold text-slate-500 text-center py-4">No upcoming deadlines.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {upcomingDeadlines.map((p, i) => {
+                      const date = new Date(p.deadline || p.dueDate);
+                      const isOverdue = date < new Date();
+                      return (
+                        <div key={i} onClick={() => navigate(`/projects/view/${p._id || p.projectId}`)} className="flex justify-between items-center p-4 bg-slate-50/50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-lg hover:shadow-amber-100 transition-all cursor-pointer">
+                          <div>
+                            <p className="text-sm font-black text-slate-800">{p.projectName || p.projectId}</p>
+                            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">Due: {date.toLocaleDateString()}</p>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${isOverdue ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'}`}>
+                            {isOverdue ? 'Overdue' : 'Upcoming'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Unpaid Invoices */}
+              <div className="bg-white/80 backdrop-blur-2xl rounded-[3rem] border border-white shadow-2xl shadow-slate-200/60 p-8 relative overflow-hidden group">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="p-3 bg-rose-100 text-rose-600 rounded-2xl shadow-inner">
+                    <AlertCircle className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight italic">Unpaid Invoices</h3>
+                </div>
+                {unpaidInvoices.length === 0 ? (
+                  <p className="text-sm font-bold text-slate-500 text-center py-4">All invoices are paid.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {unpaidInvoices.map((inv, i) => (
+                      <div key={i} onClick={() => navigate(`/invoice`)} className="flex justify-between items-center p-4 bg-slate-50/50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-lg hover:shadow-rose-100 transition-all cursor-pointer">
+                        <div>
+                          <p className="text-sm font-black text-slate-800">{inv.invoiceNumber}</p>
+                          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">{inv.client?.companyName || inv.client?.clientName || 'Client'}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-black text-slate-800">₹{(inv.totalAmount || 0).toLocaleString()}</p>
+                          <span className={`inline-block mt-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${inv.status?.toLowerCase() === 'overdue' ? 'bg-rose-100 text-rose-600' : 'bg-slate-200 text-slate-600'}`}>
+                            {inv.status || 'Pending'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
+
 
           {/* Sidebar Section */}
           <div className="space-y-8">
-            {/* System Health Widget */}
-            <div className="bg-[#1a1c31] rounded-[3rem] p-10 text-white relative overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.3)] min-h-[300px] flex flex-col justify-center border border-white/5">
-              <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl group-hover:bg-indigo-500/30 transition-colors duration-1000" />
-              <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl" />
-
-              <div className="relative z-10">
-                <div className="flex items-center justify-between mb-10">
-                  <h3 className="font-black text-xl italic tracking-tight">System Core</h3>
-                  <span className="flex items-center gap-2 px-4 py-1.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase rounded-full border border-emerald-500/20 shadow-[0_0_15px_rgba(52,211,153,0.2)]">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    Healthy
-                  </span>
-                </div>
-                <div className="space-y-8">
-                  {[
-                    { label: "Infrastructure", value: "84%", color: "bg-indigo-500", glow: "shadow-indigo-500/20" },
-                    { label: "API Latency", value: "32ms", color: "bg-emerald-500", glow: "shadow-emerald-500/20" },
-                    { label: "Memory Usage", value: "62%", color: "bg-purple-500", glow: "shadow-purple-500/20" },
-                  ].map((item, i) => (
-                    <div key={i} className="group/item">
-                      <div className="flex justify-between text-[11px] font-black mb-3 uppercase tracking-widest text-slate-600 group-hover/item:text-slate-300 transition-colors">
-                        <span>{item.label}</span>
-                        <span className="text-white">{item.value}</span>
-                      </div>
-                      <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden p-[2px] border border-white/5">
-                        <div className={`h-full ${item.color} rounded-full transition-all duration-1000 shadow-lg ${item.glow}`} style={{ width: item.value.includes('%') ? item.value : '45%' }}></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
             {/* Activity Feed */}
             <div className="bg-white/80 backdrop-blur-2xl rounded-[3rem] border border-white shadow-2xl shadow-slate-200/60 p-8 sm:p-10 relative">
               <div className="flex items-center justify-between mb-10">
@@ -347,6 +489,42 @@ const Dashboard = () => {
                 ))}
               </div>
             </div>
+
+            {/* Top Clients */}
+            <div className="bg-[#1a1c31] backdrop-blur-2xl rounded-[3rem] border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.3)] p-8 sm:p-10 relative overflow-hidden group">
+              <div className="absolute -top-24 -right-24 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition-colors duration-1000" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="p-3 bg-cyan-500/20 text-cyan-400 rounded-2xl border border-cyan-500/20 shadow-inner">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-xl font-black text-white tracking-tight italic">Top Clients</h3>
+                </div>
+
+                {topClients.length === 0 ? (
+                  <p className="text-sm font-bold text-slate-400 text-center py-4">No client data available.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {topClients.map((client, i) => (
+                      <div key={i} className="flex items-center justify-between group/item p-3 rounded-2xl hover:bg-white/5 transition-all cursor-pointer border border-transparent hover:border-white/10" onClick={() => navigate(`/clients`)}>
+                        <div className="flex items-center gap-4">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shadow-lg ${i === 0 ? 'bg-amber-400 text-amber-900' : i === 1 ? 'bg-slate-300 text-slate-800' : i === 2 ? 'bg-orange-300 text-orange-900' : 'bg-slate-800 text-slate-300'}`}>
+                            #{i + 1}
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-slate-200 group-hover/item:text-cyan-400 transition-colors">{client.companyName || client.clientName || 'Unknown Client'}</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">{client.clientType || 'Corporate'}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-black text-white">₹{(client.totalRevenue || 0).toLocaleString()}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -360,4 +538,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

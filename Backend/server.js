@@ -26,6 +26,7 @@ import authRoutes from "./src/routes/authRoutes.js";
 import projectRoutes from "./src/routes/projectRoutes.js";
 import invoiceRoutes from "./src/routes/invoiceRoutes.js";
 import unitRoutes from "./src/routes/unitRoutes.js";
+import dashboardRoutes from "./src/routes/dashboardRoutes.js";
 
 dotenv.config();
 
@@ -75,6 +76,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api/units", unitRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
