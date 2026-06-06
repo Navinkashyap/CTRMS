@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Plus, MinusCircle, Save } from 'lucide-react';
 import { getClients } from '../lib/clientApi';
+import { getProjects } from '../lib/projectApi';
 import { createInvoice, updateInvoice, getInvoice, getNextInvoiceNumber } from '../lib/invoiceApi';
 
 const EMPTY_ITEMS = Array.from({ length: 10 }, (_, i) => ({
@@ -45,6 +46,7 @@ export default function AddInvoice() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [clients, setClients] = useState([]);
+  const [projects, setProjects] = useState([]);
 
   const [formData, setFormData] = useState({
     invoiceNumber: '',
@@ -73,8 +75,9 @@ export default function AddInvoice() {
     const fetchAll = async () => {
       try {
         setLoading(true);
-        const clientsRes = await getClients();
+        const [clientsRes, projectsRes] = await Promise.all([getClients(), getProjects()]);
         setClients(clientsRes);
+        setProjects(projectsRes);
 
         if (isEditMode) {
           const inv = await getInvoice(editId);
@@ -141,12 +144,88 @@ export default function AddInvoice() {
     setFormData((prev) => ({
       ...prev,
       client: clientId,
+      project: '', // Reset project when client changes
       billToCompany: selected?.name || '',
       billToAddress: [selected?.address, selected?.city, selected?.state, selected?.zip, selected?.country].filter(Boolean).join(', ') || '',
       billToEmail: selected?.email || '',
       billToPhone: selected?.phone || '',
       billToGSTIN: selected?.gstIn || '',
     }));
+  };
+
+  // When project changes, auto-fill particulars and amount into the next empty row
+  const [selectedProjectId, setSelectedProjectId] = useState('');
+
+  const handleProjectChange = (projectId) => {
+    if (!projectId) {
+      setSelectedProjectId('');
+      return;
+    }
+
+    const selectedProject = projects.find((p) => p._id === projectId);
+    
+    if (selectedProject) {
+      let particularsText = '';
+      const po = selectedProject.clientPO ? `PO No: ${selectedProject.clientPO}` : '';
+      const name = selectedProject.isProgramGroup ? selectedProject.programName : selectedProject.projectName;
+      const code = selectedProject.projectCode ? `Code: ${selectedProject.projectCode}` : '';
+      
+      particularsText = [po, name, code].filter(Boolean).join(' / ');
+
+      // Try to calculate total fees and words from targets/tasks if available
+      let totalFees = 0;
+      let totalWords = 0;
+      let rate = 0;
+
+      if (selectedProject.targets && selectedProject.targets.length > 0) {
+        selectedProject.targets.forEach(target => {
+          if (target.tasks && target.tasks.length > 0) {
+            target.tasks.forEach(task => {
+              totalFees += Number(task.fees) || 0;
+              if (task.unit === 'Words') {
+                totalWords += Number(task.quantity) || 0;
+              }
+              if (task.rate) rate = task.rate; // just taking last rate for particulars if needed
+            });
+          }
+        });
+      }
+
+      if (totalWords > 0) {
+        particularsText += ` / ${totalWords} Words`;
+      }
+      if (rate > 0) {
+        particularsText += ` / Rate: ${rate}`;
+      }
+
+      const amount = totalFees > 0 ? totalFees : (Number(selectedProject.amount) || 0);
+
+      const newItems = [...formData.items];
+      
+      // Find the first empty row
+      let emptyIndex = newItems.findIndex(item => item.particulars.trim() === '' && (!item.amount || Number(item.amount) === 0));
+      
+      if (emptyIndex === -1) {
+        // No empty row found, append a new one
+        emptyIndex = newItems.length;
+        newItems.push({ sNo: emptyIndex + 1, particulars: '', amount: 0 });
+      }
+
+      newItems[emptyIndex] = {
+        ...newItems[emptyIndex],
+        particulars: particularsText,
+        amount: amount
+      };
+
+      setFormData((prev) => ({
+        ...prev,
+        project: projectId, // Keeps reference to the last added project for the DB
+        items: newItems
+      }));
+      
+      // Reset dropdown so they can pick another project
+      setSelectedProjectId('');
+    }
   };
 
   // Determine if client is from UP (same state logic as AddProject.jsx)
@@ -330,7 +409,6 @@ export default function AddInvoice() {
             <div className="p-4 text-sm space-y-2">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Bill to:</p>
 
-              {/* Client Dropdown */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-slate-500">Select Client</label>
                 <select
@@ -345,7 +423,28 @@ export default function AddInvoice() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-1 gap-1.5 mt-2">
+              {/* Project Dropdown */}
+              {formData.client && (
+                <div className="space-y-1.5 mt-2">
+                  <label className="block text-xs font-bold text-indigo-600">Add Project as Line Item</label>
+                  <select
+                    value={selectedProjectId}
+                    onChange={(e) => handleProjectChange(e.target.value)}
+                    className="w-full px-3 py-2 text-sm bg-indigo-50 border border-indigo-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
+                  >
+                    <option value="">Select a Project to add...</option>
+                    {projects
+                      .filter((p) => p.client === formData.client || p.client?._id === formData.client)
+                      .map((p) => (
+                        <option key={p._id} value={p._id}>
+                          {p.isProgramGroup ? p.programName : p.projectName} {p.clientPO ? `(PO: ${p.clientPO})` : ''}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-1.5 mt-4">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-slate-700 w-20 shrink-0">Company</span>
                   <input

@@ -154,6 +154,7 @@ export default function AddProject() {
         next.programName = '';
       }
       if (field === 'client') {
+        next.clientContact = '';
         const clientObj = clients.find((c) => c._id === value);
         const newCurrency = clientObj?.currency || 'INR';
         if (next.targets && next.targets.length > 0) {
@@ -339,7 +340,7 @@ export default function AddProject() {
     return (
       <div className="space-y-4 animate-in fade-in duration-500 mb-8">
         <div className="border-b border-slate-200 pb-2">
-          <h2 className="text-xl font-bold text-slate-800">Translations</h2>
+          <h2 className="text-xl font-bold text-slate-800">Task Details</h2>
         </div>
 
         {/* Header metadata */}
@@ -769,7 +770,9 @@ export default function AddProject() {
               className={inputClass}
             >
               <option value="">Select Contact</option>
-              {contacts.map(c => <option key={c._id} value={c._id}>{c.firstName} {c.lastName}</option>)}
+              {contacts
+                .filter(c => !formData.client || c.company === clients.find(cl => cl._id === formData.client)?.name || c.clientId === formData.client)
+                .map(c => <option key={c._id} value={c._id}>{c.firstName} {c.lastName}</option>)}
             </select>
           </div>
           <div className="space-y-1.5">
