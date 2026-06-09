@@ -63,15 +63,15 @@ export default function ViewInvoice() {
         <div className="bg-white border border-slate-200 rounded-[2rem] shadow-2xl shadow-slate-200/50 overflow-hidden print:shadow-none print:border-none print:rounded-none printable-invoice">
           
           {/* Top Brand & Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 border-b border-slate-100">
-            <div className="p-8 md:p-10 border-b md:border-b-0 md:border-r border-slate-100 flex flex-col justify-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 border-b border-slate-100">
+            <div className="p-5 md:p-6 border-b md:border-b-0 md:border-r print:border-b-0 print:border-r border-slate-100 flex flex-col justify-center">
               <h2 className="text-4xl font-black tracking-tight text-blue-700" style={{ fontFamily: 'Georgia, serif' }}>
                 Perfectrans<sup className="text-sm align-super text-blue-500">™</sup>
               </h2>
               <p className="text-sm text-slate-500 font-medium mt-1">A Brand of Convaq Technologies Pvt. Ltd.</p>
             </div>
-            <div className="p-8 md:p-10 bg-slate-50/50 flex flex-col justify-center">
-              <div className="space-y-4 max-w-sm ml-auto w-full">
+            <div className="p-5 md:p-6 bg-slate-50/50 flex flex-col justify-center">
+              <div className="space-y-2 max-w-sm ml-auto w-full">
                 <div className="flex justify-between items-center border-b border-slate-200/60 pb-2">
                   <span className="font-bold text-slate-400 text-xs uppercase tracking-wider">Date</span>
                   <span className="font-bold text-slate-700 text-sm">{invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString('en-IN') : 'N/A'}</span>
@@ -100,26 +100,26 @@ export default function ViewInvoice() {
           </div>
 
           {/* From & Bill To */}
-          <div className="grid grid-cols-1 md:grid-cols-2 border-b border-slate-100">
-            <div className="p-8 md:p-10 border-b md:border-b-0 md:border-r border-slate-100">
-              <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">From</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 border-b border-slate-100">
+            <div className="p-5 md:p-6 border-b md:border-b-0 md:border-r print:border-b-0 print:border-r border-slate-100">
+              <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">From</h3>
               <p className="font-black text-xl text-slate-800">{invoice.fromCompany}</p>
-              <div className="mt-4 space-y-1.5 text-sm text-slate-600 font-medium">
+              <div className="mt-2 space-y-1 text-sm text-slate-600 font-medium">
                 <p>{invoice.fromAddress}</p>
                 <p>Phone: <span className="text-slate-800">{invoice.fromPhone}</span></p>
                 <p>Email: <a href={`mailto:${invoice.fromEmail}`} className="text-indigo-600 hover:text-indigo-800 transition-colors">{invoice.fromEmail}</a></p>
                 <p>Website: <a href={`https://${invoice.fromWebsite}`} className="text-indigo-600 hover:text-indigo-800 transition-colors">{invoice.fromWebsite}</a></p>
-                <p className="mt-4 inline-block bg-slate-100 px-3 py-1 rounded-md text-xs font-bold text-slate-700">GSTIN: {invoice.fromGSTIN}</p>
+                <p className="mt-2 inline-block bg-slate-100 px-3 py-1 rounded-md text-xs font-bold text-slate-700">GSTIN: {invoice.fromGSTIN}</p>
               </div>
             </div>
-            <div className="p-8 md:p-10">
-              <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Bill To</h3>
+            <div className="p-5 md:p-6">
+              <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Bill To</h3>
               <p className="font-black text-xl text-slate-800">{invoice.billToCompany}</p>
-              <div className="mt-4 space-y-1.5 text-sm text-slate-600 font-medium">
+              <div className="mt-2 space-y-1 text-sm text-slate-600 font-medium">
                 {invoice.billToAddress && <p className="whitespace-pre-wrap">{invoice.billToAddress}</p>}
                 {invoice.billToPhone && <p>Phone: <span className="text-slate-800">{invoice.billToPhone}</span></p>}
                 {invoice.billToEmail && <p>Email: <a href={`mailto:${invoice.billToEmail}`} className="text-indigo-600 hover:text-indigo-800 transition-colors">{invoice.billToEmail}</a></p>}
-                {invoice.billToGSTIN && <p className="mt-4 inline-block bg-slate-100 px-3 py-1 rounded-md text-xs font-bold text-slate-700">GSTIN: {invoice.billToGSTIN}</p>}
+                {invoice.billToGSTIN && <p className="mt-2 inline-block bg-slate-100 px-3 py-1 rounded-md text-xs font-bold text-slate-700">GSTIN: {invoice.billToGSTIN}</p>}
               </div>
             </div>
           </div>
@@ -129,25 +129,25 @@ export default function ViewInvoice() {
             <table className="w-full text-sm text-left">
               <thead>
                 <tr className="bg-slate-900 text-white">
-                  <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs w-20 text-center">No.</th>
-                  <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs">Particulars</th>
-                  <th className="px-8 py-5 font-bold uppercase tracking-wider text-xs text-right w-48">Amount</th>
+                  <th className="px-6 py-3 font-bold uppercase tracking-wider text-xs w-20 text-center">No.</th>
+                  <th className="px-6 py-3 font-bold uppercase tracking-wider text-xs">Particulars</th>
+                  <th className="px-6 py-3 font-bold uppercase tracking-wider text-xs text-right w-48">Amount</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {invoice.items && invoice.items.length > 0 ? (
                   invoice.items.map((item, idx) => (
                     <tr key={item._id || idx} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-8 py-5 text-center font-bold text-slate-400">{item.sNo || idx + 1}</td>
-                      <td className="px-8 py-5 text-slate-700 font-medium">{item.particulars}</td>
-                      <td className="px-8 py-5 text-right font-black text-slate-900">
+                      <td className="px-6 py-3 text-center font-bold text-slate-400">{item.sNo || idx + 1}</td>
+                      <td className="px-6 py-3 text-slate-700 font-medium">{item.particulars}</td>
+                      <td className="px-6 py-3 text-right font-black text-slate-900">
                         {invoice.currency} {item.amount.toFixed(2)}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="3" className="px-8 py-12 text-center text-slate-400 font-medium">No items found in this invoice.</td>
+                    <td colSpan="3" className="px-6 py-8 text-center text-slate-400 font-medium">No items found in this invoice.</td>
                   </tr>
                 )}
               </tbody>
@@ -155,17 +155,17 @@ export default function ViewInvoice() {
           </div>
 
           {/* Totals */}
-          <div className="border-t border-slate-200 flex flex-col md:flex-row">
-            <div className="flex-1 p-8 md:p-10 border-b md:border-b-0 md:border-r border-slate-100 bg-slate-50/50">
+          <div className="border-t border-slate-200 flex flex-col md:flex-row print:flex-row">
+            <div className="flex-1 p-5 md:p-6 border-b md:border-b-0 md:border-r print:border-b-0 print:border-r border-slate-100 bg-slate-50/50">
                <div className="h-full flex flex-col justify-end">
-                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Notes / Terms</p>
+                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Notes / Terms</p>
                  <p className="text-sm text-slate-600 font-medium max-w-sm">
                    Please review all details before processing payment. Thank you for doing business with us!
                  </p>
                </div>
             </div>
-            <div className="w-full md:w-96 bg-slate-50">
-              <div className="p-8 md:p-10 space-y-4">
+            <div className="w-full md:w-96 print:w-96 bg-slate-50">
+              <div className="p-5 md:p-6 space-y-2.5">
                 <div className="flex justify-between items-center text-sm">
                   <span className="font-bold text-slate-500">Subtotal</span>
                   <span className="font-black text-slate-900">{invoice.currency} {(invoice.subtotal || 0).toFixed(2)}</span>
@@ -188,10 +188,10 @@ export default function ViewInvoice() {
                     <span className="font-bold text-slate-700">{invoice.currency} {invoice.igstAmount.toFixed(2)}</span>
                   </div>
                 )}
-                <div className="pt-6 mt-4 border-t-2 border-slate-200 border-dashed">
+                <div className="pt-4 mt-3 border-t-2 border-slate-200 border-dashed">
                   <div className="flex justify-between items-center">
                     <span className="font-black text-slate-900 uppercase tracking-widest text-sm">Total</span>
-                    <span className="text-3xl font-black text-indigo-700">{invoice.currency} {(invoice.totalAmount || 0).toFixed(2)}</span>
+                    <span className="text-2xl font-black text-indigo-700">{invoice.currency} {(invoice.totalAmount || 0).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -199,12 +199,12 @@ export default function ViewInvoice() {
           </div>
 
           {/* Bank Info */}
-          <div className="p-8 md:p-10 border-t border-slate-100 bg-slate-900 text-white rounded-b-[2rem] print:rounded-none">
-            <h4 className="font-black text-indigo-400 uppercase tracking-widest text-xs mb-6 flex items-center gap-2">
+          <div className="p-5 md:p-6 border-t border-slate-100 bg-slate-900 text-white rounded-b-[2rem] print:rounded-none">
+            <h4 className="font-black text-indigo-400 uppercase tracking-widest text-xs mb-4 flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
               Bank Information
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-6 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 print:grid-cols-3 gap-x-8 gap-y-4 text-sm">
               {invoice.bankGSTIN && <div><p className="text-slate-400 text-xs font-bold uppercase mb-1">GSTIN</p><p className="font-medium text-slate-100">{invoice.bankGSTIN}</p></div>}
               {invoice.sacCode && <div><p className="text-slate-400 text-xs font-bold uppercase mb-1">SAC Code</p><p className="font-medium text-slate-100">{invoice.sacCode}</p></div>}
               {invoice.panNo && <div><p className="text-slate-400 text-xs font-bold uppercase mb-1">PAN No.</p><p className="font-medium text-slate-100">{invoice.panNo}</p></div>}
@@ -226,6 +226,11 @@ export default function ViewInvoice() {
 
       <style>{`
         @media print {
+          * {
+            -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
           body {
             background-color: white !important;
           }

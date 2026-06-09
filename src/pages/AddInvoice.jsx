@@ -370,7 +370,14 @@ export default function AddInvoice() {
                   </tr>
                   <tr className="border-b border-slate-200">
                     <td className={labelCell}>INVOICE #</td>
-                    <td className="px-3 py-2 text-sm font-bold text-slate-800">{formData.invoiceNumber}</td>
+                    <td className="p-0">
+                      <input
+                        type="text"
+                        value={formData.invoiceNumber}
+                        onChange={(e) => handleInputChange('invoiceNumber', e.target.value)}
+                        className={`${cellInput} font-bold text-slate-800`}
+                      />
+                    </td>
                   </tr>
                   <tr>
                     <td className={labelCell}>Supplier No.</td>
@@ -391,18 +398,62 @@ export default function AddInvoice() {
           {/* From / Bill To */}
           <div className="grid grid-cols-1 md:grid-cols-2 border-b border-slate-300">
             {/* FROM */}
-            <div className="p-4 border-b md:border-b-0 md:border-r border-slate-300 text-sm space-y-1">
+            <div className="p-4 border-b md:border-b-0 md:border-r border-slate-300 text-sm space-y-2">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">From:</p>
-              <p className="font-extrabold text-slate-900">{formData.fromCompany}</p>
-              <p className="text-slate-600">{formData.fromAddress}</p>
-              <p className="text-slate-600">Phone: {formData.fromPhone}</p>
-              <p className="text-slate-600">
-                e-mail: <a href={`mailto:${formData.fromEmail}`} className="text-blue-600 underline">{formData.fromEmail}</a>
-              </p>
-              <p className="text-slate-600">
-                Website: <a href={`https://${formData.fromWebsite}`} target="_blank" rel="noreferrer" className="text-blue-600 underline">{formData.fromWebsite}</a>
-              </p>
-              <p className="text-slate-600">GSTIN: {formData.fromGSTIN}</p>
+              <input
+                type="text"
+                value={formData.fromCompany}
+                onChange={(e) => handleInputChange('fromCompany', e.target.value)}
+                className="w-full font-extrabold text-slate-900 px-2 py-1 border border-slate-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                placeholder="Company Name"
+              />
+              <input
+                type="text"
+                value={formData.fromAddress}
+                onChange={(e) => handleInputChange('fromAddress', e.target.value)}
+                className="w-full text-slate-600 px-2 py-1 border border-slate-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                placeholder="Address"
+              />
+              <div className="flex items-center gap-2">
+                <span className="text-slate-600 w-16 shrink-0">Phone:</span>
+                <input
+                  type="text"
+                  value={formData.fromPhone}
+                  onChange={(e) => handleInputChange('fromPhone', e.target.value)}
+                  className="flex-1 px-2 py-1 border border-slate-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                  placeholder="Phone"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-600 w-16 shrink-0">e-mail:</span>
+                <input
+                  type="text"
+                  value={formData.fromEmail}
+                  onChange={(e) => handleInputChange('fromEmail', e.target.value)}
+                  className="flex-1 px-2 py-1 border border-slate-200 rounded text-sm text-blue-600 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                  placeholder="Email"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-600 w-16 shrink-0">Website:</span>
+                <input
+                  type="text"
+                  value={formData.fromWebsite}
+                  onChange={(e) => handleInputChange('fromWebsite', e.target.value)}
+                  className="flex-1 px-2 py-1 border border-slate-200 rounded text-sm text-blue-600 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                  placeholder="Website"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-600 w-16 shrink-0">GSTIN:</span>
+                <input
+                  type="text"
+                  value={formData.fromGSTIN}
+                  onChange={(e) => handleInputChange('fromGSTIN', e.target.value)}
+                  className="flex-1 px-2 py-1 border border-slate-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                  placeholder="GSTIN"
+                />
+              </div>
             </div>
 
             {/* BILL TO */}
