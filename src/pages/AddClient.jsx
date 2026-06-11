@@ -20,6 +20,7 @@ import {
   Briefcase,
   Paperclip,
   User,
+  MessageSquare,
 } from 'lucide-react';
 
 import { createClient, getNextMembershipCode, updateClient } from '../lib/clientApi';
@@ -50,6 +51,7 @@ const getInitialFormData = () => ({
   vat: '',
   registrationDate: new Date().toISOString().split('T')[0],
   createdBy: 'System Admin',
+  notes: '',
 });
 
 const normalizeClientForForm = (client) => {
@@ -87,6 +89,7 @@ const normalizeClientForForm = (client) => {
     existingDocuments: client?.documents || [],
     gstIn: client?.gstIn || '',
     vat: client?.vat || '',
+    notes: client?.notes || '',
   };
 };
 
@@ -163,7 +166,7 @@ export default function AddClient() {
           setFormData(prev => ({
             ...prev,
             domain: typesData[0]?.type || '',
-            membership: membershipsData[0]?.name ? [membershipsData[0].name] : [],
+            membership: [],
           }));
         }
       } catch (error) {
@@ -343,6 +346,7 @@ export default function AddClient() {
       formDataToSend.append('vat', formData.vat.trim());
       formDataToSend.append('registrationDate', formData.registrationDate);
       formDataToSend.append('createdBy', formData.createdBy || 'System Admin');
+      formDataToSend.append('notes', formData.notes || '');
 
       if (isEditMode) {
         formDataToSend.append('existingDocuments', JSON.stringify(formData.existingDocuments || []));
@@ -373,6 +377,7 @@ export default function AddClient() {
   };
 
   const getFileUrl = (url) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
     const backendUrl = import.meta.env.VITE_API_BASE_URL
       ? import.meta.env.VITE_API_BASE_URL.replace('/api', '')
       : 'http://localhost:5000';
@@ -550,10 +555,9 @@ export default function AddClient() {
                 Contact Information
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField icon={Mail} label="Email Address" required>
+                <FormField icon={Mail} label="Email Address">
                   <input
                     type="email"
-                    required
                     className={inputClass}
                     placeholder="Email Address"
                     value={formData.email}
@@ -690,6 +694,25 @@ export default function AddClient() {
                     placeholder="VAT Number"
                     value={formData.vat}
                     onChange={(e) => updateField('vat', e.target.value)}
+                  />
+                </FormField>
+              </div>
+            </div>
+
+            <hr className="border-slate-100" />
+
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-indigo-500" />
+                Additional Information
+              </h3>
+              <div className="grid grid-cols-1 gap-4">
+                <FormField icon={MessageSquare} label="Notes / Comments">
+                  <textarea
+                    className={`${inputClass} min-h-[120px] resize-y`}
+                    placeholder="Enter any notes or comments about this client..."
+                    value={formData.notes || ''}
+                    onChange={(e) => updateField('notes', e.target.value)}
                   />
                 </FormField>
               </div>

@@ -1,22 +1,24 @@
 import express from "express";
 import multer from "multer";
-import path from "path";
-import { fileURLToPath } from "url";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 import Client from "../models/Client.js";
 
 const router = express.Router();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const uploadDir = path.join(__dirname, "../../uploads");
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (_req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "sadminperfectras_documents",
+    allowed_formats: ["jpg", "png", "jpeg", "pdf", "docx", "doc"],
+    resource_type: "auto",
   },
 });
 const upload = multer({ storage });
@@ -44,6 +46,7 @@ const formatClient = (client) => ({
     ? new Date(client.registrationDate).toISOString().split("T")[0]
     : "",
   createdBy: client.createdBy,
+  notes: client.notes || "",
   documents: client.documents || [],
   createdAt: client.createdAt,
   updatedAt: client.updatedAt,
@@ -98,7 +101,7 @@ router.post("/", upload.array("documents"), async (req, res, next) => {
     if (req.files && req.files.length > 0) {
       clientData.documents = req.files.map((file) => ({
         name: file.originalname,
-        url: `/uploads/${file.filename}`,
+        url: file.path,
       }));
     }
     const client = await Client.create(clientData);
@@ -130,7 +133,7 @@ router.put("/:id", upload.array("documents"), async (req, res, next) => {
     if (req.files && req.files.length > 0) {
       const newDocs = req.files.map((file) => ({
         name: file.originalname,
-        url: `/uploads/${file.filename}`,
+        url: file.path,
       }));
       clientData.documents = [...clientData.documents, ...newDocs];
     }

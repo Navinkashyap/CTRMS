@@ -17,7 +17,8 @@ import {
   Paperclip,
   FileText,
   LoaderCircle,
-  AlertCircle
+  AlertCircle,
+  MessageSquare
 } from 'lucide-react';
 import { getClient as fetchClientById } from '../lib/clientApi';
 
@@ -48,6 +49,7 @@ export default function ViewClient() {
   }, [id]);
 
   const getFileUrl = (url) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
     const backendUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : 'http://localhost:5000';
     return `${backendUrl}${url}`;
   };
@@ -223,7 +225,23 @@ export default function ViewClient() {
 
             <hr className="border-slate-100" />
 
-            {/* Section 5: Documents */}
+            {/* Section 5: Notes */}
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-indigo-500" />
+                Additional Information
+              </h3>
+              <div className="p-4 rounded-2xl bg-slate-50/50 hover:bg-white border border-transparent hover:border-slate-100 transition-colors">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Notes / Comments</p>
+                <p className="font-medium text-slate-700 text-sm whitespace-pre-wrap leading-relaxed">
+                  {client.notes || <span className="italic text-slate-400">No notes provided for this client.</span>}
+                </p>
+              </div>
+            </div>
+
+            <hr className="border-slate-100" />
+
+            {/* Section 6: Documents */}
             <div>
               <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                 <Paperclip className="w-5 h-5 text-indigo-500" />
