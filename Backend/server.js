@@ -27,9 +27,6 @@ import projectRoutes from "./src/routes/projectRoutes.js";
 import invoiceRoutes from "./src/routes/invoiceRoutes.js";
 import unitRoutes from "./src/routes/unitRoutes.js";
 import dashboardRoutes from "./src/routes/dashboardRoutes.js";
-import dailyRevenueRoutes from "./src/routes/dailyRevenueRoutes.js";
-import monthwiseSaleRoutes from "./src/routes/monthwiseSaleRoutes.js";
-import yearwiseFinanceRoutes from "./src/routes/yearwiseFinanceRoutes.js";
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -79,9 +76,6 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api/units", unitRoutes);
 app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/daily-revenues", dailyRevenueRoutes);
-app.use("/api/monthwise-sales", monthwiseSaleRoutes);
-app.use("/api/yearwise-finances", yearwiseFinanceRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
