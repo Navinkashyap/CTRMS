@@ -1,5 +1,5 @@
+import "dotenv/config";
 import cors from "cors";
-import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
 import fs from "fs";
@@ -27,8 +27,10 @@ import projectRoutes from "./src/routes/projectRoutes.js";
 import invoiceRoutes from "./src/routes/invoiceRoutes.js";
 import unitRoutes from "./src/routes/unitRoutes.js";
 import dashboardRoutes from "./src/routes/dashboardRoutes.js";
+import dailyRevenueRoutes from "./src/routes/dailyRevenueRoutes.js";
+import monthwiseSaleRoutes from "./src/routes/monthwiseSaleRoutes.js";
+import yearwiseFinanceRoutes from "./src/routes/yearwiseFinanceRoutes.js";
 
-dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -77,6 +79,9 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api/units", unitRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/daily-revenues", dailyRevenueRoutes);
+app.use("/api/monthwise-sales", monthwiseSaleRoutes);
+app.use("/api/yearwise-finances", yearwiseFinanceRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
@@ -97,6 +102,8 @@ app.use((err, _req, res, _next) => {
 
   return res.status(500).json({
     message: err.message || "Internal server error",
+    stack: err.stack,
+    details: err
   });
 });
 

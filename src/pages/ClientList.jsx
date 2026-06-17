@@ -84,7 +84,7 @@ export default function ClientList() {
   const sortedAndFilteredClients = useMemo(() => {
     let result = [...clients];
     const query = searchQuery.toLowerCase();
-    
+
     if (query) {
       result = result.filter((client) => {
         return (
@@ -141,7 +141,18 @@ export default function ClientList() {
     setIsSettingsModalOpen(false);
   };
 
-
+  const renderSortableHeader = (id, label) => (
+    <th
+      key={id}
+      className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 transition-colors select-none"
+      onClick={() => requestSort(id)}
+    >
+      <div className="flex items-center gap-1.5 whitespace-nowrap">
+        {label}
+        <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === id ? 'text-indigo-500' : 'text-slate-300'}`} />
+      </div>
+    </th>
+  );
 
   return (
     <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8">
@@ -207,30 +218,20 @@ export default function ClientList() {
             <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-100/80">
-                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Client Code</th>
-                  {visibleColumns.includes('domain') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Domain</th>}
-                  {visibleColumns.includes('status') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Status</th>}
-                  {visibleColumns.includes('membership') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Membership</th>}
-                  {visibleColumns.includes('name') && (
-                    <th 
-                      className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 transition-colors"
-                      onClick={() => requestSort('name')}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        Name
-                        <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                      </div>
-                    </th>
-                  )}
-                  {visibleColumns.includes('website') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Website</th>}
-                  {visibleColumns.includes('email') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Email</th>}
-                  {visibleColumns.includes('phone') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Phone</th>}
-                  {visibleColumns.includes('address') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Address</th>}
-                  {visibleColumns.includes('city') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">City</th>}
-                  {visibleColumns.includes('country') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Country</th>}
-                  {visibleColumns.includes('currency') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Currency</th>}
-                  {visibleColumns.includes('registrationDate') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Date of Registration</th>}
-                  {visibleColumns.includes('createdBy') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Added By</th>}
+                  {renderSortableHeader('membershipCode', 'Client Code')}
+                  {visibleColumns.includes('domain') && renderSortableHeader('domain', 'Domain')}
+                  {visibleColumns.includes('status') && renderSortableHeader('status', 'Status')}
+                  {visibleColumns.includes('membership') && renderSortableHeader('membership', 'Membership')}
+                  {visibleColumns.includes('name') && renderSortableHeader('name', 'Name')}
+                  {visibleColumns.includes('website') && renderSortableHeader('website', 'Website')}
+                  {visibleColumns.includes('email') && renderSortableHeader('email', 'Email')}
+                  {visibleColumns.includes('phone') && renderSortableHeader('phone', 'Phone')}
+                  {visibleColumns.includes('address') && renderSortableHeader('address', 'Address')}
+                  {visibleColumns.includes('city') && renderSortableHeader('city', 'City')}
+                  {visibleColumns.includes('country') && renderSortableHeader('country', 'Country')}
+                  {visibleColumns.includes('currency') && renderSortableHeader('currency', 'Currency')}
+                  {visibleColumns.includes('registrationDate') && renderSortableHeader('registrationDate', 'Date of Registration')}
+                  {visibleColumns.includes('createdBy') && renderSortableHeader('createdBy', 'Added By')}
                   <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider text-center sticky right-0 bg-slate-50 z-30 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] border-l border-slate-100">Action</th>
                 </tr>
               </thead>
