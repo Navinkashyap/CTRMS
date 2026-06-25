@@ -41,6 +41,9 @@ const formatProject = (project, managerMap = {}) => ({
   deadline: project.deadline
     ? new Date(project.deadline).toISOString().split('T')[0]
     : '—',
+  cgst: project.gstEnabled && project.cgstPercent ? `${project.cgstPercent}%` : '—',
+  sgst: project.gstEnabled && project.sgstPercent ? `${project.sgstPercent}%` : '—',
+  igst: project.gstEnabled && project.igstPercent ? `${project.igstPercent}%` : '—',
 });
 
 const allColumns = [
@@ -49,6 +52,9 @@ const allColumns = [
   { id: 'service', label: 'Service' },
   { id: 'manager', label: 'Manager' },
   { id: 'budget', label: 'Budget' },
+  { id: 'cgst', label: 'CGST' },
+  { id: 'sgst', label: 'SGST' },
+  { id: 'igst', label: 'IGST' },
   { id: 'priority', label: 'Priority' },
   { id: 'deadline', label: 'Deadline' },
   { id: 'progress', label: 'Progress' },
@@ -351,6 +357,9 @@ export default function ProjectsList() {
                   {visibleColumns.includes('service') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Service</th>}
                   {visibleColumns.includes('manager') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Manager</th>}
                   {visibleColumns.includes('budget') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Budget</th>}
+                  {visibleColumns.includes('cgst') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">CGST</th>}
+                  {visibleColumns.includes('sgst') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">SGST</th>}
+                  {visibleColumns.includes('igst') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">IGST</th>}
                   {visibleColumns.includes('priority') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Priority</th>}
                   {visibleColumns.includes('deadline') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Deadline</th>}
                   {visibleColumns.includes('progress') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Progress</th>}
@@ -401,9 +410,9 @@ export default function ProjectsList() {
                             <span className="font-semibold text-slate-900 block">
                               {project.projectName}
                             </span>
-                            {project.projectId && (
+                            {(project.projectCode || project.projectId) && (
                               <span className="text-[11px] text-slate-400 font-medium">
-                                {project.projectId}
+                                {project.projectCode || project.projectId}
                               </span>
                             )}
                           </div>
@@ -441,6 +450,24 @@ export default function ProjectsList() {
                     {visibleColumns.includes('budget') && (
                       <td className="px-6 py-4 font-semibold text-emerald-600">
                         {project.budget}
+                      </td>
+                    )}
+
+                    {visibleColumns.includes('cgst') && (
+                      <td className="px-6 py-4 text-slate-600">
+                        {project.cgst}
+                      </td>
+                    )}
+
+                    {visibleColumns.includes('sgst') && (
+                      <td className="px-6 py-4 text-slate-600">
+                        {project.sgst}
+                      </td>
+                    )}
+
+                    {visibleColumns.includes('igst') && (
+                      <td className="px-6 py-4 text-slate-600">
+                        {project.igst}
                       </td>
                     )}
 
@@ -515,18 +542,7 @@ export default function ProjectsList() {
                             <div className="px-4 py-1.5 mb-1 border-b border-slate-50">
                               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Actions</p>
                             </div>
-                            <button
-                              onClick={() => {
-                                handleView(project);
-                                setActiveMenuId(null);
-                              }}
-                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all group/item"
-                            >
-                              <div className="w-8 h-8 rounded-lg bg-slate-50 group-hover/item:bg-white flex items-center justify-center transition-colors">
-                                <Eye className="w-4 h-4" />
-                              </div>
-                              View Details
-                            </button>
+
                             <button
                               onClick={() => {
                                 handleEdit(project);
@@ -539,17 +555,7 @@ export default function ProjectsList() {
                               </div>
                               Edit Project
                             </button>
-                            {canShowOverrideOption(project) && (
-                              <button
-                                onClick={() => handleOpenOverride(project)}
-                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-violet-600 hover:bg-violet-50 transition-all group/item"
-                              >
-                                <div className="w-8 h-8 rounded-lg bg-violet-50 group-hover/item:bg-white flex items-center justify-center transition-colors">
-                                  <SlidersHorizontal className="w-4 h-4" />
-                                </div>
-                                Override
-                              </button>
-                            )}
+
                             <button
                               onClick={() => {
                                 handleDelete(project.id);

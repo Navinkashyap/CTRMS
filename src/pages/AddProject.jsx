@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { MinusCircle, Plus, ArrowLeft } from 'lucide-react';
-import { createProject, getProjects } from '../lib/projectApi';
+import { createProject, getProjects, updateProject, getProject } from '../lib/projectApi';
 import { getClients } from '../lib/clientApi';
 import { getContacts } from '../lib/contactApi';
 import { getLanguages } from '../lib/languageApi';
@@ -49,6 +49,10 @@ const cellSelect =
 
 export default function AddProject() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const editId = location.state?.project?.id || location.state?.project?._id;
+  const isEditMode = Boolean(editId);
 
   const [loading, setLoading] = useState(true);
 
@@ -124,7 +128,56 @@ export default function AddProject() {
         const hiIN = langsRes.find((l) => l.localeCode === 'hi-IN' || l.name === 'Hindi');
         const enUS = langsRes.find((l) => l.localeCode === 'en-US' || l.name === 'English' || l.name === 'English (US)');
 
+        let editData = null;
+        if (isEditMode) {
+          editData = await getProject(editId);
+        }
+
         setFormData((prev) => {
+          if (editData) {
+            return {
+              ...prev,
+              projectName: editData.projectName || '',
+              projectCode: editData.projectCode || '',
+              client: editData.client?._id || editData.client || '',
+              clientContact: editData.clientContact?._id || editData.clientContact || '',
+              clientPO: editData.clientPO || '',
+              clientProjectCode: editData.clientProjectCode || '',
+              projectStatus: editData.projectStatus || editData.status || 'In Progress',
+              isProgramGroup: editData.isProgramGroup || false,
+              programName: editData.programName || '',
+              amount: editData.amount || '',
+              dueDate: editData.dueDate ? new Date(editData.dueDate).toISOString().split('T')[0] : '',
+              dueTime: editData.dueTime || '',
+              description: editData.description || '',
+              translationTool: editData.translationTool || '',
+              subjectMatter: editData.subjectMatter || '',
+              gstEnabled: editData.gstEnabled || false,
+              cgstPercent: editData.cgstPercent ?? 9,
+              sgstPercent: editData.sgstPercent ?? 9,
+              igstPercent: editData.igstPercent ?? 18,
+              otherCharges: editData.otherCharges || 0,
+              otherChargesLabel: editData.otherChargesLabel || 'None',
+              targets: editData.targets && editData.targets.length > 0 ? editData.targets.map(t => ({
+                sourceLanguage: t.sourceLanguage?._id || t.sourceLanguage || '',
+                targetLanguage: t.targetLanguage?._id || t.targetLanguage || '',
+                service: t.service?._id || t.service || '',
+                tasks: t.tasks && t.tasks.length > 0 ? t.tasks.map(task => ({
+                  ...task,
+                  startDate: task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '',
+                  endDate: task.endDate ? new Date(task.endDate).toISOString().split('T')[0] : '',
+                })) : createDefaultTasks('INR', unitsRes.length > 0 ? unitsRes[0].name : 'Words')
+              })) : [{
+                sourceLanguage: enUS ? enUS._id : '',
+                targetLanguage: hiIN ? hiIN._id : '',
+                service: '',
+                tasks: createDefaultTasks('INR', unitsRes.length > 0 ? unitsRes[0].name : 'Words')
+              }],
+              referenceFiles: editData.referenceFiles && editData.referenceFiles.length > 0 ? editData.referenceFiles : [''],
+              workingFiles: editData.workingFiles && editData.workingFiles.length > 0 ? editData.workingFiles : [''],
+            };
+          }
+
           if (prev.targets.length === 0) {
             return {
               ...prev,
@@ -174,7 +227,7 @@ export default function AddProject() {
   const selectedClient = clients.find((c) => c._id === formData.client);
   const clientCurrency = selectedClient?.currency || 'INR';
   const clientState = selectedClient?.state?.trim().toLowerCase() || '';
-  const isUP = clientState === 'up' || clientState === 'uttar pradesh';
+  const isUP = ['up', 'uttar pradesh', 'uttarpradesh', 'uttar pardesh', 'u.p', 'u.p.', 'uttarpardesh'].includes(clientState);
 
   const targetSummary = formData.targets
     .map((t) => getLangName(t.targetLanguage, languages))
@@ -297,6 +350,10 @@ export default function AddProject() {
   const preparePayload = () => ({
     ...formData,
     projectName: formData.projectName || formData.projectCode || 'Untitled Project',
+    service: formData.targets && formData.targets.length > 0 ? formData.targets[0].service : '',
+    budget: formData.amount || '',
+    deadline: formData.dueDate || '',
+    status: formData.projectStatus || 'In Progress',
     targets: formData.targets.map((t) => ({
       ...t,
       tasks: t.tasks.map((task) => ({
@@ -312,12 +369,17 @@ export default function AddProject() {
       return;
     }
     try {
-      await createProject(preparePayload());
-      alert('Project created successfully!');
+      if (isEditMode) {
+        await updateProject(editId, preparePayload());
+        alert('Project updated successfully!');
+      } else {
+        await createProject(preparePayload());
+        alert('Project created successfully!');
+      }
       navigate('/projects');
     } catch (error) {
       console.error(error);
-      alert('Failed to create project');
+      alert(isEditMode ? 'Failed to update project' : 'Failed to create project');
     }
   };
 
@@ -340,7 +402,7 @@ export default function AddProject() {
     return (
       <div className="space-y-4 animate-in fade-in duration-500 mb-8">
         <div className="border-b border-slate-200 pb-2">
-          <h2 className="text-xl font-bold text-slate-800">Task Details</h2>
+          <h2 className="text-xl font-bold text-slate-800">{isEditMode ? 'Edit Task Details' : 'Task Details'}</h2>
         </div>
 
         {/* Header metadata */}
@@ -898,14 +960,14 @@ export default function AddProject() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-xl font-black text-slate-800 tracking-tight">
-            Add Project
+            {isEditMode ? 'Edit Project' : 'Add Project'}
           </h1>
         </div>
         <div className="min-h-[400px] space-y-8">
           {renderCompanyContent()}
           {renderTranslationsContent()}
           <div className="flex gap-3 pt-4 border-t border-slate-200">
-            <button onClick={handleSubmit} className="px-6 py-2.5 text-sm bg-[#3f5d9a] hover:bg-[#344d7e] text-white rounded-lg font-bold">Create Project</button>
+            <button onClick={handleSubmit} className="px-6 py-2.5 text-sm bg-[#3f5d9a] hover:bg-[#344d7e] text-white rounded-lg font-bold">{isEditMode ? 'Update Project' : 'Create Project'}</button>
             <button onClick={() => navigate('/projects')} className="px-6 py-2.5 text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold">Cancel</button>
           </div>
         </div>

@@ -150,6 +150,7 @@ export default function AddInvoice() {
       billToEmail: selected?.email || '',
       billToPhone: selected?.phone || '',
       billToGSTIN: selected?.gstIn || '',
+      currency: selected?.currency || 'INR',
     }));
   };
 
@@ -231,7 +232,7 @@ export default function AddInvoice() {
   // Determine if client is from UP (same state logic as AddProject.jsx)
   const selectedClient = clients.find((c) => c._id === formData.client);
   const clientState = selectedClient?.state?.trim().toLowerCase() || '';
-  const isUP = clientState === 'up' || clientState === 'uttar pradesh';
+  const isUP = ['up', 'uttar pradesh', 'uttarpradesh', 'uttar pardesh', 'u.p', 'u.p.', 'uttarpardesh'].includes(clientState);
 
   // Calculate totals
   const subtotal = formData.items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
@@ -708,30 +709,35 @@ export default function AddInvoice() {
                       {formData.currency} {subtotal.toFixed(2)}
                     </td>
                   </tr>
-                  <tr>
-                    <td className="border border-slate-300 bg-slate-50 px-4 py-2.5 font-bold text-slate-700">
-                      CGST ({formData.cgstPercent}%)
-                    </td>
-                    <td className="border border-slate-300 px-4 py-2.5 text-right font-semibold">
-                      {formData.currency} {cgstAmount.toFixed(2)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-slate-300 bg-slate-50 px-4 py-2.5 font-bold text-slate-700">
-                      SGST ({formData.sgstPercent}%)
-                    </td>
-                    <td className="border border-slate-300 px-4 py-2.5 text-right font-semibold">
-                      {formData.currency} {sgstAmount.toFixed(2)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="border border-slate-300 bg-slate-50 px-4 py-2.5 font-bold text-slate-700">
-                      IGST ({formData.igstPercent}%)
-                    </td>
-                    <td className="border border-slate-300 px-4 py-2.5 text-right font-semibold">
-                      {formData.currency} {igstAmount.toFixed(2)}
-                    </td>
-                  </tr>
+                  {isUP ? (
+                    <>
+                      <tr>
+                        <td className="border border-slate-300 bg-slate-50 px-4 py-2.5 font-bold text-slate-700">
+                          CGST ({formData.cgstPercent}%)
+                        </td>
+                        <td className="border border-slate-300 px-4 py-2.5 text-right font-semibold">
+                          {formData.currency} {cgstAmount.toFixed(2)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="border border-slate-300 bg-slate-50 px-4 py-2.5 font-bold text-slate-700">
+                          SGST ({formData.sgstPercent}%)
+                        </td>
+                        <td className="border border-slate-300 px-4 py-2.5 text-right font-semibold">
+                          {formData.currency} {sgstAmount.toFixed(2)}
+                        </td>
+                      </tr>
+                    </>
+                  ) : (
+                    <tr>
+                      <td className="border border-slate-300 bg-slate-50 px-4 py-2.5 font-bold text-slate-700">
+                        IGST ({formData.igstPercent}%)
+                      </td>
+                      <td className="border border-slate-300 px-4 py-2.5 text-right font-semibold">
+                        {formData.currency} {igstAmount.toFixed(2)}
+                      </td>
+                    </tr>
+                  )}
                   <tr className="bg-green-50">
                     <td className="border-2 border-green-500 px-4 py-3 font-black text-slate-900 text-sm">
                       TOTAL (in {formData.currency})
