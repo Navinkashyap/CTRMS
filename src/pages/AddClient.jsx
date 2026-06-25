@@ -23,7 +23,7 @@ import {
   MessageSquare,
 } from 'lucide-react';
 
-import { createClient, getNextMembershipCode, updateClient } from '../lib/clientApi';
+import { createClient, getClients, getNextMembershipCode, updateClient } from '../lib/clientApi';
 import { getTypes } from '../lib/typeApi';
 import { getMemberships } from '../lib/membershipApi';
 import { getCountries, createCountry } from '../lib/countryApi';
@@ -142,24 +142,27 @@ export default function AddClient() {
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
+  const [existingClients, setExistingClients] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
 
   useEffect(() => {
     const loadOptions = async () => {
       setLoadingOptions(true);
       try {
-        const [typesData, membershipsData, countriesData, statesData, citiesData] = await Promise.all([
+        const [typesData, membershipsData, countriesData, statesData, citiesData, clientsData] = await Promise.all([
           getTypes(),
           getMemberships(),
           getCountries(),
           getStates(),
-          getCities()
+          getCities(),
+          getClients()
         ]);
         setDomains(typesData.filter(t => t.status === 'Active'));
         setMemberships(membershipsData.filter(m => m.status === 'Active'));
         setCountries(countriesData.filter(c => c.status === 'Active'));
         setStates(statesData.filter(s => s.status === 'Active'));
         setCities(citiesData.filter(c => c.status === 'Active'));
+        setExistingClients(clientsData || []);
 
         // Set defaults if not editing
         if (!isEditMode) {
@@ -313,6 +316,17 @@ export default function AddClient() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const currentName = formData.name.trim().toLowerCase();
+    const isDuplicate = existingClients.some(
+      client => client.name?.toLowerCase() === currentName && client._id !== editingClient?._id
+    );
+
+    if (isDuplicate) {
+      setErrorMessage('A client with this name already exists.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
 
     setSaving(true);
     setErrorMessage('');

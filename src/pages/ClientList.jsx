@@ -37,6 +37,8 @@ const allColumns = [
   { id: 'createdBy', label: 'Added By' },
 ];
 
+const DEFAULT_VISIBLE_COLUMNS = ['domain', 'status', 'membership', 'name', 'website', 'email', 'phone', 'city', 'country', 'registrationDate'];
+
 export default function ClientList() {
   const navigate = useNavigate();
   const [clients, setClients] = useState([]);
@@ -47,7 +49,17 @@ export default function ClientList() {
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
-  const [visibleColumns, setVisibleColumns] = useState(['domain', 'status', 'membership', 'name', 'website', 'email', 'phone', 'city', 'country', 'registrationDate']);
+  const [visibleColumns, setVisibleColumns] = useState(() => {
+    const savedColumns = localStorage.getItem('clientListVisibleColumns');
+    if (savedColumns) {
+      try {
+        return JSON.parse(savedColumns);
+      } catch (e) {
+        return DEFAULT_VISIBLE_COLUMNS;
+      }
+    }
+    return DEFAULT_VISIBLE_COLUMNS;
+  });
   const [tempVisibleColumns, setTempVisibleColumns] = useState(visibleColumns);
 
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
@@ -138,6 +150,7 @@ export default function ClientList() {
 
   const applyColumnSettings = () => {
     setVisibleColumns(tempVisibleColumns);
+    localStorage.setItem('clientListVisibleColumns', JSON.stringify(tempVisibleColumns));
     setIsSettingsModalOpen(false);
   };
 
