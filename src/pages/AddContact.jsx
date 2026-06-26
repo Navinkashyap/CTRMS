@@ -205,16 +205,20 @@ export default function AddContact() {
                 </label>
                 <div className="relative group flex gap-2 w-full">
                   <div className="relative w-[90px] shrink-0">
-                    <select
+                    <input
+                      type="text"
+                      list="contactCountryCodes"
                       className="w-full px-2 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none cursor-pointer"
                       value={formData.countryCode}
                       onChange={(e) => updateField('countryCode', e.target.value)}
+                      placeholder="+91"
                       title={countryCodes.find(c => c.code === formData.countryCode)?.label || 'Country Code'}
-                    >
+                    />
+                    <datalist id="contactCountryCodes">
                       {countryCodes.map((c) => (
                         <option key={c.label} value={c.code}>{c.code} {c.label}</option>
                       ))}
-                    </select>
+                    </datalist>
                   </div>
                   <div className="relative flex-1 min-w-0">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />

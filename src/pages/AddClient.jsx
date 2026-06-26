@@ -581,16 +581,20 @@ export default function AddClient() {
 
                 <FormField icon={Phone} label="Phone Number">
                   <div className="flex gap-2 w-full">
-                    <select
+                    <input
+                      type="text"
+                      list="clientCountryCodes"
                       className="px-2 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all w-[100px] shrink-0"
                       value={formData.countryCode}
                       onChange={(e) => updateField('countryCode', e.target.value)}
+                      placeholder="+91"
                       title={countryCodes.find(c => c.code === formData.countryCode)?.label || 'Country Code'}
-                    >
+                    />
+                    <datalist id="clientCountryCodes">
                       {countryCodes.map((c) => (
                         <option key={c.label} value={c.code}>{c.code} {c.label}</option>
                       ))}
-                    </select>
+                    </datalist>
                     <input
                       type="tel"
                       maxLength={10}
