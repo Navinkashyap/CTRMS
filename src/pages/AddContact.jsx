@@ -146,7 +146,7 @@ export default function AddContact() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Salutation + First Name */}
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">First Name <span className="text-rose-500">*</span></label>
+                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">First Name</label>
                 <div className="relative group flex gap-2">
                   <div className="relative w-[30%]">
                     <select
@@ -164,7 +164,6 @@ export default function AddContact() {
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                     <input
                       type="text"
-                      required
                       className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
                       placeholder="Enter first name"
                       value={formData.firstName}
