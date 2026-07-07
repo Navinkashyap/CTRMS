@@ -34,6 +34,27 @@ router.get("/", async (_req, res, next) => {
   }
 });
 
+// Search vendors by name, code, or email
+router.get("/search", async (req, res, next) => {
+  try {
+    const { q } = req.query;
+    if (!q?.trim()) {
+      return res.json([]);
+    }
+
+    const regex = new RegExp(q.trim(), "i");
+    const vendors = await Vendor.find({
+      $or: [{ name: regex }, { code: regex }, { email: regex }],
+    })
+      .sort({ name: 1 })
+      .limit(10);
+
+    res.json(vendors.map(formatVendor));
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Get vendor by ID
 router.get("/:id", async (req, res, next) => {
   try {

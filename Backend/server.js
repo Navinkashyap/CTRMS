@@ -27,6 +27,7 @@ import projectRoutes from "./src/routes/projectRoutes.js";
 import invoiceRoutes from "./src/routes/invoiceRoutes.js";
 import unitRoutes from "./src/routes/unitRoutes.js";
 import dashboardRoutes from "./src/routes/dashboardRoutes.js";
+import evaluationRoutes from "./src/routes/evaluationRoutes.js";
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -76,6 +77,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api/units", unitRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/evaluations", evaluationRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

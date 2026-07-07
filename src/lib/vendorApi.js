@@ -9,6 +9,11 @@ export const getVendors = async () => {
   return response.data;
 };
 
+export const searchVendors = async (query) => {
+  const response = await api.get('/vendors/search', { params: { q: query } });
+  return response.data;
+};
+
 export const getVendorById = async (id) => {
   const response = await api.get(`/vendors/${id}`);
   return response.data;
