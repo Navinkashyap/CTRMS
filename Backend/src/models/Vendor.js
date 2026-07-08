@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 const vendorSchema = new mongoose.Schema(
   {
@@ -18,6 +19,19 @@ const vendorSchema = new mongoose.Schema(
       required: [true, "Email is required"],
       trim: true,
       lowercase: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      default: "",
+    },
+    googleId: {
+      type: String,
+      default: "",
+    },
+    profilePicture: {
+      type: String,
+      default: "",
     },
     mobile: {
       type: String,
@@ -83,5 +97,19 @@ const vendorSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+// Hash password before saving (only if password is modified and not empty)
+vendorSchema.pre("save", async function (next) {
+  if (!this.isModified("password") || !this.password) return next();
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
+
+// Compare password method
+vendorSchema.methods.comparePassword = async function (candidatePassword) {
+  if (!this.password) return false;
+  return bcrypt.compare(candidatePassword, this.password);
+};
 
 export default mongoose.model("Vendor", vendorSchema);
