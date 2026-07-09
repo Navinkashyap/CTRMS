@@ -40,7 +40,7 @@ export default function AddContact() {
     status: 'Active',
     dob: '',
     department: '',
-    countryCode: '+91',
+    countryCode: '',
     isWhatsapp: false,
     remark: ''
   });
@@ -210,7 +210,7 @@ export default function AddContact() {
                       className="w-full px-2 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none cursor-pointer"
                       value={formData.countryCode}
                       onChange={(e) => updateField('countryCode', e.target.value)}
-                      placeholder="+91"
+                      placeholder="Code"
                       title={countryCodes.find(c => c.code === formData.countryCode)?.label || 'Country Code'}
                     />
                     <datalist id="contactCountryCodes">

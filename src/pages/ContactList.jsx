@@ -223,12 +223,15 @@ export default function ContactList() {
                     <tr key={contact._id} className="group hover:bg-slate-50/50 transition-colors">
                       {visibleColumns.includes('fullName') && (
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
+                          <div 
+                            className="flex items-center gap-3 cursor-pointer"
+                            onClick={() => navigate(`view-contact/${contact._id}`, { state: { contact } })}
+                          >
                             <div className="w-9 h-9 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-sm font-semibold text-indigo-600 shrink-0">
                               {(contact.firstName?.charAt(0) || '').toUpperCase()}
                               {(contact.lastName?.charAt(0) || '').toUpperCase()}
                             </div>
-                            <span className="font-semibold text-slate-900 capitalize group-hover:text-indigo-600 transition-colors">
+                            <span className="font-semibold text-slate-900 capitalize group-hover:text-indigo-600 transition-colors hover:underline">
                               {contact.firstName} {contact.lastName}
                             </span>
                           </div>
