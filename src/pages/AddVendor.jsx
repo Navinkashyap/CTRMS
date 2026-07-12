@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, ChevronDown } from 'lucide-react';
+import { ChevronLeft, ChevronDown, Eye, EyeOff } from 'lucide-react';
 import { createVendor, updateVendor } from '../lib/vendorApi';
 
 export default function AddVendor() {
@@ -14,6 +14,7 @@ export default function AddVendor() {
     lastName: '',
     mobile: '',
     email: '',
+    password: '',
     dob: '',
     gender: '',
     country: '',
@@ -24,6 +25,8 @@ export default function AddVendor() {
     address: '',
     isActive: true
   });
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const [saving, setSaving] = useState(false);
 
@@ -74,6 +77,11 @@ export default function AddVendor() {
         address: formData.address.trim(),
         isActive: formData.isActive
       };
+
+      // Include password only when creating a new vendor
+      if (!isEditMode && formData.password.trim()) {
+        payload.password = formData.password;
+      }
 
       if (isEditMode) {
         await updateVendor(editingVendor._id, payload);
@@ -155,6 +163,32 @@ export default function AddVendor() {
                   value={formData.email} onChange={handleFormChange}
                 />
               </div>
+
+              {/* Password field - only shown when creating a new vendor */}
+              {!isEditMode && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider ml-1">Password <span className="text-rose-500">*</span></label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      required={!isEditMode}
+                      minLength={6}
+                      placeholder="Min. 6 characters"
+                      className="w-full h-12 px-4 pr-12 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
+                      value={formData.password}
+                      onChange={handleFormChange}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(prev => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-indigo-600 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider ml-1">Mobile <span className="text-rose-500">*</span></label>
