@@ -83,11 +83,11 @@ const navItems = [
     icon: Store,
     to: null,
     sub: [
-      { label: "All Vendors", to: "/vendors" },
-      { label: "Manage Vendors", to: "/vendors/manage-vendors" },
+      { label: "Vendor Manager", to: "/vendors" },
       { label: "Evaluation", to: "/vendors/evaluation" },
     ],
   },
+  { label: "Project Manager", icon: User, to: "/project-managers", sub: [] },
   { label: "Clients", icon: Building2, to: "/clients", sub: [] },
   { label: "Contacts", icon: BookUser, to: "/contacts", sub: [] },
   { label: "Projects", icon: Layers, to: "/projects", sub: [] },
@@ -331,7 +331,7 @@ const Sidebar = ({ isCollapsed = false }) => {
             <button className="p-2 text-slate-500 hover:text-white transition-colors">
               <Settings size={18} className="hover:rotate-45 transition-transform duration-500" />
             </button>
-            <button 
+            <button
               onClick={handleLogout}
               className="p-2 text-red-500/70 hover:text-red-400 transition-colors"
             >
@@ -365,9 +365,9 @@ const Sidebar = ({ isCollapsed = false }) => {
               <p className="text-[10px] font-medium text-slate-500 uppercase">Super Admin</p>
               <div className="mt-2 pt-2 border-t border-white/5 flex gap-2">
                 <Settings size={14} className="text-slate-500 hover:text-white cursor-pointer" />
-                <LogOut 
-                  size={14} 
-                  className="text-red-500/70 hover:text-red-400 cursor-pointer" 
+                <LogOut
+                  size={14}
+                  className="text-red-500/70 hover:text-red-400 cursor-pointer"
                   onClick={handleLogout}
                 />
               </div>

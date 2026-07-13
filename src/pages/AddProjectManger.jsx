@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, ChevronDown, Eye, EyeOff } from 'lucide-react';
-import { createVendor, updateVendor } from '../lib/vendorApi';
+import { createProjectManager, updateProjectManager } from '../lib/projectManagerApi';
 
-export default function AddVendor() {
+export default function AddProjectManager() {
   const navigate = useNavigate();
   const location = useLocation();
-  const editingVendor = location.state?.vendor;
-  const isEditMode = Boolean(editingVendor?._id);
+  const editingProjectManager = location.state?.projectManager;
+  const isEditMode = Boolean(editingProjectManager?._id);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -32,25 +32,25 @@ export default function AddVendor() {
 
   useEffect(() => {
     if (isEditMode) {
-      const nameParts = editingVendor.name.split(' ');
+      const nameParts = editingProjectManager.name.split(' ');
       const first = nameParts[0] || '';
       const last = nameParts.slice(1).join(' ') || '';
 
       setFormData({
         firstName: first,
         lastName: last,
-        email: editingVendor.email || '',
-        mobile: editingVendor.mobile || '',
-        dob: editingVendor.dob || '',
-        gender: editingVendor.gender || '',
-        country: editingVendor.country || '',
-        availability: editingVendor.availability || 'Full Time',
-        address: editingVendor.address || '',
-        isActive: editingVendor.isActive ?? true,
+        email: editingProjectManager.email || '',
+        mobile: editingProjectManager.mobile || '',
+        dob: editingProjectManager.dob || '',
+        gender: editingProjectManager.gender || '',
+        country: editingProjectManager.country || '',
+        availability: editingProjectManager.availability || 'Full Time',
+        address: editingProjectManager.address || '',
+        isActive: editingProjectManager.isActive ?? true,
         state: '', city: '', zipCode: ''
       });
     }
-  }, [editingVendor, isEditMode]);
+  }, [editingProjectManager, isEditMode]);
 
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -78,25 +78,25 @@ export default function AddVendor() {
         isActive: formData.isActive
       };
 
-      // Include password only when creating a new vendor
+      // Include password only when creating a new projectManager
       if (!isEditMode && formData.password.trim()) {
         payload.password = formData.password;
       }
 
       if (isEditMode) {
-        await updateVendor(editingVendor._id, payload);
+        await updateProjectManager(editingProjectManager._id, payload);
       } else {
         const newPayload = {
           ...payload,
           code: Math.floor(Math.random() * 10000).toString()
         };
-        await createVendor(newPayload);
+        await createProjectManager(newPayload);
       }
 
-      navigate('/vendors');
+      navigate('/project-managers');
     } catch (error) {
-      console.error('Failed to save vendor:', error);
-      alert('Failed to save vendor. Please try again.');
+      console.error('Failed to save projectManager:', error);
+      alert('Failed to save projectManager. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -110,14 +110,14 @@ export default function AddVendor() {
         <div className="flex items-center justify-between bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/60 shadow-sm">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate('/vendors')}
+              onClick={() => navigate('/project-managers')}
               className="p-3 bg-white text-slate-600 hover:text-indigo-600 rounded-2xl shadow-sm hover:shadow-md transition-all group"
             >
               <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
             </button>
             <div>
               <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent italic">
-                {isEditMode ? 'Modify Partner Details' : 'Onboard New Vendor'}
+                {isEditMode ? 'Modify Partner Details' : 'Onboard New Project Manager'}
               </h1>
               <p className="text-slate-500 font-medium tracking-wide">Manage resource profile information</p>
             </div>
@@ -164,7 +164,7 @@ export default function AddVendor() {
                 />
               </div>
 
-              {/* Password field - only shown when creating a new vendor */}
+              {/* Password field - only shown when creating a new projectManager */}
               {!isEditMode && (
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider ml-1">Password <span className="text-rose-500">*</span></label>
@@ -290,7 +290,7 @@ export default function AddVendor() {
               <div className="md:col-span-2 flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200 shadow-sm mt-2">
                 <div className="space-y-0.5">
                   <label className="text-sm font-bold text-slate-800">System Visibility</label>
-                  <p className="text-xs font-medium text-slate-500">Enable or disable this Vendor Manager's profile</p>
+                  <p className="text-xs font-medium text-slate-500">Enable or disable this ProjectManager Manager's profile</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className={`text-xs font-semibold uppercase tracking-wider ${formData.isActive ? 'text-emerald-600' : 'text-slate-500'}`}>
@@ -310,7 +310,7 @@ export default function AddVendor() {
             <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 mt-6">
               <button
                 type="button"
-                onClick={() => navigate('/vendors')}
+                onClick={() => navigate('/project-managers')}
                 className="px-6 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-900 text-slate-600 rounded-xl text-sm font-semibold transition-all shadow-sm"
               >
                 Cancel
@@ -320,7 +320,7 @@ export default function AddVendor() {
                 disabled={saving}
                 className="px-8 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-all shadow-sm active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {saving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Create Vendor')}
+                {saving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Create Project Manager')}
               </button>
             </div>
           </form>

@@ -29,6 +29,8 @@ import ViewInvoice from "./pages/ViewInvoice";
 import UsersList from "./pages/UsersList";
 import VendorList from "./pages/VendorList";
 import AddVendor from "./pages/AddVendor";
+import ProjectMangerList from "./pages/ProjectManger";
+import AddProjectManager from "./pages/AddProjectManger";
 import Evaluation from "./pages/Evaluation";
 import AddAdmin from "./pages/AddAdmin";
 import AddClient from "./pages/AddClient";
@@ -130,6 +132,8 @@ const App = () => {
           <Route path="vendors/add-vendor" element={<AddVendor />} />
           <Route path="vendors/manage-vendors" element={<VendorList />} />
           <Route path="vendors/evaluation" element={<Evaluation />} />
+          <Route path="project-managers" element={<ProjectMangerList />} />
+          <Route path="project-managers/add" element={<AddProjectManager />} />
           <Route path="clients">
             <Route index element={<ClientList />} />
             <Route path="add-client" element={<AddClient />} />

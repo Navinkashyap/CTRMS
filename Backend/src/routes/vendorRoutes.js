@@ -1,5 +1,7 @@
 import express from "express";
 import Vendor from "../models/Vendor.js";
+import VMSUser from "../VMS/models/VMSUser.js";
+import bcrypt from "bcryptjs";
 
 const router = express.Router();
 
@@ -72,6 +74,18 @@ router.get("/:id", async (req, res, next) => {
 router.post("/", async (req, res, next) => {
   try {
     const vendor = await Vendor.create(req.body);
+
+    // Also create a VMSUser for the vendor manager login
+    if (req.body.password) {
+      await VMSUser.create({
+        name: vendor.name,
+        email: vendor.email,
+        password: req.body.password,
+        role: "vendor_manager",
+        isActive: vendor.isActive
+      });
+    }
+
     res.status(201).json(formatVendor(vendor));
   } catch (error) {
     next(error);
@@ -81,13 +95,48 @@ router.post("/", async (req, res, next) => {
 // Update vendor
 router.put("/:id", async (req, res, next) => {
   try {
+    const oldVendor = await Vendor.findById(req.params.id);
+    if (!oldVendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    const plainPassword = req.body.password;
+
+    // Handle password hashing manually for Vendor because findByIdAndUpdate bypasses pre('save')
+    if (plainPassword) {
+      const salt = await bcrypt.genSalt(10);
+      req.body.password = await bcrypt.hash(plainPassword, salt);
+    } else {
+      delete req.body.password; // Don't overwrite with empty
+    }
+
     const vendor = await Vendor.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
-    if (!vendor) {
-      return res.status(404).json({ message: "Vendor not found" });
+    
+    // Sync with VMSUser so Vendor Manager can log in
+    const vmsUser = await VMSUser.findOne({ email: oldVendor.email });
+    if (vmsUser) {
+      vmsUser.name = vendor.name;
+      vmsUser.email = vendor.email;
+      vmsUser.isActive = vendor.isActive;
+      // VMSUser pre-save hook handles hashing, so we pass the plain password
+      if (plainPassword) {
+        vmsUser.password = plainPassword;
+      }
+      await vmsUser.save();
+    } else if (plainPassword) {
+      // If VMSUser didn't exist but password is provided, create it
+      await VMSUser.create({
+        name: vendor.name,
+        email: vendor.email,
+        password: plainPassword,
+        role: "vendor_manager",
+        isActive: vendor.isActive
+      });
     }
+
     res.json(formatVendor(vendor));
   } catch (error) {
     next(error);

@@ -11,7 +11,7 @@ import {
   X,
   Trash2
 } from 'lucide-react';
-import { getVendors, createVendor, updateVendor, deleteVendor } from '../lib/vendorApi';
+import { getProjectManagers, createProjectManager, updateProjectManager, deleteProjectManager } from '../lib/projectManagerApi';
 
 // Initial data placeholder removed - fetching from API instead
 
@@ -32,22 +32,22 @@ const StarRating = ({ rating }) => {
   );
 };
 
-export default function VendorList() {
+export default function ProjectManagerList() {
   const navigate = useNavigate();
-  const [vendors, setVendors] = useState([]);
+  const [projectManagers, setProjectManagers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadVendors();
+    loadProjectManagers();
   }, []);
 
-  const loadVendors = async () => {
+  const loadProjectManagers = async () => {
     try {
       setIsLoading(true);
-      const data = await getVendors();
-      setVendors(data);
+      const data = await getProjectManagers();
+      setProjectManagers(data);
     } catch (error) {
-      console.error('Failed to fetch vendors:', error);
+      console.error('Failed to fetch projectManagers:', error);
     } finally {
       setIsLoading(false);
     }
@@ -67,23 +67,23 @@ export default function VendorList() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this vendor?')) {
+    if (window.confirm('Are you sure you want to delete this projectManager?')) {
       try {
-        await deleteVendor(id);
-        await loadVendors();
+        await deleteProjectManager(id);
+        await loadProjectManagers();
       } catch (error) {
-        console.error('Failed to delete vendor:', error);
+        console.error('Failed to delete projectManager:', error);
       }
     }
   };
 
-  const handleEdit = (vendor) => {
-    navigate('/vendors/add-vendor', { state: { vendor } });
+  const handleEdit = (projectManager) => {
+    navigate('/project-managers/add', { state: { projectManager } });
   };
 
-  const filteredVendors = vendors.filter(vendor =>
+  const filteredProjectManagers = projectManagers.filter(projectManager =>
     Object.keys(filters).every(key =>
-      vendor[key]?.toString().toLowerCase().includes(filters[key].toLowerCase())
+      projectManager[key]?.toString().toLowerCase().includes(filters[key].toLowerCase())
     )
   );
 
@@ -95,12 +95,12 @@ export default function VendorList() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:px-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
           <div className="space-y-1.5">
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
-              Vendor Manger
+              Project Manager
             </h1>
             <p className="text-slate-500 text-sm font-medium tracking-wide flex items-center gap-3">
               Global Resource Management
               <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 font-semibold text-[10px] uppercase tracking-wider">
-                {filteredVendors.length} ACTIVE VENDORS
+                {filteredProjectManagers.length} ACTIVE MANAGERS
               </span>
             </p>
           </div>
@@ -118,11 +118,11 @@ export default function VendorList() {
             </div>
 
             <button
-              onClick={() => navigate('/vendors/add-vendor')}
+              onClick={() => navigate('/project-managers/add')}
               className="group relative flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-semibold shadow-[0_4px_12px_-2px_rgba(79,70,229,0.3)] hover:bg-indigo-700 transition-all active:scale-95"
             >
               <Plus className="relative w-4 h-4" />
-              <span className="relative">Add Vendor Manger</span>
+              <span className="relative">Add New Project Manager</span>
             </button>
           </div>
         </div>
@@ -167,7 +167,7 @@ export default function VendorList() {
 
         </div>
 
-        {/* Premium Vendor Table */}
+        {/* Premium ProjectManager Table */}
         <div className="bg-white border border-slate-100 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative">
           <div className="overflow-x-auto custom-scrollbarThin">
             <table className="w-full text-left text-sm border-collapse min-w-[900px]">
@@ -227,33 +227,33 @@ export default function VendorList() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100/80">
-                {filteredVendors.map((vendor, index) => (
-                  <tr key={vendor._id} className="group hover:bg-slate-50/50 transition-colors">
+                {filteredProjectManagers.map((projectManager, index) => (
+                  <tr key={projectManager._id} className="group hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4">
                       <span className="px-2 py-1 rounded bg-slate-100 text-slate-600 font-mono text-[11px] font-semibold border border-slate-200 text-center">
-                        {vendor.code}
+                        {projectManager.code}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-semibold text-xs shrink-0 line-clamp-1">
-                          {vendor.name.charAt(0)}
+                          {projectManager.name.charAt(0)}
                         </div>
                         <div className="space-y-0.5">
-                          <div className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">{vendor.name}</div>
+                          <div className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">{projectManager.name}</div>
                           <div className="text-[11px] font-medium text-slate-500 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            {vendor.country}
+                            {projectManager.country}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="space-y-1">
-                        <div className="text-sm font-medium text-slate-700">{vendor.email}</div>
+                        <div className="text-sm font-medium text-slate-700">{projectManager.email}</div>
                         <div className="flex gap-2">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100/50 hover:bg-indigo-100 transition-colors cursor-pointer">{vendor.ptft}</span>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 transition-colors cursor-pointer">{vendor.motherTongue}</span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100/50 hover:bg-indigo-100 transition-colors cursor-pointer">{projectManager.ptft}</span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 transition-colors cursor-pointer">{projectManager.motherTongue}</span>
                         </div>
                       </div>
                     </td>
@@ -262,32 +262,32 @@ export default function VendorList() {
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center justify-between text-[10px] font-semibold text-slate-500 uppercase tracking-widest pl-0.5">
                             <span>Service</span>
-                            <span>{vendor.serviceQuality}/5</span>
+                            <span>{projectManager.serviceQuality}/5</span>
                           </div>
-                          <StarRating rating={vendor.serviceQuality} />
+                          <StarRating rating={projectManager.serviceQuality} />
                         </div>
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center justify-between text-[10px] font-semibold text-slate-500 uppercase tracking-widest pl-0.5">
                             <span>Task</span>
-                            <span>{vendor.taskQuality}/5</span>
+                            <span>{projectManager.taskQuality}/5</span>
                           </div>
-                          <StarRating rating={vendor.taskQuality} />
+                          <StarRating rating={projectManager.taskQuality} />
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button
-                          onClick={() => handleEdit(vendor)}
+                          onClick={() => handleEdit(projectManager)}
                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-600 transition-all shadow-sm"
-                          title="Edit Vendor"
+                          title="Edit ProjectManager"
                         >
                           <Settings className="w-3.5 h-3.5" />
                         </button>
                         <button
-                          onClick={() => handleDelete(vendor._id)}
+                          onClick={() => handleDelete(projectManager._id)}
                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-rose-600 hover:border-rose-600 transition-all shadow-sm"
-                          title="Delete Vendor"
+                          title="Delete ProjectManager"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -301,7 +301,7 @@ export default function VendorList() {
 
           <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
             <p className="text-sm font-medium text-slate-500">
-              Showing <span className="text-slate-900 font-semibold">{filteredVendors.length}</span> of <span className="text-slate-900 font-semibold">{vendors.length}</span> Vendors
+              Showing <span className="text-slate-900 font-semibold">{filteredProjectManagers.length}</span> of <span className="text-slate-900 font-semibold">{projectManagers.length}</span> Project Managers
             </p>
             <div className="flex items-center gap-1">
               <button disabled className="px-3 py-1.5 text-sm font-medium text-slate-400 bg-white border border-slate-200 rounded-lg hover:text-indigo-600 transition-colors disabled:opacity-50 cursor-not-allowed">

@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 
 import clientRoutes from "./src/routes/clientRoutes.js";
 import vendorRoutes from "./src/routes/vendorRoutes.js";
+import projectManagerRoutes from "./src/routes/projectManagerRoutes.js";
 import typeRoutes from "./src/routes/typeRoutes.js";
 import membershipRoutes from "./src/routes/membershipRoutes.js";
 import countryRoutes from "./src/routes/countryRoutes.js";
@@ -59,6 +60,7 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/clients", clientRoutes);
 app.use("/api/vendors", vendorRoutes);
+app.use("/api/project-managers", projectManagerRoutes);
 app.use("/api/types", typeRoutes);
 app.use("/api/memberships", membershipRoutes);
 app.use("/api/countries", countryRoutes);
