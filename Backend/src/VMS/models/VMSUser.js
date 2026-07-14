@@ -21,8 +21,32 @@ const vmsUserSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["vendor_manager", "project_manager"],
       required: [true, "Role is required"],
+    },
+    countryCode: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    contactNo: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    dob: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    address: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    gender: {
+      type: String,
+      trim: true,
+      default: "",
     },
     isActive: {
       type: Boolean,
