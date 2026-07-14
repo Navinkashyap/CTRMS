@@ -64,6 +64,7 @@ router.post("/login", async (req, res, next) => {
 });
 
 // ─── POST /api/vms/auth/vendor/login ─── Vendor email+password login ────────
+// Checks both: Vendor collection (self-registered) AND VMSUser collection (created by Vendor Manager)
 router.post("/vendor/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -74,48 +75,83 @@ router.post("/vendor/login", async (req, res, next) => {
         .json({ message: "Email and password are required" });
     }
 
+    // ── 1. Check self-registered Vendor collection first ──────────────────────
     const vendor = await Vendor.findOne({ email: email.toLowerCase() });
-    if (!vendor) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
+    if (vendor) {
+      if (!vendor.isActive) {
+        return res
+          .status(403)
+          .json({ message: "Account is deactivated. Contact admin." });
+      }
 
-    if (!vendor.isActive) {
-      return res
-        .status(403)
-        .json({ message: "Account is deactivated. Contact admin." });
-    }
+      if (!vendor.password) {
+        return res.status(401).json({
+          message:
+            "No password set for this account. Please login with Google or set a password.",
+        });
+      }
 
-    if (!vendor.password) {
-      return res.status(401).json({
-        message:
-          "No password set for this account. Please login with Google or set a password.",
+      const isMatch = await vendor.comparePassword(password);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      const token = generateToken({
+        id: vendor._id,
+        email: vendor.email,
+        role: "vendor",
+        type: "vendor",
+      });
+
+      return res.json({
+        message: "Login successful",
+        token,
+        user: {
+          id: vendor._id,
+          name: vendor.name,
+          email: vendor.email,
+          role: "vendor",
+          code: vendor.code,
+          profilePicture: vendor.profilePicture,
+        },
       });
     }
 
-    const isMatch = await vendor.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email or password" });
+    // ── 2. Check VMSUser collection (vendors created by Vendor Manager) ───────
+    const vmsUser = await VMSUser.findOne({ email: email.toLowerCase() });
+    if (vmsUser) {
+      if (!vmsUser.isActive) {
+        return res
+          .status(403)
+          .json({ message: "Account is deactivated. Contact admin." });
+      }
+
+      const isMatch = await vmsUser.comparePassword(password);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      const token = generateToken({
+        id: vmsUser._id,
+        email: vmsUser.email,
+        role: vmsUser.role,
+        type: "vms_user",
+      });
+
+      return res.json({
+        message: "Login successful",
+        token,
+        user: {
+          id: vmsUser._id,
+          name: vmsUser.name,
+          email: vmsUser.email,
+          role: vmsUser.role,
+        },
+      });
     }
 
-    const token = generateToken({
-      id: vendor._id,
-      email: vendor.email,
-      role: "vendor",
-      type: "vendor",
-    });
-
-    return res.json({
-      message: "Login successful",
-      token,
-      user: {
-        id: vendor._id,
-        name: vendor.name,
-        email: vendor.email,
-        role: "vendor",
-        code: vendor.code,
-        profilePicture: vendor.profilePicture,
-      },
-    });
+    // ── 3. Not found in either collection ─────────────────────────────────────
+    return res.status(401).json({ message: "Invalid email or password" });
   } catch (error) {
     next(error);
   }
