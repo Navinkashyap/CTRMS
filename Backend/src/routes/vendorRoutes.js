@@ -9,8 +9,17 @@ const formatVendor = (vendor) => ({
   _id: vendor._id,
   code: vendor.code,
   name: vendor.name,
+  title: vendor.title,
+  firstName: vendor.firstName,
+  lastName: vendor.lastName,
   email: vendor.email,
+  phoneCode: vendor.phoneCode,
+  phone: vendor.phone,
+  mobileCode: vendor.mobileCode,
   mobile: vendor.mobile,
+  altEmail: vendor.altEmail,
+  altPhoneCode: vendor.altPhoneCode,
+  altPhone: vendor.altPhone,
   dob: vendor.dob ? new Date(vendor.dob).toISOString().split("T")[0] : "",
   gender: vendor.gender,
   country: vendor.country,
@@ -18,6 +27,9 @@ const formatVendor = (vendor) => ({
   ptft: vendor.ptft,
   availability: vendor.availability,
   address: vendor.address,
+  city: vendor.city,
+  state: vendor.state,
+  pinCode: vendor.pinCode,
   serviceQuality: vendor.serviceQuality,
   taskQuality: vendor.taskQuality,
   timelyDelivery: vendor.timelyDelivery,
@@ -52,6 +64,105 @@ router.get("/search", async (req, res, next) => {
       .limit(10);
 
     res.json(vendors.map(formatVendor));
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get vendor by code (used by self-service pages that only know the vendor's code, not its Mongo _id)
+router.get("/code/:code", async (req, res, next) => {
+  try {
+    const vendor = await Vendor.findOne({ code: req.params.code });
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+    res.json(formatVendor(vendor));
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Update personal & address details from the vendor's own profile page
+router.put("/code/:code/personal", async (req, res, next) => {
+  try {
+    const vendor = await Vendor.findOne({ code: req.params.code });
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    const oldEmail = vendor.email;
+    const updates = {
+      title: req.body.title,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      phoneCode: req.body.phoneCode,
+      phone: req.body.phone,
+      mobileCode: req.body.mobileCode,
+      mobile: req.body.mobile,
+      email: req.body.email,
+      dob: req.body.dob,
+      address: req.body.address,
+      city: req.body.city,
+      state: req.body.state,
+      country: req.body.country,
+      pinCode: req.body.pinCode,
+      altEmail: req.body.altEmail,
+      altPhoneCode: req.body.altPhoneCode,
+      altPhone: req.body.altPhone,
+    };
+    Object.keys(updates).forEach((key) => updates[key] === undefined && delete updates[key]);
+
+    Object.assign(vendor, updates);
+    await vendor.save();
+
+    // Keep the Vendor Manager login record (VMSUser) in sync with name/email changes
+    const vmsUser = await VMSUser.findOne({ email: oldEmail });
+    if (vmsUser) {
+      vmsUser.name = vendor.name;
+      vmsUser.email = vendor.email;
+      await vmsUser.save();
+    }
+
+    res.json(formatVendor(vendor));
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Change password from the vendor's own Security tab
+router.put("/code/:code/password", async (req, res, next) => {
+  try {
+    const vendor = await Vendor.findOne({ code: req.params.code });
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: "New password must be at least 6 characters" });
+    }
+
+    if (vendor.password) {
+      if (!currentPassword) {
+        return res.status(400).json({ message: "Current password is required" });
+      }
+      const isMatch = await vendor.comparePassword(currentPassword);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+    }
+
+    vendor.password = newPassword;
+    await vendor.save();
+
+    // Keep the Vendor Manager login record (VMSUser) in sync so the new password works there too
+    const vmsUser = await VMSUser.findOne({ email: vendor.email });
+    if (vmsUser) {
+      vmsUser.password = newPassword;
+      await vmsUser.save();
+    }
+
+    res.json({ message: "Password updated successfully" });
   } catch (error) {
     next(error);
   }

@@ -14,6 +14,21 @@ const vendorSchema = new mongoose.Schema(
       required: [true, "Vendor name is required"],
       trim: true,
     },
+    title: {
+      type: String,
+      enum: ["Mr.", "Mrs.", "Ms.", "Dr.", ""],
+      default: "",
+    },
+    firstName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    lastName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     email: {
       type: String,
       required: [true, "Email is required"],
@@ -33,7 +48,38 @@ const vendorSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    phoneCode: {
+      type: String,
+      trim: true,
+      default: "+1",
+    },
+    phone: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    mobileCode: {
+      type: String,
+      trim: true,
+      default: "+1",
+    },
     mobile: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    altEmail: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: "",
+    },
+    altPhoneCode: {
+      type: String,
+      trim: true,
+      default: "+1",
+    },
+    altPhone: {
       type: String,
       trim: true,
       default: "",
@@ -70,6 +116,21 @@ const vendorSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    city: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    state: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    pinCode: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     serviceQuality: {
       type: Number,
       default: 0,
@@ -97,6 +158,15 @@ const vendorSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+// Keep the display `name` in sync whenever the profile form edits title/firstName/lastName
+vendorSchema.pre("save", function (next) {
+  if (this.isModified("firstName") || this.isModified("lastName") || this.isModified("title")) {
+    const composed = [this.title, this.firstName, this.lastName].filter(Boolean).join(" ").trim();
+    if (composed) this.name = composed;
+  }
+  next();
+});
 
 // Hash password before saving (only if password is modified and not empty)
 vendorSchema.pre("save", async function (next) {
