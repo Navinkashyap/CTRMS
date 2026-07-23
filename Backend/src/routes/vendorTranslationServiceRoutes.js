@@ -61,12 +61,48 @@ router.put("/:vendorCode/services", async (req, res, next) => {
 // Update mother tongue, tools & expertise (Expertise & Tools tab)
 router.put("/:vendorCode/expertise", async (req, res, next) => {
   try {
-    const { motherTongue, tools, expertiseList } = req.body;
+    const { motherTongue, tools, expertiseList, translationExp } = req.body;
     const service = await VendorTranslationService.findOneAndUpdate(
       { vendorCode: req.params.vendorCode },
-      { vendorCode: req.params.vendorCode, motherTongue, tools, expertiseList },
+      { vendorCode: req.params.vendorCode, motherTongue, tools, expertiseList, translationExp },
       { new: true, upsert: true, runValidators: true }
     );
+    res.json(service);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Replace the reference list (PM-facing vendor profile view)
+router.put("/:vendorCode/references", async (req, res, next) => {
+  try {
+    const { references } = req.body;
+    const service = await VendorTranslationService.findOneAndUpdate(
+      { vendorCode: req.params.vendorCode },
+      { vendorCode: req.params.vendorCode, references },
+      { new: true, upsert: true, runValidators: true }
+    );
+    res.json(service);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Set the approval status of a single language pair (PM reviewing a vendor's rate card)
+router.put("/:vendorCode/language-pairs/:pairId/status", async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    if (!["Pending", "Approved"].includes(status)) {
+      return res.status(400).json({ message: "status must be 'Pending' or 'Approved'" });
+    }
+    const service = await VendorTranslationService.findOneAndUpdate(
+      { vendorCode: req.params.vendorCode, "languagePairs._id": req.params.pairId },
+      { $set: { "languagePairs.$.status": status } },
+      { new: true, runValidators: true }
+    );
+    if (!service) {
+      return res.status(404).json({ message: "Language pair not found" });
+    }
     res.json(service);
   } catch (error) {
     next(error);

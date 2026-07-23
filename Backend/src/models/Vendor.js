@@ -84,6 +84,16 @@ const vendorSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    teamsId: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    remark: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     dob: {
       type: Date,
     },

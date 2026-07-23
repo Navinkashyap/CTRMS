@@ -33,7 +33,8 @@ import evaluationRoutes from "./src/routes/evaluationRoutes.js";
 import vmsAuthRoutes from "./src/VMS/routes/vmsAuthRoutes.js";
 import vmsUserRoutes from "./src/VMS/routes/vmsUserRoutes.js";
 import vmsRoleRoutes from "./src/VMS/routes/vmsRoleRoutes.js";
-
+import vmsPMRoutes from "./src/VMS/routes/vmsPMRoutes.js";
+import vmsProjectRoutes from "./src/VMS/routes/vmsProjectRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -90,6 +91,8 @@ app.use("/api/evaluations", evaluationRoutes);
 app.use("/api/vms/auth", vmsAuthRoutes);
 app.use("/api/vms/users", vmsUserRoutes);
 app.use("/api/vms/roles", vmsRoleRoutes);
+app.use("/api/vms/pm", vmsPMRoutes);
+app.use("/api/vms/projects", vmsProjectRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

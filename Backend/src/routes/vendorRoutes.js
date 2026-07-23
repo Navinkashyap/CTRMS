@@ -20,6 +20,8 @@ const formatVendor = (vendor) => ({
   altEmail: vendor.altEmail,
   altPhoneCode: vendor.altPhoneCode,
   altPhone: vendor.altPhone,
+  teamsId: vendor.teamsId,
+  remark: vendor.remark,
   dob: vendor.dob ? new Date(vendor.dob).toISOString().split("T")[0] : "",
   gender: vendor.gender,
   country: vendor.country,
@@ -109,6 +111,12 @@ router.put("/code/:code/personal", async (req, res, next) => {
       altEmail: req.body.altEmail,
       altPhoneCode: req.body.altPhoneCode,
       altPhone: req.body.altPhone,
+      teamsId: req.body.teamsId,
+      remark: req.body.remark,
+      gender: req.body.gender,
+      ptft: req.body.ptft,
+      availability: req.body.availability,
+      motherTongue: req.body.motherTongue,
     };
     Object.keys(updates).forEach((key) => updates[key] === undefined && delete updates[key]);
 
