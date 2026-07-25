@@ -185,9 +185,15 @@ router.post("/vendor/google", async (req, res, next) => {
     } else {
       // Create new vendor with Google account
       const vendorCount = await Vendor.countDocuments();
+      const displayName = name || email.split("@")[0];
+      const gNameParts = displayName.trim().split(/\s+/);
+      const gFirstName = gNameParts[0] || "";
+      const gLastName = gNameParts.slice(1).join(" ") || "";
       vendor = await Vendor.create({
         code: `G-${vendorCount + 1}`,
-        name: name || email.split("@")[0],
+        name: displayName,
+        firstName: gFirstName,
+        lastName: gLastName,
         email: email.toLowerCase(),
         googleId,
         profilePicture: profilePicture || "",
@@ -255,9 +261,16 @@ router.post("/vendor/register", async (req, res, next) => {
     const vendorCount = await Vendor.countDocuments();
     const vendorCode = `V-${vendorCount + 1}`;
 
+    // Split name into firstName and lastName so it shows in Personal Details
+    const nameParts = name.trim().split(/\s+/);
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.slice(1).join(" ") || "";
+
     const vendor = await Vendor.create({
       code: vendorCode,
       name,
+      firstName,
+      lastName,
       email: email.toLowerCase(),
       password,
       mobile: mobile || "",

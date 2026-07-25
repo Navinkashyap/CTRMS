@@ -35,6 +35,7 @@ import vmsUserRoutes from "./src/VMS/routes/vmsUserRoutes.js";
 import vmsRoleRoutes from "./src/VMS/routes/vmsRoleRoutes.js";
 import vmsPMRoutes from "./src/VMS/routes/vmsPMRoutes.js";
 import vmsProjectRoutes from "./src/VMS/routes/vmsProjectRoutes.js";
+import jobRoutes from "./src/routes/jobRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -86,6 +87,7 @@ app.use("/api/invoices", invoiceRoutes);
 app.use("/api/units", unitRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/evaluations", evaluationRoutes);
+app.use("/api/jobs", jobRoutes);
 
 // ─── VMS Routes ─────────────────────────────────────────────────────────────
 app.use("/api/vms/auth", vmsAuthRoutes);

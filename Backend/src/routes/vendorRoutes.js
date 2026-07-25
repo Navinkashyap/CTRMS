@@ -229,6 +229,22 @@ router.put("/:id", async (req, res, next) => {
       delete req.body.password; // Don't overwrite with empty
     }
 
+    // If name is provided but firstName/lastName are not, derive them from name
+    // This keeps Personal Details in sync when edits come from different UIs
+    if (req.body.name && !req.body.firstName && !req.body.lastName) {
+      const parts = req.body.name.trim().split(/\s+/);
+      // Check if first part is a title (Mr., Mrs., Ms., Dr.)
+      const titles = ['Mr.', 'Mrs.', 'Ms.', 'Dr.'];
+      if (titles.includes(parts[0])) {
+        req.body.title = parts[0];
+        req.body.firstName = parts[1] || '';
+        req.body.lastName = parts.slice(2).join(' ') || '';
+      } else {
+        req.body.firstName = parts[0] || '';
+        req.body.lastName = parts.slice(1).join(' ') || '';
+      }
+    }
+
     const vendor = await Vendor.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,

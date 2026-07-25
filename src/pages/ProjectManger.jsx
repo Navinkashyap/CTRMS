@@ -82,9 +82,13 @@ export default function ProjectManagerList() {
   };
 
   const filteredProjectManagers = projectManagers.filter(projectManager =>
-    Object.keys(filters).every(key =>
-      projectManager[key]?.toString().toLowerCase().includes(filters[key].toLowerCase())
-    )
+    Object.keys(filters).every(key => {
+      const filterValue = filters[key].toLowerCase();
+      if (!filterValue) return true;
+      const pmValue = projectManager[key];
+      if (pmValue == null) return false;
+      return pmValue.toString().toLowerCase().includes(filterValue);
+    })
   );
 
   return (
@@ -237,10 +241,10 @@ export default function ProjectManagerList() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-semibold text-xs shrink-0 line-clamp-1">
-                          {projectManager.name.charAt(0)}
+                          {projectManager.name ? projectManager.name.charAt(0) : '?'}
                         </div>
                         <div className="space-y-0.5">
-                          <div className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">{projectManager.name}</div>
+                          <div className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">{projectManager.name || 'Unknown'}</div>
                           <div className="text-[11px] font-medium text-slate-500 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                             {projectManager.country}
@@ -252,8 +256,8 @@ export default function ProjectManagerList() {
                       <div className="space-y-1">
                         <div className="text-sm font-medium text-slate-700">{projectManager.email}</div>
                         <div className="flex gap-2">
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100/50 hover:bg-indigo-100 transition-colors cursor-pointer">{projectManager.ptft}</span>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 transition-colors cursor-pointer">{projectManager.motherTongue}</span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100/50 hover:bg-indigo-100 transition-colors cursor-pointer">{projectManager.ptft || 'N/A'}</span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 transition-colors cursor-pointer">{projectManager.motherTongue || 'N/A'}</span>
                         </div>
                       </div>
                     </td>
@@ -262,16 +266,16 @@ export default function ProjectManagerList() {
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center justify-between text-[10px] font-semibold text-slate-500 uppercase tracking-widest pl-0.5">
                             <span>Service</span>
-                            <span>{projectManager.serviceQuality}/5</span>
+                            <span>{projectManager.serviceQuality || 0}/5</span>
                           </div>
-                          <StarRating rating={projectManager.serviceQuality} />
+                          <StarRating rating={projectManager.serviceQuality || 0} />
                         </div>
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center justify-between text-[10px] font-semibold text-slate-500 uppercase tracking-widest pl-0.5">
                             <span>Task</span>
-                            <span>{projectManager.taskQuality}/5</span>
+                            <span>{projectManager.taskQuality || 0}/5</span>
                           </div>
-                          <StarRating rating={projectManager.taskQuality} />
+                          <StarRating rating={projectManager.taskQuality || 0} />
                         </div>
                       </div>
                     </td>
