@@ -1,7 +1,9 @@
 import express from "express";
 import VMSRole from "../models/VMSRole.js";
+import vmsAuth from "../middleware/vmsAuth.js";
 
 const router = express.Router();
+router.use(vmsAuth);
 
 // GET /api/vms/roles
 router.get("/", async (req, res, next) => {

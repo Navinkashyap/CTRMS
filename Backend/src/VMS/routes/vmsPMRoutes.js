@@ -2,8 +2,33 @@ import express from "express";
 import VMSUser from "../models/VMSUser.js";
 import Project from "../../models/Project.js";
 import Invoice from "../../models/Invoice.js";
+import vmsAuth from "../middleware/vmsAuth.js";
 
 const router = express.Router();
+router.use(vmsAuth);
+
+// Fields a PM/VM is allowed to change on their own profile.
+// Excludes role, password, email, isActive so a profile edit can't escalate privileges.
+const EDITABLE_PROFILE_FIELDS = [
+  "name",
+  "countryCode",
+  "contactNo",
+  "dob",
+  "address",
+  "gender",
+  "title",
+  "firstName",
+  "lastName",
+  "cityName",
+  "stateName",
+  "countryName",
+  "pinCode",
+  "teamsId",
+  "altEmail",
+  "altCountryCode",
+  "altContactNo",
+  "remark",
+];
 
 // GET /api/vms/pm/profile/:id
 router.get("/profile/:id", async (req, res, next) => {
@@ -23,8 +48,11 @@ router.get("/profile/:id", async (req, res, next) => {
 router.put("/profile/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
-    
+    const updateData = {};
+    for (const field of EDITABLE_PROFILE_FIELDS) {
+      if (req.body[field] !== undefined) updateData[field] = req.body[field];
+    }
+
     // Auto-update 'name' if firstName and lastName are provided and name isn't explicitly sent
     if (updateData.firstName && updateData.lastName && !updateData.name) {
        updateData.name = `${updateData.firstName} ${updateData.lastName}`;

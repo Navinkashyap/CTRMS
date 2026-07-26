@@ -35,6 +35,8 @@ import vmsUserRoutes from "./src/VMS/routes/vmsUserRoutes.js";
 import vmsRoleRoutes from "./src/VMS/routes/vmsRoleRoutes.js";
 import vmsPMRoutes from "./src/VMS/routes/vmsPMRoutes.js";
 import vmsProjectRoutes from "./src/VMS/routes/vmsProjectRoutes.js";
+import vmsVendorRoutes from "./src/VMS/routes/vmsVendorRoutes.js";
+import vmsVMRoutes from "./src/VMS/routes/vmsVMRoutes.js";
 import jobRoutes from "./src/routes/jobRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -95,6 +97,8 @@ app.use("/api/vms/users", vmsUserRoutes);
 app.use("/api/vms/roles", vmsRoleRoutes);
 app.use("/api/vms/pm", vmsPMRoutes);
 app.use("/api/vms/projects", vmsProjectRoutes);
+app.use("/api/vms/vendor", vmsVendorRoutes);
+app.use("/api/vms/vm", vmsVMRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
@@ -113,10 +117,10 @@ app.use((err, _req, res, _next) => {
     });
   }
 
+  const isDev = process.env.NODE_ENV !== "production";
   return res.status(500).json({
     message: err.message || "Internal server error",
-    stack: err.stack,
-    details: err
+    ...(isDev ? { stack: err.stack } : {}),
   });
 });
 

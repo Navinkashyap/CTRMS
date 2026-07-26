@@ -1,8 +1,10 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import VMSUser from "../models/VMSUser.js";
+import vmsAuth from "../middleware/vmsAuth.js";
 
 const router = express.Router();
+router.use(vmsAuth);
 
 // GET /api/vms/users
 router.get("/", async (req, res, next) => {
