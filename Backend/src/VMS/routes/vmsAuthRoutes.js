@@ -13,6 +13,21 @@ const generateToken = (payload) => {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 };
 
+// Generate the next available vendor code for a given prefix (e.g. "V-", "G-").
+// Uses the highest existing numeric suffix rather than a document count, so a
+// deleted vendor can never cause the next code to collide with one still in use.
+const generateNextVendorCode = async (prefix) => {
+  const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const matching = await Vendor.find({ code: { $regex: `^${escapedPrefix}\\d+$` } })
+    .select("code")
+    .lean();
+  const maxNumber = matching.reduce((max, v) => {
+    const n = parseInt(v.code.slice(prefix.length), 10);
+    return Number.isFinite(n) && n > max ? n : max;
+  }, 0);
+  return `${prefix}${maxNumber + 1}`;
+};
+
 // ─── POST /api/vms/auth/login ─── Unified login for VM & PM ─────────────────
 router.post("/login", async (req, res, next) => {
   try {
@@ -184,13 +199,13 @@ router.post("/vendor/google", async (req, res, next) => {
       await vendor.save();
     } else {
       // Create new vendor with Google account
-      const vendorCount = await Vendor.countDocuments();
+      const vendorCode = await generateNextVendorCode("G-");
       const displayName = name || email.split("@")[0];
       const gNameParts = displayName.trim().split(/\s+/);
       const gFirstName = gNameParts[0] || "";
       const gLastName = gNameParts.slice(1).join(" ") || "";
       vendor = await Vendor.create({
-        code: `G-${vendorCount + 1}`,
+        code: vendorCode,
         name: displayName,
         firstName: gFirstName,
         lastName: gLastName,
@@ -258,8 +273,7 @@ router.post("/vendor/register", async (req, res, next) => {
     }
 
     // Generate vendor code
-    const vendorCount = await Vendor.countDocuments();
-    const vendorCode = `V-${vendorCount + 1}`;
+    const vendorCode = await generateNextVendorCode("V-");
 
     // Split name into firstName and lastName so it shows in Personal Details
     const nameParts = name.trim().split(/\s+/);

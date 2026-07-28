@@ -80,8 +80,14 @@ const ProjectSchema = new mongoose.Schema(
 
 ProjectSchema.pre("save", async function (next) {
   if (!this.projectId) {
-    const count = await mongoose.model("Project").countDocuments();
-    this.projectId = `PT2526${String(count + 1).padStart(4, "0")}`;
+    const lastProject = await mongoose
+      .model("Project")
+      .findOne({ projectId: { $regex: /^PT2526\d{4}$/ } })
+      .sort({ projectId: -1 })
+      .select("projectId")
+      .lean();
+    const lastNumber = lastProject ? parseInt(lastProject.projectId.slice(-4), 10) : 0;
+    this.projectId = `PT2526${String(lastNumber + 1).padStart(4, "0")}`;
   }
   next();
 });
