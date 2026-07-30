@@ -1,9 +1,38 @@
 import express from "express";
+import multer from "multer";
+import path from "path";
+import { fileURLToPath } from "url";
 import Vendor from "../models/Vendor.js";
 import VMSUser from "../VMS/models/VMSUser.js";
 import bcrypt from "bcryptjs";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const router = express.Router();
+
+// Multer setup for file uploads
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, path.join(__dirname, '../../uploads'));
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  fileFilter: (_req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx/;
+    const ext = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mime = allowedTypes.test(file.mimetype);
+    if (ext || mime) cb(null, true);
+    else cb(new Error('Only images, PDFs and documents are allowed'));
+  }
+});
 
 const formatVendor = (vendor) => ({
   _id: vendor._id,
@@ -35,6 +64,10 @@ const formatVendor = (vendor) => ({
   serviceQuality: vendor.serviceQuality,
   taskQuality: vendor.taskQuality,
   timelyDelivery: vendor.timelyDelivery,
+  profilePicture: vendor.profilePicture,
+  panDocument: vendor.panDocument,
+  aadhaarDocument: vendor.aadhaarDocument,
+  resume: vendor.resume,
   isActive: vendor.isActive,
   createdAt: vendor.createdAt,
   updatedAt: vendor.updatedAt,
@@ -171,6 +204,35 @@ router.put("/code/:code/password", async (req, res, next) => {
     }
 
     res.json({ message: "Password updated successfully" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Upload documents (profile pic, PAN, Aadhaar, resume)
+router.post("/code/:code/upload", upload.fields([
+  { name: 'profilePicture', maxCount: 1 },
+  { name: 'panDocument', maxCount: 1 },
+  { name: 'aadhaarDocument', maxCount: 1 },
+  { name: 'resume', maxCount: 1 },
+]), async (req, res, next) => {
+  try {
+    const vendor = await Vendor.findOne({ code: req.params.code });
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    const files = req.files || {};
+    const updates = {};
+    for (const field of ['profilePicture', 'panDocument', 'aadhaarDocument', 'resume']) {
+      if (files[field] && files[field][0]) {
+        updates[field] = `/uploads/${files[field][0].filename}`;
+      }
+    }
+
+    Object.assign(vendor, updates);
+    await vendor.save();
+    res.json(formatVendor(vendor));
   } catch (error) {
     next(error);
   }

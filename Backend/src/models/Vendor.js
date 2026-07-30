@@ -141,6 +141,18 @@ const vendorSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    panDocument: {
+      type: String,
+      default: "",
+    },
+    aadhaarDocument: {
+      type: String,
+      default: "",
+    },
+    resume: {
+      type: String,
+      default: "",
+    },
     serviceQuality: {
       type: Number,
       default: 0,
