@@ -1,5 +1,7 @@
 import express from "express";
 import Project from "../models/Project.js";
+import Client from "../models/Client.js";
+import VMSProject from "../VMS/models/VMSProject.js";
 
 const router = express.Router();
 
@@ -91,6 +93,27 @@ router.post("/", async (req, res) => {
   try {
     const newProject = await project.save();
     res.status(201).json(newProject);
+
+    // Mirror into the VMS "incoming" queue so a PM sees this new project
+    // in their My Projects list. Best-effort: never block/fail the admin
+    // response if this secondary write has an issue.
+    try {
+      const clientDoc = newProject.client
+        ? await Client.findById(newProject.client).select("name").lean()
+        : null;
+      await VMSProject.create({
+        projectId: newProject.projectId,
+        name: newProject.projectName,
+        client: clientDoc?.name || "",
+        deadline: newProject.deadline
+          ? newProject.deadline.toISOString().slice(0, 10)
+          : "",
+        description: newProject.description || "",
+        status: "Incoming",
+      });
+    } catch (mirrorError) {
+      console.error("Failed to create VMS incoming project:", mirrorError.message);
+    }
   } catch (error) {
     console.error("Create project error:", error.message, error.errors || "");
     res.status(400).json({ message: error.message });

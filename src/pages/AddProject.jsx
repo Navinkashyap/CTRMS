@@ -1136,9 +1136,9 @@ export default function AddProject() {
 
         /* ===== MAIN ===== */
         .ap-main {
-          max-width: 920px;
-          margin: 28px auto;
-          padding: 0 20px;
+          max-width: 100%;
+          margin: 0;
+          padding: 12px 6px;
         }
 
         /* ===== CARDS ===== */
@@ -1146,7 +1146,7 @@ export default function AddProject() {
           background: #fff;
           border-radius: 14px;
           box-shadow: 0 1px 6px rgba(0,0,0,0.05);
-          margin-bottom: 24px;
+          margin-bottom: 0px;
           overflow: visible;
           border: 1px solid #f1f5f9;
         }
