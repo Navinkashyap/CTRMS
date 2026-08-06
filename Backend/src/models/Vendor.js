@@ -141,6 +141,10 @@ const vendorSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    // Document slots shown on the profile as:
+    // panDocument = Bachelor's Degree, aadhaarDocument = Master's Degree,
+    // resume = Diploma certificate, gstDocument = PhD Degree,
+    // ndaDocument = Tax ID (PAN), otherDocument = Resume/CV
     panDocument: {
       type: String,
       default: "",
@@ -151,6 +155,30 @@ const vendorSchema = new mongoose.Schema(
     },
     resume: {
       type: String,
+      default: "",
+    },
+    gstDocument: {
+      type: String,
+      default: "",
+    },
+    ndaDocument: {
+      type: String,
+      default: "",
+    },
+    otherDocument: {
+      type: String,
+      default: "",
+    },
+    // Vendor Manager approval of the vendor's service/rate card. Vendors start as
+    // Pending and only show up in Vendor Search once approved.
+    approvalStatus: {
+      type: String,
+      enum: ["Pending", "Approved", "Rejected"],
+      default: "Pending",
+    },
+    approvalRemark: {
+      type: String,
+      trim: true,
       default: "",
     },
     serviceQuality: {

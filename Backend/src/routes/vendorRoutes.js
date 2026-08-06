@@ -34,6 +34,16 @@ const upload = multer({
   }
 });
 
+// Every uploadable document slot on the vendor profile
+const DOCUMENT_FIELDS = [
+  'panDocument',
+  'aadhaarDocument',
+  'resume',
+  'gstDocument',
+  'ndaDocument',
+  'otherDocument',
+];
+
 const formatVendor = (vendor) => ({
   _id: vendor._id,
   code: vendor.code,
@@ -68,6 +78,11 @@ const formatVendor = (vendor) => ({
   panDocument: vendor.panDocument,
   aadhaarDocument: vendor.aadhaarDocument,
   resume: vendor.resume,
+  gstDocument: vendor.gstDocument,
+  ndaDocument: vendor.ndaDocument,
+  otherDocument: vendor.otherDocument,
+  approvalStatus: vendor.approvalStatus || "Pending",
+  approvalRemark: vendor.approvalRemark || "",
   isActive: vendor.isActive,
   createdAt: vendor.createdAt,
   updatedAt: vendor.updatedAt,
@@ -151,6 +166,11 @@ router.put("/code/:code/personal", async (req, res, next) => {
       availability: req.body.availability,
       motherTongue: req.body.motherTongue,
     };
+    // Documents are uploaded separately, but the profile form may also send the
+    // current values back when saving Personal details.
+    DOCUMENT_FIELDS.forEach((field) => {
+      updates[field] = req.body[field];
+    });
     Object.keys(updates).forEach((key) => updates[key] === undefined && delete updates[key]);
 
     Object.assign(vendor, updates);
@@ -209,13 +229,10 @@ router.put("/code/:code/password", async (req, res, next) => {
   }
 });
 
-// Upload documents (profile pic, PAN, Aadhaar, resume)
-router.post("/code/:code/upload", upload.fields([
-  { name: 'profilePicture', maxCount: 1 },
-  { name: 'panDocument', maxCount: 1 },
-  { name: 'aadhaarDocument', maxCount: 1 },
-  { name: 'resume', maxCount: 1 },
-]), async (req, res, next) => {
+// Upload documents (profile pic + every document slot on the profile)
+router.post("/code/:code/upload", upload.fields(
+  ['profilePicture', ...DOCUMENT_FIELDS].map((name) => ({ name, maxCount: 1 }))
+), async (req, res, next) => {
   try {
     const vendor = await Vendor.findOne({ code: req.params.code });
     if (!vendor) {
@@ -224,7 +241,7 @@ router.post("/code/:code/upload", upload.fields([
 
     const files = req.files || {};
     const updates = {};
-    for (const field of ['profilePicture', 'panDocument', 'aadhaarDocument', 'resume']) {
+    for (const field of ['profilePicture', ...DOCUMENT_FIELDS]) {
       if (files[field] && files[field][0]) {
         updates[field] = `/uploads/${files[field][0].filename}`;
       }
@@ -232,6 +249,50 @@ router.post("/code/:code/upload", upload.fields([
 
     Object.assign(vendor, updates);
     await vendor.save();
+    res.json(formatVendor(vendor));
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Remove a single uploaded document
+router.delete("/code/:code/document/:field", async (req, res, next) => {
+  try {
+    const { field } = req.params;
+    if (!['profilePicture', ...DOCUMENT_FIELDS].includes(field)) {
+      return res.status(400).json({ message: "Unknown document field" });
+    }
+
+    const vendor = await Vendor.findOne({ code: req.params.code });
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    vendor[field] = "";
+    await vendor.save();
+    res.json(formatVendor(vendor));
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Vendor Manager approval decision on a vendor (Approve Vendor list / service review)
+router.put("/code/:code/approval", async (req, res, next) => {
+  try {
+    const { approvalStatus, approvalRemark } = req.body;
+    if (!["Pending", "Approved", "Rejected"].includes(approvalStatus)) {
+      return res.status(400).json({ message: "approvalStatus must be 'Pending', 'Approved' or 'Rejected'" });
+    }
+
+    const vendor = await Vendor.findOne({ code: req.params.code });
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    vendor.approvalStatus = approvalStatus;
+    vendor.approvalRemark = approvalStatus === "Rejected" ? (approvalRemark || "") : "";
+    await vendor.save();
+
     res.json(formatVendor(vendor));
   } catch (error) {
     next(error);

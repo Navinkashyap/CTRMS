@@ -11,8 +11,11 @@ const languagePairSchema = new mongoose.Schema(
     unit: { type: String, trim: true, default: "word" },
     hourlyCurrency: { type: String, trim: true, default: "USD" },
     hourly: { type: String, trim: true, default: "" },
-    // Set by a PM when reviewing the vendor's rate card during vendor approval.
-    status: { type: String, enum: ["Pending", "Approved"], default: "Pending" },
+    // Set by the Vendor Manager when reviewing the vendor's rate card during vendor approval.
+    status: { type: String, enum: ["Pending", "Approved", "Rejected"], default: "Pending" },
+    // Reason shown to the vendor when a rate is rejected so they can update it.
+    statusRemark: { type: String, trim: true, default: "" },
+    reviewedAt: { type: Date },
   },
   { timestamps: true }
 );
@@ -52,7 +55,7 @@ const vendorTranslationServiceSchema = new mongoose.Schema(
     },
     selectedServices: {
       type: [String],
-      default: ["Translation"],
+      default: [],
     },
     languagePairs: {
       type: [languagePairSchema],
