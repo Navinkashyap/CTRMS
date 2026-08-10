@@ -250,6 +250,36 @@ router.put("/:vendorCode/payment-methods/:paymentId", async (req, res, next) => 
   }
 });
 
+// Bulk update payment methods (Financial Details tab redesign)
+router.put("/:vendorCode/payment-methods-bulk", async (req, res, next) => {
+  try {
+    const { paymentMethods = [] } = req.body;
+    
+    const sanitizedMethods = paymentMethods.map(pm => {
+      const summary = buildPaymentSummary(pm.method, pm.fullDetails);
+      const sanitizedDetails = sanitizePaymentDetails(pm.method, pm.fullDetails);
+      return {
+        country: pm.country || "US",
+        method: pm.method,
+        summary,
+        fullDetails: sanitizedDetails
+      };
+    });
+
+    const service = await VendorTranslationService.findOneAndUpdate(
+      { vendorCode: req.params.vendorCode },
+      {
+        $setOnInsert: { vendorCode: req.params.vendorCode },
+        $set: { paymentMethods: sanitizedMethods },
+      },
+      { new: true, upsert: true, runValidators: true }
+    );
+    res.json(service);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Delete a payment method
 router.delete("/:vendorCode/payment-methods/:paymentId", async (req, res, next) => {
   try {
