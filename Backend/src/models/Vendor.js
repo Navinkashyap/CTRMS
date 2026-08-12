@@ -29,6 +29,16 @@ const vendorSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    companyName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    panNumber: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     email: {
       type: String,
       required: [true, "Email is required"],
