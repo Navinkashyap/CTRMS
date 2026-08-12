@@ -16,6 +16,9 @@ const FileRefSchema = new mongoose.Schema(
   {
     id: { type: mongoose.Schema.Types.Mixed },
     name: { type: String, trim: true, default: "" },
+    // Path under /uploads served by the API; empty for legacy rows that only
+    // ever captured a filename.
+    url: { type: String, trim: true, default: "" },
   },
   { strict: false, _id: false }
 );

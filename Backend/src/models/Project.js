@@ -68,9 +68,12 @@ const ProjectSchema = new mongoose.Schema(
     sourceLanguage: { type: mongoose.Schema.Types.ObjectId, ref: "Language" },
     targets: [TargetSchema],
 
-    // Upload files
-    referenceFiles: [{ type: String, trim: true }],
-    workingFiles: [{ type: String, trim: true }],
+    // Uploaded files, each { name, url }. Typed Mixed rather than a subdocument
+    // so legacy rows — which stored a bare filename string — still hydrate
+    // instead of throwing a CastError. normalizeProjectFiles() in the routes
+    // coerces both shapes to the object form.
+    referenceFiles: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    workingFiles: { type: [mongoose.Schema.Types.Mixed], default: [] },
 
     // ViewProject - Remark Tab
     remark: { type: String, trim: true },

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, ArrowLeft, Check, X, Info, ArrowRight, Upload, Trash2 } from 'lucide-react';
-import { createProject, getProjects, updateProject, getProject } from '../lib/projectApi';
+import { createProject, getProjects, updateProject, getProject, uploadProjectFiles, deleteProjectFile, projectFileHref } from '../lib/projectApi';
 import { getClients } from '../lib/clientApi';
 import { getContacts } from '../lib/contactApi';
 import { getLanguages } from '../lib/languageApi';
@@ -84,9 +84,12 @@ export default function AddProject() {
     otherCharges: 0,
     otherChargesLabel: 'None',
     targets: [],
-    referenceFiles: [''],
-    workingFiles: [''],
+    referenceFiles: [],
+    workingFiles: [],
   });
+  // Files picked before the project exists; uploaded once it has an id.
+  const [pendingFiles, setPendingFiles] = useState({ referenceFiles: [], workingFiles: [] });
+  const [uploadingFiles, setUploadingFiles] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -168,8 +171,8 @@ export default function AddProject() {
                 service: '',
                 tasks: createDefaultTasks('INR', unitsRes.length > 0 ? unitsRes[0].name : 'Words')
               }],
-              referenceFiles: editData.referenceFiles && editData.referenceFiles.length > 0 ? editData.referenceFiles : [''],
-              workingFiles: editData.workingFiles && editData.workingFiles.length > 0 ? editData.workingFiles : [''],
+              referenceFiles: editData.referenceFiles || [],
+              workingFiles: editData.workingFiles || [],
             };
           }
 
@@ -248,25 +251,33 @@ export default function AddProject() {
   }
   const grandTotal = subTotal + taxAmount + (Number(formData.otherCharges) || 0);
 
-  // File field helpers
-  const addFileField = (field) => {
-    setFormData((prev) => ({
+  // File field helpers. A new project has no id yet, so picked files are queued
+  // and uploaded by handleSubmit once the project has been created.
+  const addPendingFiles = (field, fileList) => {
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+    setPendingFiles((prev) => ({ ...prev, [field]: [...prev[field], ...files] }));
+  };
+
+  const removePendingFile = (field, index) => {
+    setPendingFiles((prev) => ({
       ...prev,
-      [field]: [...(prev[field] || []), '']
+      [field]: prev[field].filter((_, i) => i !== index),
     }));
   };
 
-  const removeFileField = (field, index) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: prev[field].filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleFileFieldChange = (field, index, value) => {
-    const updated = [...(formData[field] || [])];
-    updated[index] = value;
-    setFormData((prev) => ({ ...prev, [field]: updated }));
+  const removeSavedFile = async (field, index) => {
+    if (!editId || !window.confirm('Remove this file?')) return;
+    try {
+      const updated = await deleteProjectFile(editId, field, index);
+      setFormData((prev) => ({
+        ...prev,
+        referenceFiles: updated.referenceFiles || [],
+        workingFiles: updated.workingFiles || [],
+      }));
+    } catch (error) {
+      alert(error?.response?.data?.message || 'Failed to remove file.');
+    }
   };
 
   // Target helpers
@@ -342,8 +353,64 @@ export default function AddProject() {
     setFormData({ ...formData, targets: newTargets });
   };
 
+  const renderUploadRow = (label, field) => {
+    const saved = formData[field] || [];
+    const queued = pendingFiles[field] || [];
+    return (
+      <div className="ap-upload-row">
+        <span className="ap-upload-label">{label}</span>
+        <div className="ap-upload-fields">
+          {saved.map((file, idx) => (
+            <div key={`saved-${idx}`} className="ap-upload-field-row">
+              {file.url ? (
+                <a href={projectFileHref(file.url)} target="_blank" rel="noreferrer" className="ap-file-input" style={{ lineHeight: '2rem' }}>
+                  {file.name}
+                </a>
+              ) : (
+                <span className="ap-file-input" style={{ lineHeight: '2rem', opacity: 0.6 }}>
+                  {file.name} (no file attached)
+                </span>
+              )}
+              <button type="button" onClick={() => removeSavedFile(field, idx)} className="ap-icon-btn ap-icon-btn-red">
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+
+          {queued.map((file, idx) => (
+            <div key={`queued-${idx}`} className="ap-upload-field-row">
+              <span className="ap-file-input" style={{ lineHeight: '2rem' }}>
+                {file.name} <em style={{ opacity: 0.6 }}>(uploads on save)</em>
+              </span>
+              <button type="button" onClick={() => removePendingFile(field, idx)} className="ap-icon-btn ap-icon-btn-red">
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))}
+
+          <label className="ap-upload-field-row" style={{ cursor: 'pointer' }}>
+            <span className="ap-file-input" style={{ lineHeight: '2rem' }}>Add file(s)...</span>
+            <span className="ap-icon-btn ap-icon-btn-blue"><Upload size={16} /></span>
+            <input
+              type="file"
+              multiple
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                addPendingFiles(field, e.target.files);
+                e.target.value = '';
+              }}
+            />
+          </label>
+        </div>
+      </div>
+    );
+  };
+
   const preparePayload = () => ({
     ...formData,
+    // Files go through the upload endpoint, not the project payload.
+    referenceFiles: undefined,
+    workingFiles: undefined,
     projectName: formData.projectName || formData.projectCode || 'Untitled Project',
     service: formData.targets && formData.targets.length > 0 ? formData.targets[0].service : '',
     budget: formData.amount || '',
@@ -363,18 +430,32 @@ export default function AddProject() {
       alert('Please select a program name.');
       return;
     }
+    setUploadingFiles(true);
     try {
-      if (isEditMode) {
-        await updateProject(editId, preparePayload());
-        alert('Project updated successfully!');
-      } else {
-        await createProject(preparePayload());
-        alert('Project created successfully!');
+      const saved = isEditMode
+        ? await updateProject(editId, preparePayload())
+        : await createProject(preparePayload());
+
+      // The project exists now, so any queued files can be attached to it.
+      const projectId = isEditMode ? editId : saved?._id;
+      const hasPending =
+        pendingFiles.referenceFiles.length || pendingFiles.workingFiles.length;
+      if (hasPending && projectId) {
+        try {
+          await uploadProjectFiles(projectId, pendingFiles);
+        } catch (uploadError) {
+          console.error(uploadError);
+          alert('Project saved, but the file upload failed. Open the project to retry.');
+        }
       }
+
+      alert(isEditMode ? 'Project updated successfully!' : 'Project created successfully!');
       navigate('/projects');
     } catch (error) {
       console.error(error);
       alert(isEditMode ? 'Failed to update project' : 'Failed to create project');
+    } finally {
+      setUploadingFiles(false);
     }
   };
 
@@ -972,76 +1053,17 @@ export default function AddProject() {
 
           <div className="ap-card-body">
             <div className="ap-upload-section">
-              {/* Reference files */}
-              <div className="ap-upload-row">
-                <span className="ap-upload-label">Reference files</span>
-                <div className="ap-upload-fields">
-                  {(formData.referenceFiles?.length ? formData.referenceFiles : ['']).map((file, idx) => (
-                    <div key={idx} className="ap-upload-field-row">
-                      <input
-                        type="file"
-                        onChange={(e) => handleFileFieldChange('referenceFiles', idx, e.target.value)}
-                        className="ap-file-input"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => addFileField('referenceFiles')}
-                        className="ap-icon-btn ap-icon-btn-blue"
-                      >
-                        <Upload size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removeFileField('referenceFiles', idx)}
-                        disabled={(formData.referenceFiles?.length || 1) <= 1}
-                        className="ap-icon-btn ap-icon-btn-red"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Working files */}
-              <div className="ap-upload-row">
-                <span className="ap-upload-label">Working files</span>
-                <div className="ap-upload-fields">
-                  {(formData.workingFiles?.length ? formData.workingFiles : ['']).map((file, idx) => (
-                    <div key={idx} className="ap-upload-field-row">
-                      <input
-                        type="file"
-                        onChange={(e) => handleFileFieldChange('workingFiles', idx, e.target.value)}
-                        className="ap-file-input"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => addFileField('workingFiles')}
-                        className="ap-icon-btn ap-icon-btn-blue"
-                      >
-                        <Upload size={16} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removeFileField('workingFiles', idx)}
-                        disabled={(formData.workingFiles?.length || 1) <= 1}
-                        className="ap-icon-btn ap-icon-btn-red"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              {renderUploadRow('Reference files', 'referenceFiles')}
+              {renderUploadRow('Working files', 'workingFiles')}
             </div>
           </div>
         </section>
 
         {/* ── ACTIONS ── */}
         <div className="ap-actions-container">
-          <button type="button" onClick={handleSubmit} className="ap-btn-create">
+          <button type="button" onClick={handleSubmit} disabled={uploadingFiles} className="ap-btn-create">
             <Check size={16} />
-            {isEditMode ? 'Update Project' : 'Create Project'}
+            {uploadingFiles ? 'Saving...' : isEditMode ? 'Update Project' : 'Create Project'}
           </button>
           <button type="button" onClick={() => navigate('/projects')} className="ap-btn-cancel">
             <X size={16} />

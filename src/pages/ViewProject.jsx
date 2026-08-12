@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MinusCircle, Plus, FolderGit2 } from 'lucide-react';
-import { getProject, getProjects, updateProject } from '../lib/projectApi';
+import { getProject, getProjects, updateProject, uploadProjectFiles, deleteProjectFile, projectFileHref } from '../lib/projectApi';
 import { getClients } from '../lib/clientApi';
 import { getContacts } from '../lib/contactApi';
 import { getLanguages } from '../lib/languageApi';
@@ -112,10 +112,11 @@ export default function ViewProject() {
     otherCharges: 0,
     otherChargesLabel: 'None',
     targets: [],
-    referenceFiles: [''],
-    workingFiles: [''],
+    referenceFiles: [],
+    workingFiles: [],
     remark: ''
   });
+  const [uploadingFiles, setUploadingFiles] = useState({});
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -186,8 +187,8 @@ export default function ViewProject() {
           otherCharges: projRes.otherCharges ?? 0,
           otherChargesLabel: projRes.otherChargesLabel || 'None',
           targets: normalizeTargets(projRes.targets),
-          referenceFiles: projRes.referenceFiles?.length ? projRes.referenceFiles : [''],
-          workingFiles: projRes.workingFiles?.length ? projRes.workingFiles : [''],
+          referenceFiles: projRes.referenceFiles || [],
+          workingFiles: projRes.workingFiles || [],
           remark: projRes.remark || ''
         });
 
@@ -266,24 +267,38 @@ export default function ViewProject() {
   }
   const grandTotal = subTotal + taxAmount + (Number(formData.otherCharges) || 0);
 
-  const addFileField = (field) => {
+  // Files upload straight away against their own endpoint — the project payload
+  // no longer carries them, so a save can't clobber a newer upload.
+  const applyFileResponse = (updated) =>
     setFormData((prev) => ({
       ...prev,
-      [field]: [...(prev[field] || []), '']
+      referenceFiles: updated.referenceFiles || [],
+      workingFiles: updated.workingFiles || [],
     }));
+
+  const handleFileUpload = async (field, fileList) => {
+    const files = Array.from(fileList || []);
+    if (!files.length || !id) return;
+    setUploadingFiles((prev) => ({ ...prev, [field]: true }));
+    try {
+      applyFileResponse(await uploadProjectFiles(id, { [field]: files }));
+    } catch (error) {
+      alert(error?.response?.data?.message || 'Failed to upload file(s).');
+    } finally {
+      setUploadingFiles((prev) => ({ ...prev, [field]: false }));
+    }
   };
 
-  const removeFileField = (field, index) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: prev[field].filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleFileFieldChange = (field, index, value) => {
-    const updated = [...(formData[field] || [])];
-    updated[index] = value;
-    setFormData((prev) => ({ ...prev, [field]: updated }));
+  const handleFileRemove = async (field, index) => {
+    if (!id || !window.confirm('Remove this file?')) return;
+    setUploadingFiles((prev) => ({ ...prev, [field]: true }));
+    try {
+      applyFileResponse(await deleteProjectFile(id, field, index));
+    } catch (error) {
+      alert(error?.response?.data?.message || 'Failed to remove file.');
+    } finally {
+      setUploadingFiles((prev) => ({ ...prev, [field]: false }));
+    }
   };
 
   const addTarget = () => {
@@ -358,8 +373,63 @@ export default function ViewProject() {
     setFormData({ ...formData, targets: newTargets });
   };
 
+  const renderFileField = (label, field) => {
+    const files = formData[field] || [];
+    const busy = uploadingFiles[field];
+    return (
+      <div className="flex flex-col md:flex-row md:items-start gap-4">
+        <span className="w-32 shrink-0 font-bold text-slate-700 pt-2">{label}</span>
+        <div className="flex-1 space-y-2">
+          {files.map((file, idx) => (
+            <div key={`${file.url || file.name}-${idx}`} className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm">
+              {file.url ? (
+                <a href={projectFileHref(file.url)} target="_blank" rel="noreferrer" className="flex-1 truncate text-indigo-600 hover:underline">
+                  {file.name}
+                </a>
+              ) : (
+                <span className="flex-1 truncate text-slate-500" title="Uploaded before file storage existed — re-upload to attach the actual file">
+                  {file.name} (no file attached)
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => handleFileRemove(field, idx)}
+                disabled={busy}
+                className="w-8 h-8 rounded border border-slate-300 bg-white hover:bg-rose-50 text-rose-600 font-bold flex items-center justify-center disabled:opacity-30"
+              >
+                <MinusCircle className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+
+          <label className={`inline-flex items-center gap-2 px-3 py-2 rounded border border-dashed border-slate-300 text-sm ${busy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-indigo-50 text-indigo-600'}`}>
+            <Plus className="w-4 h-4" />
+            {busy ? 'Uploading...' : 'Add file(s)'}
+            <input
+              type="file"
+              multiple
+              className="hidden"
+              disabled={busy}
+              onChange={(e) => {
+                handleFileUpload(field, e.target.files);
+                e.target.value = '';
+              }}
+            />
+          </label>
+          {!files.length && !busy && (
+            <p className="text-xs text-slate-400 m-0">No files uploaded yet.</p>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const preparePayload = () => ({
     ...formData,
+    // Files are owned by the upload/remove endpoints; leaving them out keeps a
+    // save from overwriting an upload made since this form was loaded.
+    referenceFiles: undefined,
+    workingFiles: undefined,
     projectName: formData.projectName || formData.projectCode || 'Untitled Project',
     targets: formData.targets.map((target) => ({
       ...target,
@@ -725,47 +795,8 @@ export default function ViewProject() {
           <p className="text-sm font-medium text-slate-500">For Translation</p>
 
           <div className="space-y-4">
-            <div className="flex flex-col md:flex-row md:items-start gap-4">
-              <span className="w-32 shrink-0 font-bold text-slate-700 pt-2">Reference files</span>
-              <div className="flex-1 space-y-2">
-                {(formData.referenceFiles?.length ? formData.referenceFiles : ['']).map((file, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <input
-                      type="file"
-                      onChange={(e) => handleFileFieldChange('referenceFiles', idx, e.target.value)}
-                      className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm"
-                    />
-                    <button type="button" onClick={() => addFileField('referenceFiles')} className="w-8 h-8 rounded border border-slate-300 bg-white hover:bg-indigo-50 text-indigo-600 font-bold flex items-center justify-center">
-                      <Plus className="w-4 h-4" />
-                    </button>
-                    <button type="button" onClick={() => removeFileField('referenceFiles', idx)} disabled={(formData.referenceFiles?.length || 1) <= 1} className="w-8 h-8 rounded border border-slate-300 bg-white hover:bg-rose-50 text-rose-600 font-bold flex items-center justify-center disabled:opacity-30">
-                      <MinusCircle className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col md:flex-row md:items-start gap-4">
-              <span className="w-32 shrink-0 font-bold text-slate-700 pt-2">Working files</span>
-              <div className="flex-1 space-y-2">
-                {(formData.workingFiles?.length ? formData.workingFiles : ['']).map((file, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <input
-                      type="file"
-                      onChange={(e) => handleFileFieldChange('workingFiles', idx, e.target.value)}
-                      className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm"
-                    />
-                    <button type="button" onClick={() => addFileField('workingFiles')} className="w-8 h-8 rounded border border-slate-300 bg-white hover:bg-indigo-50 text-indigo-600 font-bold flex items-center justify-center">
-                      <Plus className="w-4 h-4" />
-                    </button>
-                    <button type="button" onClick={() => removeFileField('workingFiles', idx)} disabled={(formData.workingFiles?.length || 1) <= 1} className="w-8 h-8 rounded border border-slate-300 bg-white hover:bg-rose-50 text-rose-600 font-bold flex items-center justify-center disabled:opacity-30">
-                      <MinusCircle className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {renderFileField('Reference files', 'referenceFiles')}
+            {renderFileField('Working files', 'workingFiles')}
           </div>
         </div>
 
