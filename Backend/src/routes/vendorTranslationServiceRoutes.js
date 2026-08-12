@@ -63,6 +63,22 @@ const sanitizePaymentDetails = (method, fullDetails = {}) => {
   return sanitized;
 };
 
+// List translation service profiles. Vendor Search joins these onto the vendor list so the
+// language pair / tools / expertise filters run against what the vendor actually offers.
+// Optional ?codes=V001,V002 narrows the list to the vendors already on screen.
+router.get("/", async (req, res, next) => {
+  try {
+    const { codes } = req.query;
+    const filter = codes
+      ? { vendorCode: { $in: String(codes).split(",").map((c) => c.trim()).filter(Boolean) } }
+      : {};
+    const services = await VendorTranslationService.find(filter);
+    res.json(services);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Get (or lazily create) the translation service profile for a vendor by code
 router.get("/:vendorCode", async (req, res, next) => {
   try {
