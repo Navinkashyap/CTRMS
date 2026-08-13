@@ -968,8 +968,18 @@ export default function ViewProject() {
   return (
     <div className="min-h-screen bg-white text-slate-900 pb-20">
       <div className="max-w-[1400px] mx-auto p-4 md:p-8 space-y-6">
-        <h1 className="text-xl font-black text-slate-800 tracking-tight">
+        <h1 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-3 flex-wrap">
           Update Project ({project.projectId})
+          {project.pmStatus === 'Rejected' && (
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200">
+              Rejected by PM{project.pmStatusNote ? `: "${project.pmStatusNote}"` : ''}
+            </span>
+          )}
+          {project.pmStatus === 'Accepted' && (
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
+              Accepted by PM
+            </span>
+          )}
         </h1>
         <div className="min-h-[400px] space-y-5">
           {renderCompanyContent()}

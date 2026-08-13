@@ -4,8 +4,30 @@ import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 import Job from "../models/Job.js";
+import VMSProject from "../VMS/models/VMSProject.js";
+import { syncAdminProjectStatus } from "../VMS/utils/adminProjectSync.js";
 
 const router = express.Router();
+
+// Best-effort cascade: when a job's vendor-facing status resolves to a
+// terminal state, mirror it onto the parent VMSProject (and from there onto
+// the admin's own Project) so status isn't stuck at "In Progress" forever
+// once the vendor has actually finished. Never throws.
+async function cascadeJobStatus(job, vmsStatus) {
+  if (!job.project) return;
+  try {
+    const vmsProject = await VMSProject.findByIdAndUpdate(
+      job.project,
+      { status: vmsStatus },
+      { new: true }
+    );
+    if (vmsProject) {
+      await syncAdminProjectStatus(vmsProject.projectId, vmsStatus);
+    }
+  } catch (error) {
+    console.error("Failed to cascade job status to project:", error.message);
+  }
+}
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -94,6 +116,12 @@ router.put("/:id", async (req, res, next) => {
       if (!updates.status) updates.status = "Issued";
     }
 
+    // Republishing/reassigning after a rejection — clear the rejection marker
+    // so the PM's UI stops flagging it once it's back in play.
+    if (updates.vendorStatus && updates.vendorStatus !== "Rejected") {
+      updates.rejectedAt = null;
+    }
+
     Object.assign(job, updates);
     await job.save();
     res.json(job);
@@ -136,6 +164,7 @@ router.put("/:id/respond", async (req, res, next) => {
       job.startDate = new Date().toISOString().split("T")[0];
     } else {
       job.vendorStatus = "Rejected";
+      job.rejectedAt = new Date();
     }
     await job.save();
     res.json(job);
@@ -203,6 +232,7 @@ router.put("/:id/complete", async (req, res, next) => {
     job.vendorStatus = "Completed";
     await job.save();
     res.json(job);
+    await cascadeJobStatus(job, "Completed");
   } catch (error) {
     next(error);
   }

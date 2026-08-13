@@ -37,6 +37,7 @@ import vmsPMRoutes from "./src/VMS/routes/vmsPMRoutes.js";
 import vmsProjectRoutes from "./src/VMS/routes/vmsProjectRoutes.js";
 import vmsVendorRoutes from "./src/VMS/routes/vmsVendorRoutes.js";
 import vmsVMRoutes from "./src/VMS/routes/vmsVMRoutes.js";
+import vendorInvoiceRoutes from "./src/VMS/routes/vendorInvoiceRoutes.js";
 import jobRoutes from "./src/routes/jobRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -99,6 +100,7 @@ app.use("/api/vms/pm", vmsPMRoutes);
 app.use("/api/vms/projects", vmsProjectRoutes);
 app.use("/api/vms/vendor", vmsVendorRoutes);
 app.use("/api/vms/vm", vmsVMRoutes);
+app.use("/api/vms/vendor-invoices", vendorInvoiceRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

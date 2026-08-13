@@ -21,6 +21,17 @@ const deliveredFileSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// The admin's reference/working files for the project this PO covers, copied
+// in at PO-creation time so the vendor has something real to download instead
+// of the placeholder files the admin/PM see on the project itself.
+const jobFileSchema = new mongoose.Schema(
+  {
+    name: { type: String, trim: true, default: "" },
+    url: { type: String, trim: true, default: "" },
+  },
+  { _id: false }
+);
+
 const jobSchema = new mongoose.Schema(
   {
     po: { type: String, required: [true, "PO number is required"], trim: true, unique: true },
@@ -83,6 +94,16 @@ const jobSchema = new mongoose.Schema(
       enum: ["", "Pending", "Rejected", "In Progress", "Completed"],
       default: "",
     },
+    // When the vendor most recently rejected this offer. Cleared whenever the
+    // PM reassigns/republishes it. Lets the PM see *that* and *when* a vendor
+    // said no instead of the rejection being silently invisible.
+    rejectedAt: { type: Date, default: null },
+
+    // Reference/working files the vendor can download for this job. Copied
+    // from the project at PO-creation time (see poRoutes/PMPO) rather than
+    // resolved on the fly, since a job can outlive edits to the project.
+    referenceFiles: { type: [jobFileSchema], default: [] },
+    workingFiles: { type: [jobFileSchema], default: [] },
 
     deliveredFiles: { type: [deliveredFileSchema], default: [] },
     deliveredLinks: { type: [String], default: [] },

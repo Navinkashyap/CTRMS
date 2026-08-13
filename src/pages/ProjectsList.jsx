@@ -514,14 +514,24 @@ export default function ProjectsList() {
 
                     {visibleColumns.includes('status') && (
                       <td className="px-6 py-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-[11px] font-medium inline-flex items-center gap-2 border ${getStatusStyles(
-                            project.status
-                          )}`}
-                        >
-                          <div className="w-2 h-2 rounded-full bg-current opacity-70" />
-                          {project.status}
-                        </span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span
+                            className={`px-3 py-1 rounded-full text-[11px] font-medium inline-flex items-center gap-2 border ${getStatusStyles(
+                              project.status
+                            )}`}
+                          >
+                            <div className="w-2 h-2 rounded-full bg-current opacity-70" />
+                            {project.status}
+                          </span>
+                          {project.pmStatus === 'Rejected' && (
+                            <span
+                              className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-600 border border-red-100"
+                              title={project.pmStatusNote || 'Rejected by the assigned Project Manager'}
+                            >
+                              PM Rejected
+                            </span>
+                          )}
+                        </div>
                       </td>
                     )}
 

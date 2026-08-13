@@ -77,6 +77,17 @@ const ProjectSchema = new mongoose.Schema(
 
     // ViewProject - Remark Tab
     remark: { type: String, trim: true },
+
+    // Set by the VMS backend when the assigned PM responds to this project in
+    // their "My Projects" incoming queue (see VMS/routes/vmsProjectRoutes.js).
+    // Pending = still sitting in the PM's incoming list, untouched.
+    pmStatus: {
+      type: String,
+      enum: ["Pending", "Accepted", "Rejected"],
+      default: "Pending",
+    },
+    pmStatusNote: { type: String, trim: true, default: "" },
+    pmStatusAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

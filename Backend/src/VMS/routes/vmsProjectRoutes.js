@@ -1,6 +1,7 @@
 import express from "express";
 import VMSProject from "../models/VMSProject.js";
 import vmsAuth from "../middleware/vmsAuth.js";
+import { flagAdminProjectPmStatus, syncAdminProjectStatus } from "../utils/adminProjectSync.js";
 
 const router = express.Router();
 router.use(vmsAuth);
@@ -47,6 +48,49 @@ router.delete("/incoming/:id", async (req, res, next) => {
   }
 });
 
+// POST /api/vms/projects/incoming/:id/accept — PM accepts an incoming project.
+// Moves the incoming copy into the PM's real project list and flags the
+// admin's own Project record so the admin dashboard reflects the decision.
+router.post("/incoming/:id/accept", async (req, res, next) => {
+  try {
+    const incoming = await VMSProject.findOne({ _id: req.params.id, status: "Incoming" });
+    if (!incoming) return res.status(404).json({ message: "Incoming project not found" });
+
+    const data = { ...incoming.toObject(), ...req.body };
+    delete data._id;
+    delete data.createdAt;
+    delete data.updatedAt;
+    delete data.__v;
+    data.status = data.status && data.status !== "Incoming" ? data.status : "In Progress";
+
+    const accepted = await VMSProject.create(data);
+    await VMSProject.deleteOne({ _id: incoming._id });
+    await flagAdminProjectPmStatus(incoming.projectId, "Accepted");
+
+    res.status(201).json(accepted);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/vms/projects/incoming/:id/reject — PM rejects an incoming
+// project. Unlike the bare DELETE above, this leaves a trace on the admin's
+// own Project record instead of vanishing without a notification.
+router.post("/incoming/:id/reject", async (req, res, next) => {
+  try {
+    const incoming = await VMSProject.findOne({ _id: req.params.id, status: "Incoming" });
+    if (!incoming) return res.status(404).json({ message: "Incoming project not found" });
+
+    const { reason = "" } = req.body || {};
+    await flagAdminProjectPmStatus(incoming.projectId, "Rejected", reason);
+    await VMSProject.deleteOne({ _id: incoming._id });
+
+    res.json({ message: "Incoming project rejected" });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/vms/projects/:id
 router.get("/:id", async (req, res, next) => {
   try {
@@ -78,6 +122,12 @@ router.put("/:id", async (req, res, next) => {
     });
     if (!project) return res.status(404).json({ message: "Project not found" });
     res.json(project);
+
+    // Keep the admin's own dashboard from freezing at creation-time status —
+    // best-effort, mirrors this PM-side status change back by projectId.
+    if (req.body.status) {
+      await syncAdminProjectStatus(project.projectId, project.status);
+    }
   } catch (error) {
     next(error);
   }
