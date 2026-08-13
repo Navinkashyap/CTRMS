@@ -6,7 +6,9 @@ import Vendor from "../../models/Vendor.js";
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || "default_super_secret_key_123";
-const JWT_EXPIRES_IN = "1d";
+// A one-day token forced every PM, VM and vendor to sign in again daily. There is
+// no refresh flow, so the lifetime itself is the session length.
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
 // ─── Generate JWT Token ─────────────────────────────────────────────────────
 const generateToken = (payload) => {
