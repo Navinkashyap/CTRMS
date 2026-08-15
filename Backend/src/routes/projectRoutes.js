@@ -107,33 +107,94 @@ const toFileRefs = (files) =>
     url: f.url || "",
   }));
 
-async function buildVmsPayload(projectId) {
+const UP_STATE_ALIASES = [
+  "up",
+  "uttar pradesh",
+  "uttarpradesh",
+  "uttar pardesh",
+  "u.p",
+  "u.p.",
+  "uttarpardesh",
+];
+
+const calcTaskFees = (quantity, rate) =>
+  (Number(quantity) || 0) * (Number(rate) || 0);
+
+// GST split follows the same rule as the admin's own project form: an intra-state
+// (Uttar Pradesh) client is billed CGST + SGST, everyone else IGST. Resolved here
+// so the PM portal gets a single effective percentage and doesn't have to know
+// the client's address.
+function effectiveGstPercent(project) {
+  if (!project.gstEnabled) return 0;
+  const state = (project.client?.state || "").trim().toLowerCase();
+  if (UP_STATE_ALIASES.includes(state)) {
+    return (Number(project.cgstPercent) || 0) + (Number(project.sgstPercent) || 0);
+  }
+  return Number(project.igstPercent) || 0;
+}
+
+export async function buildVmsPayload(projectId) {
   const project = await Project.findById(projectId)
-    .populate("client", "name")
+    .populate("client", "name state currency")
+    .populate("clientContact", "firstName lastName")
+    .populate("service", "name")
     .populate("sourceLanguage", "name")
     .populate("targets.sourceLanguage", "name")
     .populate("targets.targetLanguage", "name")
+    .populate("targets.service", "name")
     .lean();
   if (!project) return null;
+
+  const currency = project.client?.currency || "INR";
 
   const targets = (project.targets || []).map((t, i) => ({
     id: i + 1,
     source: t.sourceLanguage?.name || project.sourceLanguage?.name || "",
     target: t.targetLanguage?.name || "",
-    tasks: t.tasks || [],
+    service: t.service?.name || "",
+    tasks: (t.tasks || []).map((task) => ({
+      taskName: task.taskName || "",
+      unit: task.unit || "",
+      quantity: Number(task.quantity) || 0,
+      rate: Number(task.rate) || 0,
+      currency: task.currency || currency,
+      fees: task.fees ?? calcTaskFees(task.quantity, task.rate),
+      status: task.status || "Not Started",
+    })),
   }));
 
   const sourceLang = project.sourceLanguage?.name || targets[0]?.source || "";
   const targetLang = targets[0]?.target || "";
+  const contact = project.clientContact;
 
   return {
     projectId: project.projectId,
     name: project.projectName,
     client: project.client?.name || "",
+    clientContact: contact
+      ? `${contact.firstName || ""} ${contact.lastName || ""}`.trim()
+      : "",
+    clientPo: project.clientPO || "",
+    clientProjectCode: project.clientProjectCode || "",
+    projectType: project.service?.name || project.jobType || "Translation",
+    priority: project.priority || "Normal",
+    amount: project.amount || "",
+    currency,
     deadline: project.deadline
       ? new Date(project.deadline).toISOString().slice(0, 10)
       : "",
+    dueTime: project.dueTime || "",
     description: project.description || "",
+    instructions: project.description || "",
+    isProgramGroup: !!project.isProgramGroup,
+    programName: project.programName || "",
+    translationTool: project.translationTool || "",
+    subjectMatter: project.subjectMatter || "",
+    deliverable: project.deliverable || "",
+    gstEnabled: !!project.gstEnabled,
+    gstPercentage: effectiveGstPercent(project),
+    otherCharges: Number(project.otherCharges) || 0,
+    otherChargesLabel: project.otherChargesLabel || "None",
     sourceLang,
     targetLang,
     lang: sourceLang && targetLang ? `${sourceLang} → ${targetLang}` : "",

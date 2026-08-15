@@ -13,6 +13,13 @@ function computeTotals(body) {
   return { subtotal, gstAmount, total: subtotal + gstAmount };
 }
 
+// CVV must never reach the database, however it got into the request body.
+function stripCvv(body) {
+  if (!body.paymentDetails || typeof body.paymentDetails !== "object") return body;
+  const { cvv, ...paymentDetails } = body.paymentDetails;
+  return { ...body, paymentDetails };
+}
+
 // Best-effort: mirror the invoice's link/status onto the job it bills for so
 // "Payment Status" on the vendor's job screen stops being a dead-end field.
 async function syncJobInvoiceState(jobId, invoice) {
@@ -55,7 +62,8 @@ router.get("/:id", async (req, res, next) => {
 // tied to a completed job (body.job = Job _id).
 router.post("/", async (req, res, next) => {
   try {
-    const { job: jobId, ...body } = req.body;
+    const { job: jobId, ...rest } = req.body;
+    const body = stripCvv(rest);
     const totals = computeTotals(body);
     const invoice = await VendorInvoice.create({ ...body, ...totals, job: jobId || null });
     res.status(201).json(invoice);
@@ -68,7 +76,8 @@ router.post("/", async (req, res, next) => {
 // PUT /api/vms/vendor-invoices/:id
 router.put("/:id", async (req, res, next) => {
   try {
-    const { job: jobId, ...body } = req.body;
+    const { job: jobId, ...rest } = req.body;
+    const body = stripCvv(rest);
     const totals = computeTotals(body);
     const invoice = await VendorInvoice.findByIdAndUpdate(
       req.params.id,

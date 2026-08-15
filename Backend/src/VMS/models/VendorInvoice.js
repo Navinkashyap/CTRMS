@@ -39,6 +39,14 @@ const vendorInvoiceSchema = new mongoose.Schema(
     paymentCountry: { type: String, trim: true, default: "US" },
     paymentMethod: { type: String, trim: true, default: "Bank Account (ACH)" },
 
+    // Free-form: which keys are meaningful (accountNumber, ifscCode, upiId, ...)
+    // depends on paymentMethod, which the vendor can change at any time — a
+    // fixed set of columns would mean losing data on every method switch.
+    // Card number is intentionally the only sensitive-payment field kept here;
+    // CVV is never accepted from the client (see vendorInvoiceRoutes.js) and
+    // must never be persisted.
+    paymentDetails: { type: mongoose.Schema.Types.Mixed, default: {} },
+
     particulars: { type: [particularSchema], default: [] },
     subtotal: { type: Number, default: 0 },
     gstAmount: { type: Number, default: 0 },
