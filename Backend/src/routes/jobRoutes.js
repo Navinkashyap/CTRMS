@@ -29,6 +29,27 @@ async function cascadeJobStatus(job, vmsStatus) {
   }
 }
 
+// A project keeps one project number but can carry several purchase orders —
+// one per vendor/task — so PO numbers have to differ within the same project.
+// Callers that don't name one (the PM assigning a vendor from the project Edit
+// page) get the next free `<projectNumber>-PO<n>`.
+const escapeRegExp = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const poBaseFor = (projectId) =>
+  String(projectId || "").split(" / ")[0].trim() || "PO";
+
+async function nextPoNumber(projectId) {
+  const base = poBaseFor(projectId);
+  const taken = await Job.find({ po: new RegExp(`^${escapeRegExp(base)}-PO\\d+$`) })
+    .select("po")
+    .lean();
+  const highest = taken.reduce((max, job) => {
+    const n = parseInt(job.po.slice(base.length + 3), 10);
+    return Number.isFinite(n) && n > max ? n : max;
+  }, 0);
+  return `${base}-PO${highest + 1}`;
+}
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -94,8 +115,29 @@ router.post("/", async (req, res, next) => {
     if (data.vendorCode && !data.vendorStatus) {
       data.vendorStatus = "Pending";
     }
-    const job = await Job.create(data);
-    res.status(201).json(job);
+
+    const autoNumbered = !data.po;
+    if (autoNumbered) {
+      data.po = await nextPoNumber(data.projectId);
+    }
+
+    // Two PMs assigning vendors at the same moment can mint the same number;
+    // the unique index catches it, so just take the next one and retry.
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const job = await Job.create(data);
+        return res.status(201).json(job);
+      } catch (error) {
+        if (error.code !== 11000) throw error;
+        if (!autoNumbered) {
+          return res
+            .status(409)
+            .json({ message: `Purchase order ${data.po} already exists.` });
+        }
+        if (attempt >= 4) throw error;
+        data.po = await nextPoNumber(data.projectId);
+      }
+    }
   } catch (error) {
     next(error);
   }
