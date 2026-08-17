@@ -65,6 +65,21 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage });
 
+// POST /api/jobs/uploads — single-file upload for the per-task Working File /
+// Reference File pickers on the project Edit page. Runs before a PO exists
+// (or before the task is even assigned to a vendor), so it just stores the
+// file and hands back {name, url} for the caller to carry on the PO payload.
+router.post("/uploads", upload.single("file"), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "file is required" });
+    }
+    res.status(201).json({ name: req.file.originalname, url: req.file.path });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/jobs?vendorCode=&status=&vendorStatus=&projectId=
 router.get("/", async (req, res, next) => {
   try {
