@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
-const TaskSchema = new mongoose.Schema({}, { strict: false });
+// `id` has to be declared (and the `id` virtual turned off) or Mongoose treats it as
+// the built-in _id alias and drops the client-side id the PM form matches tasks on —
+// which left saved tasks unmatchable after a reload, losing their assigned vendor.
+const TaskSchema = new mongoose.Schema(
+  { id: { type: mongoose.Schema.Types.Mixed } },
+  { strict: false, id: false }
+);
 
 const TargetSchema = new mongoose.Schema(
   {
