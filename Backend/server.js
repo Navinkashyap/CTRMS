@@ -39,6 +39,7 @@ import vmsVendorRoutes from "./src/VMS/routes/vmsVendorRoutes.js";
 import vmsVMRoutes from "./src/VMS/routes/vmsVMRoutes.js";
 import vendorInvoiceRoutes from "./src/VMS/routes/vendorInvoiceRoutes.js";
 import jobRoutes from "./src/routes/jobRoutes.js";
+import fileRoutes from "./src/routes/fileRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -71,6 +72,7 @@ app.get("/api/health", (_req, res) => {
   res.json({ ok: true, message: "Server is running" });
 });
 
+app.use("/api/files", fileRoutes);
 app.use("/api/clients", clientRoutes);
 app.use("/api/vendors", vendorRoutes);
 app.use("/api/vendor-translation-services", vendorTranslationServiceRoutes);
@@ -109,6 +111,12 @@ app.use("/api/vms/vendor-invoices", vendorInvoiceRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
+
+  // Errors that already know their own status (e.g. a rejected upload) are
+  // client mistakes, so report just the message rather than a 500 + stack.
+  if (err?.status >= 400 && err.status < 500) {
+    return res.status(err.status).json({ message: err.message });
+  }
 
   if (err instanceof mongoose.Error.ValidationError) {
     return res.status(400).json({

@@ -1,27 +1,14 @@
 import express from "express";
-import multer from "multer";
-import { v2 as cloudinary } from "cloudinary";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
+import { createS3Uploader, uploadedFileUrl } from "../utils/s3Upload.js";
 
 import Client from "../models/Client.js";
 
 const router = express.Router();
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+const upload = createS3Uploader({
+  folder: "sadminperfectras_documents",
+  allowedExtensions: [".jpg", ".jpeg", ".png", ".pdf", ".doc", ".docx"],
 });
-
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: "sadminperfectras_documents",
-    allowed_formats: ["jpg", "png", "jpeg", "pdf", "docx", "doc"],
-    resource_type: "auto",
-  },
-});
-const upload = multer({ storage });
 
 
 const formatClient = (client) => ({
@@ -101,7 +88,7 @@ router.post("/", upload.array("documents"), async (req, res, next) => {
     if (req.files && req.files.length > 0) {
       clientData.documents = req.files.map((file) => ({
         name: file.originalname,
-        url: file.path,
+        url: uploadedFileUrl(file),
       }));
     }
     const client = await Client.create(clientData);
@@ -133,7 +120,7 @@ router.put("/:id", upload.array("documents"), async (req, res, next) => {
     if (req.files && req.files.length > 0) {
       const newDocs = req.files.map((file) => ({
         name: file.originalname,
-        url: file.path,
+        url: uploadedFileUrl(file),
       }));
       clientData.documents = [...clientData.documents, ...newDocs];
     }

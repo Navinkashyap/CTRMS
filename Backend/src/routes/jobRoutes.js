@@ -1,7 +1,5 @@
 import express from "express";
-import multer from "multer";
-import { v2 as cloudinary } from "cloudinary";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
+import { createS3Uploader, uploadedFileUrl } from "../utils/s3Upload.js";
 
 import Job from "../models/Job.js";
 import VMSProject from "../VMS/models/VMSProject.js";
@@ -50,20 +48,7 @@ async function nextPoNumber(projectId) {
   return `${base}-PO${highest + 1}`;
 }
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: "sadminperfectras_deliverables",
-    resource_type: "auto",
-  },
-});
-const upload = multer({ storage });
+const upload = createS3Uploader({ folder: "sadminperfectras_deliverables" });
 
 // POST /api/jobs/uploads — single-file upload for the per-task Working File /
 // Reference File pickers on the project Edit page. Runs before a PO exists
@@ -74,7 +59,7 @@ router.post("/uploads", upload.single("file"), async (req, res, next) => {
     if (!req.file) {
       return res.status(400).json({ message: "file is required" });
     }
-    res.status(201).json({ name: req.file.originalname, url: req.file.path });
+    res.status(201).json({ name: req.file.originalname, url: uploadedFileUrl(req.file) });
   } catch (error) {
     next(error);
   }
@@ -241,7 +226,7 @@ router.post("/:id/deliverables", upload.array("files"), async (req, res, next) =
     if (req.files && req.files.length > 0) {
       const newFiles = req.files.map((file) => ({
         name: file.originalname,
-        url: file.path,
+        url: uploadedFileUrl(file),
         size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
       }));
       job.deliveredFiles.push(...newFiles);

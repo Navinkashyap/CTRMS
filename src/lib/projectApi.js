@@ -45,13 +45,17 @@ export const deleteProjectFile = async (id, field, index) => {
   return response.data;
 };
 
-// Uploaded files live at /uploads on the API host, which sits one level above
-// the /api base the client is configured with.
+// Uploaded files now live in a private S3 bucket, so an absolute URL is not
+// fetchable on its own — it goes through /api/files/view, which redirects to a
+// short-lived signed link. Older relative /uploads paths still resolve against
+// the API host, which sits one level above the configured /api base.
 export const projectFileHref = (url) => {
   if (!url) return '';
-  if (/^https?:\/\//i.test(url)) return url;
-  const base = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/api\/?$/, '');
-  return `${base}${url}`;
+  const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
+  if (/^https?:\/\//i.test(url)) {
+    return `${apiBase}/files/view?url=${encodeURIComponent(url)}`;
+  }
+  return `${apiBase.replace(/\/api\/?$/, '')}${url}`;
 };
 
 export const deleteProject = async (id) => {

@@ -48,10 +48,15 @@ export default function ViewClient() {
     }
   }, [id]);
 
+  // Documents live in a private S3 bucket, so an absolute URL has to be fetched
+  // through /api/files/view, which redirects to a short-lived signed link.
   const getFileUrl = (url) => {
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    const backendUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : 'http://localhost:5000';
-    return `${backendUrl}${url}`;
+    if (!url) return '';
+    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return `${apiBase}/files/view?url=${encodeURIComponent(url)}`;
+    }
+    return `${apiBase.replace('/api', '')}${url}`;
   };
 
   if (loading) {
