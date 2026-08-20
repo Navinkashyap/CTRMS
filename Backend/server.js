@@ -48,9 +48,14 @@ const PORT = Number(process.env.PORT) || 5000;
 const MONGODB_URI = process.env.MONGODB_URI;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
 
+// CLIENT_ORIGIN supports a comma-separated list, e.g.
+// "https://admin.example.com,https://vms.example.com"
+const allowedOrigins = CLIENT_ORIGIN.split(",").map((origin) => origin.trim());
+
 app.use(
   cors({
-    origin: "*",
+    origin: allowedOrigins.includes("*") ? "*" : allowedOrigins,
+    credentials: true,
   })
 );
 app.use(express.json());
