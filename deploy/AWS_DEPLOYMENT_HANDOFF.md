@@ -14,8 +14,10 @@ cluster — no DB migration needed.
   - `SAdminPerfectras/` (root of this repo) → CTRMS admin UI
   - `VMS/` (sibling folder) → VMS UI
 - **Database**: MongoDB Atlas (keep as-is, do not migrate to DocumentDB).
-- **File uploads**: Cloudinary (already cloud-hosted, no S3 needed unless
-  you want to migrate uploads later — not required for this deployment).
+- **File uploads**: AWS S3 (`Backend/src/utils/s3Upload.js`, bucket set via
+  `AWS_S3_BUCKET`/`AWS_REGION` env vars). Uploads were migrated off
+  Cloudinary — an IAM user scoped to that bucket (Get/Put/Delete/List) is
+  needed, with its access key + secret set in `Backend/.env`.
 
 ## Recommended AWS setup
 
@@ -39,9 +41,9 @@ cluster — no DB migration needed.
 3. **Backend**:
    - Clone/copy `Backend/` to the instance.
    - Copy [Backend/.env.production.example](../Backend/.env.production.example)
-     to `Backend/.env` and fill in real values (Mongo URI, Cloudinary
-     keys, a **freshly generated** `JWT_SECRET` — do not reuse the local
-     dev secret, generate with `openssl rand -hex 32`).
+     to `Backend/.env` and fill in real values (Mongo URI, AWS S3 keys, a
+     **freshly generated** `JWT_SECRET` — do not reuse the local dev
+     secret, generate with `openssl rand -hex 32`).
    - Set `CLIENT_ORIGIN` to a comma-separated list of the two frontend
      origins once domains are picked, e.g.
      `https://admin.yourdomain.com,https://vms.yourdomain.com`.
@@ -80,17 +82,22 @@ cluster — no DB migration needed.
 
 ## ⚠️ Security note — rotate before going live
 
-The current `render.yaml` files in both repos have the MongoDB Atlas
-connection string (including username/password) committed in plain text,
-and the local `Backend/.env` has real Cloudinary keys and a JWT secret
-checked in. Before/while moving to AWS:
+`render.yaml`'s plaintext MongoDB URI (username `piyush_db_user` +
+password) has been removed from the file (now `sync: false`, set via
+Render's dashboard env var UI instead) — but that password was committed
+to git history and pushed to the remote, so it must be treated as
+compromised regardless of the file edit. Before/while moving to AWS:
 
-- Rotate the MongoDB Atlas user password (`piyush_db_user`) and update
-  the URI everywhere it's used, then remove the plaintext URI from
-  `render.yaml` (use Render's env var UI instead, or delete the file
-  once off Render).
+- **Rotate the MongoDB Atlas user password (`piyush_db_user`)** in the
+  Atlas dashboard and update `MONGODB_URI` everywhere it's used (Render
+  env vars, EC2 `Backend/.env`, any local `.env` files). This is still
+  outstanding — the file fix alone does not invalidate the leaked
+  password.
 - Generate a new `JWT_SECRET` for production (don't reuse the dev one).
-- Rotate the Cloudinary API secret if this repo is or will be pushed to
-  a shared/public remote.
+- Rotate the AWS IAM access key/secret if they were ever pasted into a
+  commit, a chat, or anywhere outside `Backend/.env`.
 - Confirm `.env` files are actually in `.gitignore` and were never
-  pushed to a remote history that others can see.
+  pushed to a remote history that others can see (`Backend/.env` itself
+  has never been committed — only `render.yaml` leaked a credential).
+- If this repo is or ever becomes public, treat the leaked password as
+  fully public and rotate immediately regardless of other priorities.
