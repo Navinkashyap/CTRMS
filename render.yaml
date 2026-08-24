@@ -5,8 +5,12 @@ services:
     buildCommand: cd Backend && npm install
     startCommand: cd Backend && npm start
     envVars:
+      # Set these in the Render dashboard (Environment tab) instead of here —
+      # never commit real credentials to this file. MONGODB_URI's password
+      # was previously committed in plaintext and MUST be rotated in MongoDB
+      # Atlas; this file no longer carries a working value.
       - key: MONGODB_URI
-        value: "mongodb+srv://piyush_db_user:navin123@cluster0.iapkvik.mongodb.net/?appName=Cluster0"
+        sync: false
       - key: MONGODB_DB_NAME
         value: "sadminperfectras"
       - key: CLIENT_ORIGIN
