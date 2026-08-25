@@ -1,10 +1,21 @@
 import express from "express";
+import mongoose from "mongoose";
 import VMSProject from "../models/VMSProject.js";
 import vmsAuth from "../middleware/vmsAuth.js";
 import { flagAdminProjectPmStatus, syncAdminProjectStatus } from "../utils/adminProjectSync.js";
 
 const router = express.Router();
 router.use(vmsAuth);
+
+// A malformed/undefined :id (e.g. a frontend bug sending "undefined" as a
+// literal string) otherwise reaches Mongoose's ObjectId cast and surfaces as
+// an unhandled 500 with a stack trace instead of a clear client error.
+router.param("id", (req, res, next, id) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: `Invalid project id: "${id}"` });
+  }
+  next();
+});
 
 // GET /api/vms/projects — everything except pending incoming requests
 router.get("/", async (req, res, next) => {
