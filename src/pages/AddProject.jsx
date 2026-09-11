@@ -105,7 +105,7 @@ export default function AddProject() {
           getUnits(),
           getServices(),
         ]);
-        setClients(clientsRes);
+        setClients([...clientsRes].sort((a, b) => (a.name || '').localeCompare(b.name || '')));
         setContacts(contactsRes);
         setLanguages(langsRes);
         setTools(toolsRes.filter((t) => t.status === 'Active'));

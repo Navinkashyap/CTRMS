@@ -401,9 +401,28 @@ export default function AddClient() {
     return `${apiBase.replace('/api', '')}${url}`;
   };
 
+  // Some documents were uploaded before the S3 migration and stored on local
+  // disk (/uploads/...); those files no longer exist on the server, so clicking
+  // "Click to view" would otherwise open a silent blank/broken tab. Check first
+  // and tell the user the file needs to be re-uploaded.
+  const handleViewDocument = async (e, url, name) => {
+    e.preventDefault();
+    const href = getFileUrl(url);
+    const win = window.open('', '_blank');
+    try {
+      const res = await fetch(href, { method: 'HEAD' });
+      if (!res.ok) throw new Error('missing');
+      if (win) win.location.href = href;
+      else window.open(href, '_blank', 'noreferrer');
+    } catch {
+      if (win) win.close();
+      alert(`"${name}" could not be opened — this file is missing on the server and needs to be re-uploaded.`);
+    }
+  };
+
 
   return (
-    <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8">
+    <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8 animate-in fade-in duration-700">
       <div className="max-w-[1000px] mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white p-6 sm:px-8 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
           <div className="flex items-center gap-4">
@@ -772,6 +791,7 @@ export default function AddClient() {
                         href={getFileUrl(doc.url)}
                         target="_blank"
                         rel="noreferrer"
+                        onClick={(e) => handleViewDocument(e, doc.url, doc.name)}
                         className="flex items-center gap-3 overflow-hidden flex-1 min-w-0"
                       >
                         <div className="w-10 h-10 rounded-xl bg-indigo-50 group-hover:bg-indigo-100 flex items-center justify-center shrink-0 transition-colors">

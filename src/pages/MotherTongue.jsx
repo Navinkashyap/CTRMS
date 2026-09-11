@@ -1,45 +1,38 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getCities, createCity, updateCity, deleteCity } from '../lib/cityApi';
-import { getStates } from '../lib/stateApi';
+import { Plus, SquarePen, Trash2, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, Mic } from 'lucide-react';
+import { getMotherTongues, createMotherTongue, updateMotherTongue, deleteMotherTongue } from '../lib/motherTongueApi';
 
-export default function City() {
-  const [cities, setCities] = useState([]);
-  const [statesList, setStatesList] = useState([]);
+export default function MotherTongue() {
+  const [motherTongues, setMotherTongues] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCity, setEditingCity] = useState(null);
-  const [formData, setFormData] = useState({ name: '', shortName: '', district: 'South Andaman', status: 'Active' });
+  const [editingMotherTongue, setEditingMotherTongue] = useState(null);
+  const [formData, setFormData] = useState({ name: '', status: 'Active' });
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchData();
+    fetchMotherTongues();
   }, []);
 
-  const fetchData = async () => {
+  const fetchMotherTongues = async () => {
     try {
       setIsLoading(true);
-      const [citiesData, statesData] = await Promise.all([
-        getCities(),
-        getStates()
-      ]);
-      setCities(citiesData);
-      setStatesList(statesData);
+      const data = await getMotherTongues();
+      setMotherTongues(data);
     } catch (error) {
-      console.error("Error fetching data:", error);
-      showNotification("Failed to fetch data.");
+      console.error("Error fetching mother tongues:", error);
+      showNotification("Failed to fetch mother tongues.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const filteredCities = useMemo(() => {
-    return cities.filter(c =>
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.shortName.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredMotherTongues = useMemo(() => {
+    return motherTongues.filter(m =>
+      m.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [cities, searchQuery]);
+  }, [motherTongues, searchQuery]);
 
   const showNotification = (msg) => {
     setNotification(msg);
@@ -47,32 +40,45 @@ export default function City() {
   };
 
   const handleAddClick = () => {
-    setEditingCity(null);
-    setFormData({ name: '', shortName: '', district: statesList[0]?.name || 'South Andaman', status: 'Active' });
+    setEditingMotherTongue(null);
+    setFormData({ name: '', status: 'Active' });
     setIsModalOpen(true);
   };
 
-  const handleEditClick = (city) => {
-    setEditingCity(city);
-    setFormData({ name: city.name, shortName: city.shortName, district: city.district, status: city.status });
+  const handleEditClick = (motherTongue) => {
+    setEditingMotherTongue(motherTongue);
+    setFormData({ name: motherTongue.name, status: motherTongue.status });
     setIsModalOpen(true);
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      if (editingCity) {
-        await updateCity(editingCity._id, formData);
+      if (editingMotherTongue) {
+        await updateMotherTongue(editingMotherTongue._id, formData);
         showNotification(`Updated ${formData.name} successfully!`);
       } else {
-        await createCity(formData);
+        await createMotherTongue(formData);
         showNotification(`Added ${formData.name} successfully!`);
       }
-      fetchData();
+      fetchMotherTongues();
       setIsModalOpen(false);
     } catch (error) {
-      console.error("Error saving city:", error);
-      showNotification("Failed to save city.");
+      console.error("Error saving mother tongue:", error);
+      showNotification(error.response?.data?.message || "Failed to save mother tongue.");
+    }
+  };
+
+  const handleDeleteClick = async (id) => {
+    if (window.confirm('Are you sure you want to delete this mother tongue?')) {
+      try {
+        await deleteMotherTongue(id);
+        showNotification('Mother tongue deleted successfully!');
+        fetchMotherTongues();
+      } catch (error) {
+        console.error("Error deleting mother tongue:", error);
+        showNotification("Failed to delete mother tongue.");
+      }
     }
   };
 
@@ -84,12 +90,12 @@ export default function City() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-1">
             <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent">
-              City List
+              Mother Tongue List
             </h1>
             <p className="text-slate-500 font-medium tracking-wide flex items-center gap-2">
-              Urban Area Management & Locality Hubs
+              Native Language Records
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-tighter">
-                {filteredCities.length} Cities
+                {filteredMotherTongues.length} Records
               </span>
             </p>
           </div>
@@ -99,7 +105,7 @@ export default function City() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-blue-500 transition-colors" />
               <input
                 type="text"
-                placeholder="Search cities..."
+                placeholder="Search mother tongue..."
                 className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm placeholder:text-slate-600"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -113,7 +119,7 @@ export default function City() {
               className="inline-flex items-center gap-2 bg-[#1e293b] hover:bg-slate-800 text-white px-5 py-2.5 rounded-2xl transition-all shadow-md font-bold active:scale-[0.98]"
             >
               <Plus className="w-5 h-5" />
-              <span className="hidden sm:inline">Add City</span>
+              <span className="hidden sm:inline">Add Record</span>
             </button>
           </div>
         </div>
@@ -121,13 +127,11 @@ export default function City() {
         {/* Premium Table Card */}
         <div className="bg-white/70 backdrop-blur-xl border border-slate-200 rounded-[2rem] shadow-2xl shadow-slate-200/50 p-2 overflow-hidden">
           <div className="overflow-x-auto rounded-[1.5rem]">
-            <table className="w-full text-left text-[14px] border-collapse min-w-[800px]">
-              <thead className="sticky top-0 z-10 bg-white">
+            <table className="w-full text-left text-[14px] border-collapse min-w-[600px]">
+              <thead>
                 <tr className="border-b border-slate-100">
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-16 text-center">#</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">City</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Short Name</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">District</th>
+                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Mother Tongue</th>
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-32">Status</th>
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-24 text-center">
                     <MoreHorizontal className="w-4 h-4 mx-auto" />
@@ -135,48 +139,63 @@ export default function City() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {filteredCities.map((city, index) => (
-                  <tr key={city._id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
-                    <td className="px-6 py-5 text-center">
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-500 font-mono text-xs font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
-                        {index + 1}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5 font-bold text-slate-800 group-hover:text-blue-700 transition-colors tracking-tight">
-                      {city.name}
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="inline-flex px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 font-mono text-[12px] font-bold border border-slate-100 group-hover:border-blue-200 group-hover:bg-blue-50 transition-all uppercase">
-                        {city.shortName}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5 font-semibold text-slate-600">
-                      {city.district}
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide border ${city.status === 'Active'
-                          ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                          : 'bg-slate-50 text-slate-500 border-slate-200'
-                        }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${city.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-400'} animate-pulse`} />
-                        {city.status}
-                      </div>
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                      <button
-                        onClick={() => handleEditClick(city)}
-                        className="w-10 h-10 inline-flex items-center justify-center rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:scale-95 transition-all outline-none"
-                      >
-                        <SquarePen className="w-5 h-5" />
-                      </button>
-                    </td>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-10 text-center text-slate-500 font-semibold">Loading...</td>
                   </tr>
-                ))}
+                ) : filteredMotherTongues.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-10 text-center text-slate-500 font-semibold">No records found.</td>
+                  </tr>
+                ) : (
+                  filteredMotherTongues.map((mt, index) => (
+                    <tr key={mt._id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
+                      <td className="px-6 py-5 text-center">
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-500 font-mono text-xs font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                          {index + 1}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-slate-50 text-slate-600 group-hover:bg-white group-hover:text-blue-600 transition-all border border-transparent group-hover:border-blue-100 shadow-sm">
+                            <Mic className="w-4 h-4" />
+                          </div>
+                          <span className="font-bold text-slate-800 group-hover:text-blue-700 transition-colors tracking-tight">{mt.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide border ${mt.status === 'Active'
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                            : 'bg-rose-50 text-rose-600 border-rose-100'
+                          }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${mt.status === 'Active' ? 'bg-emerald-500' : 'bg-rose-500'} animate-pulse`} />
+                          {mt.status}
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleEditClick(mt)}
+                            className="w-10 h-10 inline-flex items-center justify-center rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-50 active:scale-95 transition-all outline-none"
+                          >
+                            <SquarePen className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(mt._id)}
+                            className="w-10 h-10 inline-flex items-center justify-center rounded-xl text-slate-600 hover:text-rose-600 hover:bg-rose-50 active:scale-95 transition-all outline-none"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
           <div className="px-8 py-5 flex items-center justify-between border-t border-slate-50 text-xs font-bold text-slate-600 tracking-wider uppercase">
-            <span>Showing {filteredCities.length} of {cities.length} entries</span>
+            <span>Showing {filteredMotherTongues.length} of {motherTongues.length} entries</span>
             <div className="flex items-center gap-2">
               <button className="p-2 hover:text-slate-600 transition-colors disabled:opacity-30" disabled><ChevronLeft className="w-4 h-4" /></button>
               <button className="p-2 hover:text-slate-600 transition-colors disabled:opacity-30" disabled><ChevronRight className="w-4 h-4" /></button>
@@ -188,14 +207,14 @@ export default function City() {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[60] flex items-center justify-center p-6 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden border border-white/20 animate-in zoom-in-95 duration-400">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden border border-white/20 animate-in zoom-in-95 duration-400">
             <div className="relative px-8 py-8">
               <div className="flex justify-between items-start mb-6">
                 <div className="space-y-1">
                   <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-                    {editingCity ? 'Edit City' : 'Add New City'}
+                    {editingMotherTongue ? 'Edit Mother Tongue' : 'Add Mother Tongue'}
                   </h2>
-                  <p className="text-slate-500 text-sm font-medium">Link cities to their respective districts.</p>
+                  <p className="text-slate-500 text-sm font-medium">Register a native language record.</p>
                 </div>
                 <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all flex items-center justify-center">
                   <X className="w-5 h-5" />
@@ -205,24 +224,17 @@ export default function City() {
               <form onSubmit={handleSave} className="space-y-6">
                 <div className="grid grid-cols-1 gap-6">
                   <div className="space-y-2 group">
-                    <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">City Name</label>
+                    <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">Mother Tongue Name</label>
                     <input
                       required autoFocus type="text"
                       className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
                       value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="e.g. Pune City"
+                      placeholder="e.g. Hindi"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2 text-slate-600 uppercase tracking-widest text-[11px] font-black">Short Name</div>
-                    <div className="space-y-2 text-slate-600 uppercase tracking-widest text-[11px] font-black">Status</div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    <input
-                      required type="text" className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
-                      value={formData.shortName} onChange={(e) => setFormData({ ...formData, shortName: e.target.value })}
-                      placeholder="PNE"
-                    />
+
+                  <div className="space-y-2 font-black text-slate-600 uppercase tracking-widest text-[11px]">
+                    <label className="pl-1">Select Status</label>
                     <select
                       className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold appearance-none cursor-pointer"
                       value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}
@@ -231,25 +243,9 @@ export default function City() {
                       <option value="Inactive">Inactive</option>
                     </select>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">Parent District</label>
-                    <div className="relative">
-                      <select
-                        className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold appearance-none cursor-pointer"
-                        value={formData.district} onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                      >
-                        {statesList.map(state => (
-                          <option key={state._id} value={state.name}>{state.name}</option>
-                        ))}
-                      </select>
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-600">
-                        <ChevronRight className="w-4 h-4 rotate-90" />
-                      </div>
-                    </div>
-                  </div>
                 </div>
                 <button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 rounded-2xl text-[15px] font-black transition-all shadow-lg active:scale-[0.98]">
-                  {editingCity ? 'Save Changes' : 'Create City'}
+                  {editingMotherTongue ? 'Save Changes' : 'Create Record'}
                 </button>
               </form>
             </div>

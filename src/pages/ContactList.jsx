@@ -46,13 +46,7 @@ const allColumns = [
   { id: 'countryCode', label: 'Country code' },
   { id: 'phone', label: 'Phone no' },
   { id: 'email', label: 'Email' },
-  { id: 'dob', label: 'Dob' },
-  { id: 'gender', label: 'Gender' },
-  { id: 'companyId', label: 'Company id' },
   { id: 'designation', label: 'Designation' },
-  { id: 'country', label: 'Country' },
-  { id: 'region', label: 'Region' },
-  { id: 'city', label: 'City' },
 ];
 
 export default function ContactList() {
@@ -189,13 +183,7 @@ export default function ContactList() {
                   {visibleColumns.includes('countryCode') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Country Code</th>}
                   {visibleColumns.includes('phone') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Phone</th>}
                   {visibleColumns.includes('email') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Email</th>}
-                  {visibleColumns.includes('dob') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Date of Birth</th>}
-                  {visibleColumns.includes('gender') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Gender</th>}
-                  {visibleColumns.includes('companyId') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Company ID</th>}
                   {visibleColumns.includes('designation') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Designation</th>}
-                  {visibleColumns.includes('country') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Country</th>}
-                  {visibleColumns.includes('region') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Region</th>}
-                  {visibleColumns.includes('city') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">City</th>}
                   <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider text-center sticky right-0 bg-slate-50 z-30 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] border-l border-slate-100">Action</th>
                 </tr>
               </thead>
@@ -254,23 +242,11 @@ export default function ContactList() {
                           </div>
                         </td>
                       )}
-                      {visibleColumns.includes('dob') && <td className="px-6 py-4 text-slate-600">{contact.dob || '—'}</td>}
-                      {visibleColumns.includes('gender') && (
-                        <td className="px-6 py-4">
-                          <span className="inline-flex px-2 py-0.5 bg-slate-100 border border-slate-200/60 rounded text-xs font-medium text-slate-700">
-                            {contact.gender || '—'}
-                          </span>
-                        </td>
-                      )}
-                      {visibleColumns.includes('companyId') && <td className="px-6 py-4 text-slate-600 font-medium">{contact.companyId || '—'}</td>}
                       {visibleColumns.includes('designation') && (
                         <td className="px-6 py-4">
                           <span className="font-medium text-slate-700">{contact.designation || '—'}</span>
                         </td>
                       )}
-                      {visibleColumns.includes('country') && <td className="px-6 py-4 text-slate-600">{contact.country || '—'}</td>}
-                      {visibleColumns.includes('region') && <td className="px-6 py-4 text-slate-600">{contact.region || '—'}</td>}
-                      {visibleColumns.includes('city') && <td className="px-6 py-4 text-slate-600 font-medium">{contact.city || '—'}</td>}
 
                       <td className={`px-6 py-4 text-center sticky right-0 bg-white group-hover:bg-slate-50 transition-colors border-l border-slate-100 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] ${activeMenuId === contact._id ? 'z-40' : 'z-20'}`}>
                         <div className="relative flex justify-center" onClick={(e) => e.stopPropagation()}>

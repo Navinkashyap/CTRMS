@@ -18,3 +18,8 @@ pnpm-debug.log*
 Thumbs.db
 .idea/
 .vscode/
+
+# Vendor-uploaded files (CVs, certificates, profile pics) — runtime data, never
+# committed, so a deploy (git pull/clean) can never remove an already-uploaded file.
+Backend/uploads/*
+!Backend/uploads/.gitkeep

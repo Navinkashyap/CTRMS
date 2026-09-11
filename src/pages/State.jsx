@@ -126,7 +126,7 @@ export default function State() {
         <div className="bg-white/70 backdrop-blur-xl border border-slate-200 rounded-[2rem] shadow-2xl shadow-slate-200/50 p-2 overflow-hidden">
           <div className="overflow-x-auto rounded-[1.5rem]">
             <table className="w-full text-left text-[14px] border-collapse min-w-[800px]">
-              <thead>
+              <thead className="sticky top-0 z-10 bg-white">
                 <tr className="border-b border-slate-100">
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-16 text-center">#</th>
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">State Name</th>

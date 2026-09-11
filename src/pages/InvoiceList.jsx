@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FileText,
@@ -20,6 +20,55 @@ export default function InvoiceList() {
     vendor: '',
     status: 'Status',
   });
+
+  // Manual column widths (px), keyed by column id — lets users drag a column
+  // border to resize it. Persisted so the layout survives a refresh.
+  const [colWidths, setColWidths] = useState(() => {
+    try {
+      const saved = localStorage.getItem('invoiceListColWidths');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const resizingRef = useRef(null);
+
+  const startResize = (e, colId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startWidth = colWidths[colId] || e.currentTarget.parentElement.offsetWidth;
+    resizingRef.current = { colId, startX, startWidth };
+
+    const onMouseMove = (moveEvent) => {
+      if (!resizingRef.current) return;
+      const { colId: id, startX: sx, startWidth: sw } = resizingRef.current;
+      const newWidth = Math.max(80, sw + (moveEvent.clientX - sx));
+      setColWidths((prev) => ({ ...prev, [id]: newWidth }));
+    };
+    const onMouseUp = () => {
+      resizingRef.current = null;
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      setColWidths((current) => {
+        localStorage.setItem('invoiceListColWidths', JSON.stringify(current));
+        return current;
+      });
+    };
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
+
+  const colStyle = (colId) =>
+    colWidths[colId] ? { width: `${colWidths[colId]}px`, minWidth: `${colWidths[colId]}px`, maxWidth: `${colWidths[colId]}px` } : undefined;
+
+  const ResizeHandle = ({ colId }) => (
+    <div
+      onMouseDown={(e) => startResize(e, colId)}
+      onClick={(e) => e.stopPropagation()}
+      className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-indigo-200/60 active:bg-indigo-300"
+    />
+  );
 
   const fetchInvoices = async () => {
     try {
@@ -93,11 +142,11 @@ export default function InvoiceList() {
             </div>
           ) : (
             <div className="overflow-x-auto custom-scrollbarThin">
-              <table className="w-full text-left text-[13px] border-collapse min-w-[1000px]">
-                <thead>
+              <table className="w-full text-left text-[13px] border-collapse min-w-[1000px] table-fixed">
+                <thead className="sticky top-0 z-20">
                   <tr className="bg-slate-50/50 border-b border-slate-100">
-                    <th className="px-6 py-4 font-black text-slate-700 uppercase tracking-wider text-[11px] border-r border-slate-100 w-12 text-center text-left">#</th>
-                    <th className="px-6 py-4 border-r border-slate-100 min-w-[200px] text-left">
+                    <th style={colStyle('idx')} className="relative px-4 py-3 font-black text-slate-700 uppercase tracking-wider text-[11px] border-r border-slate-100 w-12 text-center">#<ResizeHandle colId="idx" /></th>
+                    <th style={colStyle('invoiceNo')} className="relative px-4 py-3 border-r border-slate-100 min-w-[200px] text-left">
                       <div className="space-y-2">
                         <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Invoice No.</span>
                         <div className="relative group">
@@ -110,8 +159,9 @@ export default function InvoiceList() {
                           />
                         </div>
                       </div>
+                      <ResizeHandle colId="invoiceNo" />
                     </th>
-                    <th className="px-6 py-4 border-r border-slate-100 min-w-[250px] text-left">
+                    <th style={colStyle('client')} className="relative px-4 py-3 border-r border-slate-100 min-w-[250px] text-left">
                       <div className="space-y-2 text-left">
                         <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Client</span>
                         <div className="relative group">
@@ -124,11 +174,13 @@ export default function InvoiceList() {
                           />
                         </div>
                       </div>
+                      <ResizeHandle colId="client" />
                     </th>
-                    <th className="px-6 py-4 border-r border-slate-100 text-left">
+                    <th style={colStyle('amount')} className="relative px-4 py-3 border-r border-slate-100 text-left">
                       <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Total Amount</span>
+                      <ResizeHandle colId="amount" />
                     </th>
-                    <th className="px-6 py-4 border-r border-slate-100 min-w-[150px] text-left">
+                    <th style={colStyle('status')} className="relative px-4 py-3 border-r border-slate-100 min-w-[150px] text-left">
                       <div className="space-y-2">
                         <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Status</span>
                         <select
@@ -144,11 +196,13 @@ export default function InvoiceList() {
                           <option>Draft</option>
                         </select>
                       </div>
+                      <ResizeHandle colId="status" />
                     </th>
-                    <th className="px-6 py-4 border-r border-slate-100 text-left">
+                    <th style={colStyle('date')} className="relative px-4 py-3 border-r border-slate-100 text-left">
                       <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Invoice Date</span>
+                      <ResizeHandle colId="date" />
                     </th>
-                    <th className="px-6 py-4 text-center">
+                    <th className="px-4 py-3 text-center">
                       <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Action</span>
                     </th>
                   </tr>
@@ -157,23 +211,23 @@ export default function InvoiceList() {
                   {filteredInvoices.length > 0 ? (
                     filteredInvoices.map((invoice, idx) => (
                       <tr key={invoice._id} className="group hover:bg-indigo-50/20 transition-all duration-200">
-                        <td className="px-6 py-4 text-center border-r border-slate-50">
+                        <td className="px-4 py-3 text-center border-r border-slate-50">
                           <span className="font-bold text-slate-600">{idx + 1}</span>
                         </td>
-                        <td className="px-6 py-4 border-r border-slate-50 text-left">
+                        <td className="px-4 py-3 border-r border-slate-50 text-left">
                           <span className="font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-[11px] border border-indigo-100 ">
                             {invoice.invoiceNumber}
                           </span>
                         </td>
-                        <td className="px-6 py-4 border-r border-slate-50 text-left">
+                        <td className="px-4 py-3 border-r border-slate-50 text-left">
                           <span className="font-extrabold text-slate-900">{invoice.billToCompany || '—'}</span>
                         </td>
-                        <td className="px-6 py-4 border-r border-slate-50 text-left">
+                        <td className="px-4 py-3 border-r border-slate-50 text-left">
                           <span className="font-bold text-slate-700 ">
                             {invoice.currency || '₹'} {(invoice.totalAmount || 0).toFixed(2)}
                           </span>
                         </td>
-                        <td className="px-6 py-4 border-r border-slate-50 text-left">
+                        <td className="px-4 py-3 border-r border-slate-50 text-left">
                           <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
                             invoice.status === 'Paid' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
                             invoice.status === 'Pending' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
@@ -183,12 +237,12 @@ export default function InvoiceList() {
                             {invoice.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 border-r border-slate-50 text-left">
+                        <td className="px-4 py-3 border-r border-slate-50 text-left">
                           <span className="text-slate-500 font-medium ">
                             {invoice.invoiceDate ? new Date(invoice.invoiceDate).toLocaleDateString('en-IN') : '—'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-center">
+                        <td className="px-4 py-3 text-center">
                           <div className="flex items-center justify-center gap-2">
                             <button
                               onClick={() => navigate(`/invoice/view-invoice/${invoice._id}`)}

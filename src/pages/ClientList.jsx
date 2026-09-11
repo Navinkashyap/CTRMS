@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
@@ -63,6 +63,44 @@ export default function ClientList() {
   const [tempVisibleColumns, setTempVisibleColumns] = useState(visibleColumns);
 
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  // Manual column widths (px), keyed by column id — lets users drag a column
+  // border to resize it. Persisted so the layout survives a refresh.
+  const [colWidths, setColWidths] = useState(() => {
+    try {
+      const saved = localStorage.getItem('clientListColWidths');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const resizingRef = useRef(null);
+
+  const startResize = (e, colId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startWidth = colWidths[colId] || e.currentTarget.parentElement.offsetWidth;
+    resizingRef.current = { colId, startX, startWidth };
+
+    const onMouseMove = (moveEvent) => {
+      if (!resizingRef.current) return;
+      const { colId: id, startX: sx, startWidth: sw } = resizingRef.current;
+      const newWidth = Math.max(80, sw + (moveEvent.clientX - sx));
+      setColWidths((prev) => ({ ...prev, [id]: newWidth }));
+    };
+    const onMouseUp = () => {
+      resizingRef.current = null;
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      setColWidths((current) => {
+        localStorage.setItem('clientListColWidths', JSON.stringify(current));
+        return current;
+      });
+    };
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
 
 
 
@@ -157,13 +195,19 @@ export default function ClientList() {
   const renderSortableHeader = (id, label) => (
     <th
       key={id}
-      className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider cursor-pointer hover:bg-slate-100/50 transition-colors select-none"
-      onClick={() => requestSort(id)}
+      style={colWidths[id] ? { width: `${colWidths[id]}px`, minWidth: `${colWidths[id]}px`, maxWidth: `${colWidths[id]}px` } : undefined}
+      className="relative px-4 py-3 font-semibold text-slate-500 text-xs uppercase tracking-wider hover:bg-slate-100/50 transition-colors select-none"
     >
-      <div className="flex items-center gap-1.5 whitespace-nowrap">
-        {label}
-        <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === id ? 'text-indigo-500' : 'text-slate-300'}`} />
+      <div className="flex items-center gap-1.5 whitespace-nowrap overflow-hidden cursor-pointer" onClick={() => requestSort(id)}>
+        <span className="truncate">{label}</span>
+        <ArrowUpDown className={`w-3 h-3 shrink-0 ${sortConfig.key === id ? 'text-indigo-500' : 'text-slate-300'}`} />
       </div>
+      {/* Drag handle to manually resize this column */}
+      <div
+        onMouseDown={(e) => startResize(e, id)}
+        onClick={(e) => e.stopPropagation()}
+        className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-indigo-200/60 active:bg-indigo-300"
+      />
     </th>
   );
 
@@ -228,8 +272,8 @@ export default function ClientList() {
 
         <div className="bg-white border border-slate-100 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative">
           <div className="overflow-x-auto custom-scrollbarThin">
-            <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
-              <thead>
+            <table className="w-full text-left text-sm border-collapse min-w-[1000px] table-fixed">
+              <thead className="sticky top-0 z-20">
                 <tr className="bg-slate-50/80 border-b border-slate-100/80">
                   {renderSortableHeader('membershipCode', 'Client Code')}
                   {visibleColumns.includes('domain') && renderSortableHeader('domain', 'Domain')}
@@ -245,7 +289,7 @@ export default function ClientList() {
                   {visibleColumns.includes('currency') && renderSortableHeader('currency', 'Currency')}
                   {visibleColumns.includes('registrationDate') && renderSortableHeader('registrationDate', 'Date of Registration')}
                   {visibleColumns.includes('createdBy') && renderSortableHeader('createdBy', 'Added By')}
-                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider text-center sticky right-0 bg-slate-50 z-30 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] border-l border-slate-100">Action</th>
+                  <th className="px-4 py-3 font-semibold text-slate-500 text-xs uppercase tracking-wider text-center sticky right-0 bg-slate-50 z-30 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] border-l border-slate-100">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100/80">
@@ -273,13 +317,13 @@ export default function ClientList() {
 
                 {!loading && sortedAndFilteredClients.map((client, idx) => (
                   <tr key={client._id} className="group hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3">
                       <span className="text-slate-400 font-medium text-sm">
                         {client.membershipCode?.replace('MEM-', '') || '-'}
                       </span>
                     </td>
                     {visibleColumns.includes('domain') && (
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <div
                             className={`w-1.5 h-1.5 rounded-full ${['Active', 'Client'].includes(client.status)
@@ -298,7 +342,7 @@ export default function ClientList() {
                       </td>
                     )}
                     {visibleColumns.includes('status') && (
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <span
                           className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${['Active', 'Client'].includes(client.status)
                             ? 'text-emerald-700 bg-emerald-50 border border-emerald-200/60'
@@ -314,7 +358,7 @@ export default function ClientList() {
                       </td>
                     )}
                     {visibleColumns.includes('membership') && (
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1">
                           {Array.isArray(client.membership) && client.membership.length > 0 ? (
                             client.membership.map((m, i) => (
@@ -331,14 +375,20 @@ export default function ClientList() {
                       </td>
                     )}
                     {visibleColumns.includes('name') && (
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <div className="flex flex-col">
-                          <span className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">{client.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => navigate(`view-client/${client._id}`)}
+                            className="text-left font-semibold text-slate-900 hover:text-indigo-600 hover:underline transition-colors"
+                          >
+                            {client.name}
+                          </button>
                         </div>
                       </td>
                     )}
                     {visibleColumns.includes('website') && (
-                      <td className="px-6 py-4 text-blue-600 truncate max-w-[150px]">
+                      <td className="px-4 py-3 text-blue-600 truncate max-w-[150px]">
                         {client.website ? (
                           <a href={client.website} target="_blank" rel="noreferrer" className="hover:underline">
                             {client.website}
@@ -348,21 +398,21 @@ export default function ClientList() {
                         )}
                       </td>
                     )}
-                    {visibleColumns.includes('email') && <td className="px-6 py-4 text-slate-600">{client.email || '-'}</td>}
-                    {visibleColumns.includes('phone') && <td className="px-6 py-4 text-slate-600">{client.phone || '-'}</td>}
-                    {visibleColumns.includes('address') && <td className="px-6 py-4 text-slate-600 max-w-[200px] truncate" title={client.address}>{client.address || '-'}</td>}
-                    {visibleColumns.includes('city') && <td className="px-6 py-4 text-slate-600">{client.city || '-'}</td>}
-                    {visibleColumns.includes('country') && <td className="px-6 py-4 text-slate-600 font-medium">{client.country || '-'}</td>}
+                    {visibleColumns.includes('email') && <td className="px-4 py-3 text-slate-600">{client.email || '-'}</td>}
+                    {visibleColumns.includes('phone') && <td className="px-4 py-3 text-slate-600">{client.phone || '-'}</td>}
+                    {visibleColumns.includes('address') && <td className="px-4 py-3 text-slate-600 max-w-[200px] truncate" title={client.address}>{client.address || '-'}</td>}
+                    {visibleColumns.includes('city') && <td className="px-4 py-3 text-slate-600">{client.city || '-'}</td>}
+                    {visibleColumns.includes('country') && <td className="px-4 py-3 text-slate-600 font-medium">{client.country || '-'}</td>}
                     {visibleColumns.includes('currency') && (
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <span className="font-medium text-slate-700 bg-slate-100 border border-slate-200/60 px-2 py-0.5 rounded text-xs">
                           {client.currency || 'USD'}
                         </span>
                       </td>
                     )}
-                    {visibleColumns.includes('registrationDate') && <td className="px-6 py-4 text-slate-500">{client.registrationDate || '-'}</td>}
+                    {visibleColumns.includes('registrationDate') && <td className="px-4 py-3 text-slate-500">{client.registrationDate || '-'}</td>}
                     {visibleColumns.includes('createdBy') && (
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-xs font-semibold text-indigo-600">
                             {client.createdBy?.charAt(0).toUpperCase() || 'S'}
@@ -372,7 +422,7 @@ export default function ClientList() {
                       </td>
                     )}
 
-                    <td className={`px-6 py-4 text-center sticky right-0 bg-white group-hover:bg-slate-50 transition-colors border-l border-slate-100 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] ${openActionId === client._id ? 'z-40' : 'z-20'}`}>
+                    <td className={`px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-slate-50 transition-colors border-l border-slate-100 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] ${openActionId === client._id ? 'z-40' : 'z-20'}`}>
                       <div className="relative flex justify-center" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => setOpenActionId(openActionId === client._id ? null : client._id)}

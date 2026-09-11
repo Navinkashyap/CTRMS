@@ -122,30 +122,32 @@ const Dashboard = () => {
   }, [dateRange]);
 
   const stats = [
-    { 
-      label: "Total Projects", 
-      value: dashboardData.projectsCount, 
+    {
+      label: "Total Projects",
+      value: dashboardData.projectsCount,
       subStats: { pending: dashboardData.pendingProjects, completed: dashboardData.completedProjects },
-      trend: "+14.5%", 
-      isUp: true, 
-      color: "#6366f1", 
-      data: "M0 25 Q 15 20, 30 25 T 60 15 T 80 5 T 100 10", 
-      icon: Briefcase, 
-      gradient: "from-indigo-500 to-blue-600" 
+      trend: "+14.5%",
+      isUp: true,
+      color: "#6366f1",
+      data: "M0 25 Q 15 20, 30 25 T 60 15 T 80 5 T 100 10",
+      icon: Briefcase,
+      gradient: "from-indigo-500 to-blue-600",
+      path: "/projects",
     },
-    { label: "Total Clients", value: dashboardData.clientsCount, trend: "+8.4%", isUp: true, color: "#06b6d4", data: "M0 25 L 20 20 L 40 22 L 60 10 L 80 15 L 100 5", icon: Users, gradient: "from-cyan-500 to-blue-500" },
-    { 
-      label: "Total Revenue", 
-      value: `₹${(dashboardData.totalRevenue || 0).toLocaleString()}`, 
+    { label: "Total Clients", value: dashboardData.clientsCount, trend: "+8.4%", isUp: true, color: "#06b6d4", data: "M0 25 L 20 20 L 40 22 L 60 10 L 80 15 L 100 5", icon: Users, gradient: "from-cyan-500 to-blue-500", path: "/clients" },
+    {
+      label: "Total Revenue",
+      value: `₹${(dashboardData.totalRevenue || 0).toLocaleString()}`,
       subStats: { invoicesCount: dashboardData.invoicesCount },
-      trend: "+1.2%", 
-      isUp: true, 
-      color: "#8b5cf6", 
-      data: "M0 20 Q 20 5, 40 15 T 70 20 T 100 5", 
-      icon: DollarSign, 
-      gradient: "from-purple-500 to-violet-600" 
+      trend: "+1.2%",
+      isUp: true,
+      color: "#8b5cf6",
+      data: "M0 20 Q 20 5, 40 15 T 70 20 T 100 5",
+      icon: DollarSign,
+      gradient: "from-purple-500 to-violet-600",
+      path: "/invoice",
     },
-    { label: "Total Vendors", value: dashboardData.vendorsCount, trend: "+3.1%", isUp: true, color: "#ec4899", data: "M0 10 Q 20 25, 40 15 T 70 5 T 100 20", icon: UserCheck, gradient: "from-pink-500 to-rose-600" },
+    { label: "Total Vendors", value: dashboardData.vendorsCount, trend: "+3.1%", isUp: true, color: "#ec4899", data: "M0 10 Q 20 25, 40 15 T 70 5 T 100 20", icon: UserCheck, gradient: "from-pink-500 to-rose-600", path: "/vendors" },
   ];
 
   const quickActions = [
@@ -236,10 +238,21 @@ const Dashboard = () => {
                     } transition-transform duration-500`}>
                     <stat.icon className="w-5 h-5" />
                   </div>
-                  <span className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-xl ${stat.isUp ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
-                    {stat.isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                    {stat.trend}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-xl ${stat.isUp ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
+                      {stat.isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                      {stat.trend}
+                    </span>
+                    {/* Open the full list for this metric, without disturbing the card's own click-to-chart behavior */}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); navigate(stat.path); }}
+                      title={`Open ${stat.label}`}
+                      className="w-7 h-7 shrink-0 rounded-xl bg-white/80 border border-slate-100 text-slate-400 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:text-indigo-600 hover:border-indigo-200 hover:bg-white transition-all shadow-sm"
+                    >
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
                 <h3 className="text-slate-600 text-[11px] font-black uppercase tracking-[0.2em] mb-1 pl-1">{stat.label}</h3>
                 <div className="flex items-end justify-between px-1">

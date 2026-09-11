@@ -59,6 +59,25 @@ export default function ViewClient() {
     return `${apiBase.replace('/api', '')}${url}`;
   };
 
+  // Some documents were uploaded before the S3 migration and stored on local
+  // disk (/uploads/...); those files no longer exist on the server, so clicking
+  // "Click to view" would otherwise open a silent blank/broken tab. Check first
+  // and tell the client-record owner the file needs to be re-uploaded.
+  const handleViewDocument = async (e, url, name) => {
+    e.preventDefault();
+    const href = getFileUrl(url);
+    const win = window.open('', '_blank');
+    try {
+      const res = await fetch(href, { method: 'HEAD' });
+      if (!res.ok) throw new Error('missing');
+      if (win) win.location.href = href;
+      else window.open(href, '_blank', 'noreferrer');
+    } catch {
+      if (win) win.close();
+      alert(`"${name}" could not be opened — this file is missing on the server and needs to be re-uploaded.`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
@@ -260,6 +279,7 @@ export default function ViewClient() {
                       href={getFileUrl(doc.url)}
                       target="_blank"
                       rel="noreferrer"
+                      onClick={(e) => handleViewDocument(e, doc.url, doc.name)}
                       className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 hover:bg-white border border-transparent hover:border-indigo-100 hover:shadow-md transition-all group"
                     >
                       <div className="flex items-center gap-3 overflow-hidden">

@@ -9,6 +9,7 @@ import Services from "./pages/Services";
 import Tools from "./pages/Tools";
 import Currency from "./pages/Currency";
 import Languages from "./pages/Languages";
+import MotherTongue from "./pages/MotherTongue";
 import Specialization from "./pages/Specialization";
 import Quality from "./pages/Quality";
 import Deadline from "./pages/Deadline";
@@ -108,7 +109,7 @@ const App = () => {
           <Route path="master/state" element={<State />} />
           <Route path="master/city" element={<City />} />
           <Route path="master/district" element={<PagePlaceholder title="District Master" icon="fa-cube" />} />
-          <Route path="master/mother-tongue" element={<PagePlaceholder title="Mother Tongue Master" icon="fa-microphone-lines" />} />
+          <Route path="master/mother-tongue" element={<MotherTongue />} />
           <Route path="master/services" element={<Services />} />
           <Route path="master/tool" element={<Tools />} />
           <Route path="master/currency" element={<Currency />} />
