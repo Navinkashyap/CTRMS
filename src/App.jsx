@@ -43,6 +43,20 @@ import ViewProject from "./pages/ViewProject";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 
+// Sales Portal — Sales Manager screens (Clients, Contacts, Projects), scoped
+// by permission flags on the account. See src/Sales for everything.
+import SalesLayout from "./Sales/components/SalesLayout";
+import SalesDashboard from "./Sales/pages/SalesDashboard";
+import SalesClientList from "./Sales/pages/ClientList";
+import SalesClientForm from "./Sales/pages/ClientForm";
+import SalesViewClient from "./Sales/pages/ViewClient";
+import SalesContactList from "./Sales/pages/ContactList";
+import SalesContactForm from "./Sales/pages/ContactForm";
+import SalesProjectsList from "./Sales/pages/ProjectsList";
+import SalesProjectForm from "./Sales/pages/ProjectForm";
+import SalesUsersList from "./Sales/pages/SalesUsersList";
+import SalesUserForm from "./Sales/pages/SalesUserForm";
+
 // Generic placeholder for other pages
 const PagePlaceholder = ({ title, icon }) => (
   <div className="flex-1 flex flex-col items-center justify-center text-center bg-white rounded-2xl border border-zinc-200/60 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] min-h-[65vh] animate-in fade-in zoom-in-95 duration-500">
@@ -156,6 +170,31 @@ const App = () => {
           <Route path="report" element={<PagePlaceholder title="Analytics & Reports" icon="fa-chart-pie" />} />
           <Route path="logout" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<PagePlaceholder title="Page Not Found" icon="fa-circle-exclamation" />} />
+        </Route>
+
+        {/* Sales Portal — separate layout/sidebar, same login */}
+        <Route path="/sales" element={<ProtectedRoute salesOnly><SalesLayout /></ProtectedRoute>}>
+          <Route index element={<SalesDashboard />} />
+          <Route path="clients">
+            <Route index element={<SalesClientList />} />
+            <Route path="add" element={<SalesClientForm />} />
+            <Route path="edit/:id" element={<SalesClientForm />} />
+            <Route path="view/:id" element={<SalesViewClient />} />
+          </Route>
+          <Route path="contacts">
+            <Route index element={<SalesContactList />} />
+            <Route path="add" element={<SalesContactForm />} />
+            <Route path="edit/:id" element={<SalesContactForm />} />
+          </Route>
+          <Route path="projects">
+            <Route index element={<SalesProjectsList />} />
+            <Route path="create" element={<SalesProjectForm />} />
+          </Route>
+          <Route path="users">
+            <Route index element={<SalesUsersList />} />
+            <Route path="add" element={<SalesUserForm />} />
+            <Route path="edit/:id" element={<SalesUserForm />} />
+          </Route>
         </Route>
       </Routes>
     </Router>

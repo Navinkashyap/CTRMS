@@ -24,8 +24,8 @@ const Login = () => {
     setError("");
     
     try {
-      await login(formData.email, formData.password);
-      navigate("/");
+      const { user } = await login(formData.email, formData.password);
+      navigate(user?.role === "sales_manager" ? "/sales" : "/");
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {
@@ -123,19 +123,19 @@ const Login = () => {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <label className="text-[11px] font-black text-slate-600 uppercase tracking-widest ml-1">Email</label>
+              <label className="text-[11px] font-black text-slate-600 uppercase tracking-widest ml-1">Email or Mobile Number</label>
               <div className="relative group/input">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/input:text-indigo-600 transition-colors">
                   <Mail size={18} />
                 </div>
                 <input
-                  type="email"
+                  type="text"
                   name="email"
                   required
                   value={formData.email}
                   onChange={handleChange}
                   className="w-full h-14 pl-12 pr-4 bg-white border border-slate-200 rounded-2xl text-slate-900 font-bold placeholder:text-slate-400 placeholder:font-medium focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all shadow-sm"
-                  placeholder="admin@perfectrans.com"
+                  placeholder="admin@perfectrans.com or mobile number"
                 />
               </div>
             </div>

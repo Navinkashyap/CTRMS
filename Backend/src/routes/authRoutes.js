@@ -7,20 +7,31 @@ const router = express.Router();
 
 router.post("/login", async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    // Superadmins sign in with their email; Sales Managers sign in with the
+    // mobile number an admin set on their account. One field accepts either,
+    // so the login form stays the same for both.
+    const { password } = req.body;
+    const identifier = (req.body.email || req.body.identifier || "").trim();
 
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
+    if (!identifier || !password) {
+      return res.status(400).json({ message: "Email/mobile number and password are required" });
     }
 
-    const admin = await Admin.findOne({ email });
+    const isEmail = identifier.includes("@");
+    const admin = await Admin.findOne(
+      isEmail ? { email: identifier.toLowerCase() } : { mobile: identifier }
+    );
     if (!admin) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({ message: "Invalid email/mobile number or password" });
+    }
+
+    if (admin.status === "Inactive") {
+      return res.status(403).json({ message: "Account is inactive. Contact your admin." });
     }
 
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({ message: "Invalid email/mobile number or password" });
     }
 
     const token = jwt.sign(
@@ -34,8 +45,11 @@ router.post("/login", async (req, res, next) => {
       token,
       user: {
         id: admin._id,
+        name: admin.name,
         email: admin.email,
+        mobile: admin.mobile,
         role: admin.role,
+        permissions: admin.permissions,
       },
     });
   } catch (error) {

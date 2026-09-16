@@ -2,10 +2,12 @@ import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
 
-export const login = async (email, password) => {
+// identifier can be a superadmin's email or a Sales Manager's mobile number —
+// the backend figures out which by whether it contains "@".
+export const login = async (identifier, password) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/auth/login`, {
-      email,
+      email: identifier,
       password,
     });
     
