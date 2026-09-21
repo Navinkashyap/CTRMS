@@ -10,8 +10,10 @@ router.post("/login", async (req, res, next) => {
     // Superadmins sign in with their email; Sales Managers sign in with the
     // mobile number an admin set on their account. One field accepts either,
     // so the login form stays the same for both.
+    // `identifier` is the current field name; `email` is kept as a fallback
+    // for any older frontend build still sending the legacy key.
     const { password } = req.body;
-    const identifier = (req.body.email || req.body.identifier || "").trim();
+    const identifier = (req.body.identifier || req.body.email || "").trim();
 
     if (!identifier || !password) {
       return res.status(400).json({ message: "Email/mobile number and password are required" });

@@ -7,7 +7,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001
 export const login = async (identifier, password) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/auth/login`, {
-      email: identifier,
+      identifier,
       password,
     });
     
