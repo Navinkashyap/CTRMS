@@ -21,7 +21,9 @@ const upload = multer({
       cb(null, unique + path.extname(file.originalname));
     },
   }),
-  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB — translation source files run large
+  // 200MB — SDL Trados (.sdlppx) and memoQ (.mqxliff) packages bundle TM/termbase
+  // data alongside the source files and routinely exceed the old 25MB cap.
+  limits: { fileSize: 200 * 1024 * 1024 },
 });
 
 const FILE_FIELDS = ["referenceFiles", "workingFiles"];
