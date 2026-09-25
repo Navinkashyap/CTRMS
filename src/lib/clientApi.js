@@ -28,3 +28,8 @@ export const updateClient = async (id, payload) => {
   const response = await api.put(`/clients/${id}`, payload);
   return response.data;
 };
+
+export const deleteClient = async (id) => {
+  const response = await api.delete(`/clients/${id}`);
+  return response.data;
+};

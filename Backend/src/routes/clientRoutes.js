@@ -140,4 +140,19 @@ router.put("/:id", upload.array("documents"), async (req, res, next) => {
   }
 });
 
+router.delete("/:id", async (req, res, next) => {
+  try {
+    const client = await Client.findByIdAndDelete(req.params.id);
+    if (!client) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+    // Contacts/Projects use this collection directly (see routes/salesRoutes.js),
+    // so a deleted client disappears from the Sales Portal automatically — no
+    // separate cleanup needed there.
+    return res.json({ message: "Client deleted successfully" });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 export default router;

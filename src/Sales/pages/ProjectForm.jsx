@@ -1,6 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { createProject, getClients, getContacts } from "../lib/salesApi";
+
+const byNameAsc = (a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" });
+const byFirstNameAsc = (a, b) =>
+  `${a.firstName || ""} ${a.lastName || ""}`.localeCompare(
+    `${b.firstName || ""} ${b.lastName || ""}`,
+    undefined,
+    { sensitivity: "base" }
+  );
 
 const emptyProject = {
   projectName: "",
@@ -35,7 +43,20 @@ const ProjectForm = () => {
     getContacts({ clientId: form.client }).then(setContacts).catch(() => {});
   }, [form.client]);
 
-  const handleChange = (e) => setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  const sortedClients = useMemo(() => [...clients].sort(byNameAsc), [clients]);
+  const sortedContacts = useMemo(() => [...contacts].sort(byFirstNameAsc), [contacts]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+      // A different client invalidates whatever contact was picked before —
+      // clear it so the dropdown never holds a value that isn't one of its
+      // own options.
+      ...(name === "client" && value !== prev.client ? { clientContact: "" } : {}),
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -71,7 +92,7 @@ const ProjectForm = () => {
             <label className={labelCls}>Client *</label>
             <select name="client" required value={form.client} onChange={handleChange} className={inputCls}>
               <option value="">Select client</option>
-              {clients.map((c) => (
+              {sortedClients.map((c) => (
                 <option key={c._id} value={c._id}>{c.name} ({c.membershipCode})</option>
               ))}
             </select>
@@ -80,7 +101,7 @@ const ProjectForm = () => {
             <label className={labelCls}>Client Contact</label>
             <select name="clientContact" value={form.clientContact} onChange={handleChange} className={inputCls}>
               <option value="">Select contact (optional)</option>
-              {contacts.map((c) => (
+              {sortedContacts.map((c) => (
                 <option key={c._id} value={c._id}>{c.firstName} {c.lastName}</option>
               ))}
             </select>

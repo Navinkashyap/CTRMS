@@ -47,44 +47,46 @@ const ContactList = () => {
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-            <tr>
-              <th className="text-left px-5 py-3">Name</th>
-              <th className="text-left px-5 py-3">Client</th>
-              <th className="text-left px-5 py-3">Email</th>
-              <th className="text-left px-5 py-3">Phone</th>
-              <th className="text-left px-5 py-3">Status</th>
-              <th className="text-right px-5 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {loading && (
-              <tr><td colSpan={6} className="px-5 py-8 text-center text-slate-400">Loading...</td></tr>
-            )}
-            {!loading && contacts.length === 0 && (
-              <tr><td colSpan={6} className="px-5 py-8 text-center text-slate-400">No contacts found.</td></tr>
-            )}
-            {contacts.map((c) => (
-              <tr key={c._id} className="hover:bg-slate-50">
-                <td className="px-5 py-3 text-slate-800">{c.salutation} {c.firstName} {c.lastName}</td>
-                <td className="px-5 py-3 text-slate-500">{c.clientCode || "—"}</td>
-                <td className="px-5 py-3 text-slate-500">{c.email}</td>
-                <td className="px-5 py-3 text-slate-500">{c.countryCode} {c.phone}</td>
-                <td className="px-5 py-3">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${c.status === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
-                    {c.status}
-                  </span>
-                </td>
-                <td className="px-5 py-3 text-right space-x-3">
-                  {hasSalesPermission("contacts", "edit") && (
-                    <Link to={`/sales/contacts/edit/${c._id}`} className="text-indigo-600 hover:underline">Edit</Link>
-                  )}
-                </td>
+        <div className="max-h-[70vh] overflow-y-auto">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 z-10 bg-slate-50 text-slate-500 text-xs uppercase tracking-wider shadow-sm">
+              <tr>
+                <th className="text-left px-5 py-3">Name</th>
+                <th className="text-left px-5 py-3">Client</th>
+                <th className="text-left px-5 py-3">Email</th>
+                <th className="text-left px-5 py-3">Phone</th>
+                <th className="text-left px-5 py-3">Status</th>
+                <th className="text-right px-5 py-3">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading && (
+                <tr><td colSpan={6} className="px-5 py-8 text-center text-slate-400">Loading...</td></tr>
+              )}
+              {!loading && contacts.length === 0 && (
+                <tr><td colSpan={6} className="px-5 py-8 text-center text-slate-400">No contacts found.</td></tr>
+              )}
+              {contacts.map((c) => (
+                <tr key={c._id} className="hover:bg-slate-50">
+                  <td className="px-5 py-3 text-slate-800">{c.salutation} {c.firstName} {c.lastName}</td>
+                  <td className="px-5 py-3 text-slate-500">{c.clientCode || "—"}</td>
+                  <td className="px-5 py-3 text-slate-500">{c.email}</td>
+                  <td className="px-5 py-3 text-slate-500">{c.countryCode} {c.phone}</td>
+                  <td className="px-5 py-3">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${c.status === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
+                      {c.status}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3 text-right space-x-3">
+                    {hasSalesPermission("contacts", "edit") && (
+                      <Link to={`/sales/contacts/edit/${c._id}`} className="text-indigo-600 hover:underline">Edit</Link>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

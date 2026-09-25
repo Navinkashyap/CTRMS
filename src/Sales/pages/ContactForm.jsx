@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { createContact, getClients, getContact, updateContact } from "../lib/salesApi";
+
+const byNameAsc = (a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" });
 
 const emptyContact = {
   clientId: "",
@@ -40,6 +42,8 @@ const ContactForm = () => {
 
   const handleChange = (e) => setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
+  const sortedClients = useMemo(() => [...clients].sort(byNameAsc), [clients]);
+
   const handleClientChange = (e) => {
     const clientId = e.target.value;
     const client = clients.find((c) => c._id === clientId);
@@ -77,7 +81,7 @@ const ContactForm = () => {
           <label className={labelCls}>Client *</label>
           <select name="clientId" required value={form.clientId} onChange={handleClientChange} className={inputCls}>
             <option value="">Select client</option>
-            {clients.map((c) => (
+            {sortedClients.map((c) => (
               <option key={c._id} value={c._id}>{c.name} ({c.membershipCode})</option>
             ))}
           </select>

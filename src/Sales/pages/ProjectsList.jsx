@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getProjects } from "../lib/salesApi";
 import { hasSalesPermission } from "../lib/permissions";
 
@@ -12,6 +12,7 @@ const statusColors = {
 };
 
 const ProjectsList = () => {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -55,40 +56,46 @@ const ProjectsList = () => {
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-            <tr>
-              <th className="text-left px-5 py-3">Code</th>
-              <th className="text-left px-5 py-3">Project</th>
-              <th className="text-left px-5 py-3">Client</th>
-              <th className="text-left px-5 py-3">Priority</th>
-              <th className="text-left px-5 py-3">Deadline</th>
-              <th className="text-left px-5 py-3">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {loading && (
-              <tr><td colSpan={6} className="px-5 py-8 text-center text-slate-400">Loading...</td></tr>
-            )}
-            {!loading && projects.length === 0 && (
-              <tr><td colSpan={6} className="px-5 py-8 text-center text-slate-400">No projects found.</td></tr>
-            )}
-            {projects.map((p) => (
-              <tr key={p._id} className="hover:bg-slate-50">
-                <td className="px-5 py-3 font-medium text-slate-700">{p.projectId}</td>
-                <td className="px-5 py-3 text-slate-800">{p.projectName}</td>
-                <td className="px-5 py-3 text-slate-500">{p.client?.name || "—"}</td>
-                <td className="px-5 py-3 text-slate-500">{p.priority}</td>
-                <td className="px-5 py-3 text-slate-500">{p.deadline ? new Date(p.deadline).toLocaleDateString() : "—"}</td>
-                <td className="px-5 py-3">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[p.status] || "bg-slate-100 text-slate-600"}`}>
-                    {p.status}
-                  </span>
-                </td>
+        <div className="max-h-[70vh] overflow-y-auto">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 z-10 bg-slate-50 text-slate-500 text-xs uppercase tracking-wider shadow-sm">
+              <tr>
+                <th className="text-left px-5 py-3">Code</th>
+                <th className="text-left px-5 py-3">Project</th>
+                <th className="text-left px-5 py-3">Client</th>
+                <th className="text-left px-5 py-3">Priority</th>
+                <th className="text-left px-5 py-3">Deadline</th>
+                <th className="text-left px-5 py-3">Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading && (
+                <tr><td colSpan={6} className="px-5 py-8 text-center text-slate-400">Loading...</td></tr>
+              )}
+              {!loading && projects.length === 0 && (
+                <tr><td colSpan={6} className="px-5 py-8 text-center text-slate-400">No projects found.</td></tr>
+              )}
+              {projects.map((p) => (
+                <tr
+                  key={p._id}
+                  onClick={() => navigate(`/sales/projects/view/${p._id}`)}
+                  className="hover:bg-slate-50 cursor-pointer"
+                >
+                  <td className="px-5 py-3 font-medium text-slate-700">{p.projectId}</td>
+                  <td className="px-5 py-3 text-slate-800">{p.projectName}</td>
+                  <td className="px-5 py-3 text-slate-500">{p.client?.name || "—"}</td>
+                  <td className="px-5 py-3 text-slate-500">{p.priority}</td>
+                  <td className="px-5 py-3 text-slate-500">{p.deadline ? new Date(p.deadline).toLocaleDateString() : "—"}</td>
+                  <td className="px-5 py-3">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[p.status] || "bg-slate-100 text-slate-600"}`}>
+                      {p.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

@@ -10,15 +10,6 @@ dotenv.config();
 
 const randomMobile = () => "9" + crypto.randomInt(100000000, 999999999).toString();
 
-const randomPassword = () => {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$";
-  let pwd = "";
-  for (let i = 0; i < 12; i++) {
-    pwd += chars[crypto.randomInt(0, chars.length)];
-  }
-  return pwd;
-};
-
 const seedSalesManager = async () => {
   try {
     const MONGODB_URI = process.env.MONGODB_URI;
@@ -31,11 +22,11 @@ const seedSalesManager = async () => {
     });
     console.log("Connected to MongoDB.");
 
-    const name = "Rahul Sharma";
-    const email = "rahul.sharma@perfecttrans.com";
+    const name = "Navin";
+    const email = "nk@sales.com";
     const mobile = randomMobile();
-    const password = randomPassword();
-    const dob = new Date("1995-06-15");
+    const password = "123456";
+    const dob = new Date("2004-12-16");
     const gender = "Male";
 
     const existing = await Admin.findOne({ email });
@@ -61,7 +52,7 @@ const seedSalesManager = async () => {
       console.log(`  Email:    ${email}`);
       console.log(`  Mobile:   ${mobile}`);
       console.log(`  Password: ${password}`);
-      console.log(`  DOB:      1995-06-15`);
+      console.log(`  DOB:      2004-12-16`);
       console.log(`  Gender:   ${gender}`);
       console.log("\nThey can log in with Mobile Number + Password.");
       console.log("Ask them to change the password after first login.");

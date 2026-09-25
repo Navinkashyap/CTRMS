@@ -34,46 +34,48 @@ const SalesUsersList = () => {
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-            <tr>
-              <th className="text-left px-5 py-3">Name</th>
-              <th className="text-left px-5 py-3">Email</th>
-              <th className="text-left px-5 py-3">Mobile</th>
-              <th className="text-left px-5 py-3">Gender</th>
-              <th className="text-left px-5 py-3">Status</th>
-              <th className="text-right px-5 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {loading && (
-              <tr><td colSpan={6} className="px-5 py-8 text-center text-slate-400">Loading...</td></tr>
-            )}
-            {!loading && users.length === 0 && (
-              <tr><td colSpan={6} className="px-5 py-8 text-center text-slate-400">No Sales Managers yet.</td></tr>
-            )}
-            {users.map((u) => (
-              <tr key={u.id} className="hover:bg-slate-50">
-                <td className="px-5 py-3 text-slate-800">{u.name}</td>
-                <td className="px-5 py-3 text-slate-500">{u.email}</td>
-                <td className="px-5 py-3 text-slate-500">{u.mobile || "—"}</td>
-                <td className="px-5 py-3 text-slate-500">{u.gender || "—"}</td>
-                <td className="px-5 py-3">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${u.status === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
-                    {u.status}
-                  </span>
-                </td>
-                <td className="px-5 py-3 text-right space-x-3">
-                  <Link to={`/sales/users/edit/${u.id}`} className="text-indigo-600 hover:underline">Edit</Link>
-                  <button onClick={() => toggleStatus(u)} className="text-slate-600 hover:underline">
-                    {u.status === "Active" ? "Deactivate" : "Activate"}
-                  </button>
-                  <button onClick={() => remove(u)} className="text-red-600 hover:underline">Delete</button>
-                </td>
+        <div className="max-h-[70vh] overflow-y-auto">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 z-10 bg-slate-50 text-slate-500 text-xs uppercase tracking-wider shadow-sm">
+              <tr>
+                <th className="text-left px-5 py-3">Name</th>
+                <th className="text-left px-5 py-3">Email</th>
+                <th className="text-left px-5 py-3">Mobile</th>
+                <th className="text-left px-5 py-3">Gender</th>
+                <th className="text-left px-5 py-3">Status</th>
+                <th className="text-right px-5 py-3">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading && (
+                <tr><td colSpan={6} className="px-5 py-8 text-center text-slate-400">Loading...</td></tr>
+              )}
+              {!loading && users.length === 0 && (
+                <tr><td colSpan={6} className="px-5 py-8 text-center text-slate-400">No Sales Managers yet.</td></tr>
+              )}
+              {users.map((u) => (
+                <tr key={u.id} className="hover:bg-slate-50">
+                  <td className="px-5 py-3 text-slate-800">{u.name}</td>
+                  <td className="px-5 py-3 text-slate-500">{u.email}</td>
+                  <td className="px-5 py-3 text-slate-500">{u.mobile || "—"}</td>
+                  <td className="px-5 py-3 text-slate-500">{u.gender || "—"}</td>
+                  <td className="px-5 py-3">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${u.status === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
+                      {u.status}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3 text-right space-x-3">
+                    <Link to={`/sales/users/edit/${u.id}`} className="text-indigo-600 hover:underline">Edit</Link>
+                    <button onClick={() => toggleStatus(u)} className="text-slate-600 hover:underline">
+                      {u.status === "Active" ? "Deactivate" : "Activate"}
+                    </button>
+                    <button onClick={() => remove(u)} className="text-red-600 hover:underline">Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

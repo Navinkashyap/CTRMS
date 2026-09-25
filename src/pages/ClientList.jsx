@@ -15,12 +15,13 @@ import {
   MoreVertical,
   Search,
   Settings,
+  Trash2,
   UserPlus,
   Users,
   X,
 } from 'lucide-react';
 
-import { getClients } from '../lib/clientApi';
+import { deleteClient, getClients } from '../lib/clientApi';
 
 const allColumns = [
   { id: 'domain', label: 'Domain' },
@@ -178,6 +179,20 @@ export default function ClientList() {
 
   const handleAdd = () => {
     navigate('add-client');
+  };
+
+  const handleDelete = async (client) => {
+    const confirmed = window.confirm(
+      `Delete "${client.name}"? This also removes them from the Sales Portal. This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteClient(client._id);
+      setClients((prev) => prev.filter((c) => c._id !== client._id));
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || 'Could not delete client.');
+    }
   };
 
   const toggleColumnSelection = (colId) => {
@@ -474,6 +489,19 @@ export default function ClientList() {
                                 <Edit3 className="w-4 h-4" />
                               </div>
                               Edit Client
+                            </button>
+                            <div className="my-1 border-t border-slate-50" />
+                            <button
+                              onClick={() => {
+                                setOpenActionId(null);
+                                handleDelete(client);
+                              }}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-all group"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-rose-50/60 group-hover:bg-white flex items-center justify-center transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                              </div>
+                              Delete Client
                             </button>
                           </div>
                         )}

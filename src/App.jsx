@@ -54,6 +54,7 @@ import SalesContactList from "./Sales/pages/ContactList";
 import SalesContactForm from "./Sales/pages/ContactForm";
 import SalesProjectsList from "./Sales/pages/ProjectsList";
 import SalesProjectForm from "./Sales/pages/ProjectForm";
+import SalesViewProject from "./Sales/pages/ViewProject";
 import SalesUsersList from "./Sales/pages/SalesUsersList";
 import SalesUserForm from "./Sales/pages/SalesUserForm";
 
@@ -189,6 +190,7 @@ const App = () => {
           <Route path="projects">
             <Route index element={<SalesProjectsList />} />
             <Route path="create" element={<SalesProjectForm />} />
+            <Route path="view/:id" element={<SalesViewProject />} />
           </Route>
           <Route path="users">
             <Route index element={<SalesUsersList />} />
