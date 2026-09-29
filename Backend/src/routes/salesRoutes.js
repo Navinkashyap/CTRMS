@@ -9,6 +9,8 @@ import Client from "../models/Client.js";
 import Contact from "../models/Contact.js";
 import Project from "../models/Project.js";
 import Admin from "../models/Admin.js";
+import VMSProject from "../VMS/models/VMSProject.js";
+import { buildVmsPayload } from "./projectRoutes.js";
 import { requireAuth, requireRole, requirePermission } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -274,6 +276,17 @@ router.post("/projects", requireAuth, requirePermission("projects", "create"), a
   try {
     const project = await Project.create(req.body);
     res.status(201).json(project);
+
+    // Same as the admin's own create route: mirror into the VMS "incoming"
+    // queue so a PM sees it in My Projects. Best-effort, never fails the request.
+    try {
+      const payload = await buildVmsPayload(project._id);
+      if (payload) {
+        await VMSProject.create({ ...payload, status: "Incoming" });
+      }
+    } catch (mirrorError) {
+      console.error("Failed to create VMS incoming project:", mirrorError.message);
+    }
   } catch (error) {
     next(error);
   }
