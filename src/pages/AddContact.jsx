@@ -256,7 +256,17 @@ export default function AddContact() {
                   <select
                     className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
                     value={formData.company}
-                    onChange={(e) => updateField('company', e.target.value)}
+                    onChange={(e) => {
+                      // Store the client's id/code too — the Sales portal's Client Contact
+                      // dropdown looks contacts up by clientId, not by company name.
+                      const client = clients.find(c => c.name === e.target.value);
+                      setFormData(prev => ({
+                        ...prev,
+                        company: e.target.value,
+                        clientId: client?._id || '',
+                        clientCode: client?.membershipCode || ''
+                      }));
+                    }}
                   >
                     <option value="" disabled>Select Client</option>
                     {clients.map(client => (

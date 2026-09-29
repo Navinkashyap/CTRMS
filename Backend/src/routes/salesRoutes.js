@@ -174,7 +174,19 @@ router.get("/contacts", requireAuth, requirePermission("contacts", "view"), asyn
   try {
     const { clientId, search } = req.query;
     const filter = {};
-    if (clientId) filter.clientId = clientId;
+    if (clientId) {
+      // Contacts added from the admin portal used to store only the client's
+      // name in `company` (no clientId), so match those by name as well.
+      const client = /^[a-f\d]{24}$/i.test(clientId)
+        ? await Client.findById(clientId).select("name").lean()
+        : null;
+      filter.$and = [{
+        $or: [
+          { clientId },
+          ...(client ? [{ clientId: { $in: [null, ""] }, company: client.name }] : []),
+        ],
+      }];
+    }
     if (search) {
       filter.$or = [
         { firstName: { $regex: search, $options: "i" } },
