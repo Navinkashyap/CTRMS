@@ -49,15 +49,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
 const MONGODB_URI = process.env.MONGODB_URI;
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
 
-// CLIENT_ORIGIN supports a comma-separated list, e.g.
-// "https://admin.example.com,https://vms.example.com"
-const allowedOrigins = CLIENT_ORIGIN.split(",").map((origin) => origin.trim());
-
+// CORS is open to every origin. `origin: true` reflects the request's Origin
+// header, which (unlike a literal "*") also works with credentials.
 app.use(
   cors({
-    origin: allowedOrigins.includes("*") ? "*" : allowedOrigins,
+    origin: true,
     credentials: true,
   })
 );
