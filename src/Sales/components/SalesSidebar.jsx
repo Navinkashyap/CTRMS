@@ -9,8 +9,8 @@ const SalesSidebar = () => {
 
   const navItems = [
     { label: "Dashboard", icon: LayoutDashboard, to: "/sales", end: true, show: true },
-    { label: "Clients", icon: Building2, to: "/sales/clients", show: hasSalesPermission("clients", "view") },
-    { label: "Client Contacts", icon: BookUser, to: "/sales/contacts", show: hasSalesPermission("contacts", "view") },
+   // { label: "Clients", icon: Building2, to: "/sales/clients", show: hasSalesPermission("clients", "view") },
+   // { label: "Client Contacts", icon: BookUser, to: "/sales/contacts", show: hasSalesPermission("contacts", "view") },
     { label: "Projects", icon: Layers, to: "/sales/projects", show: hasSalesPermission("projects", "view") },
     { label: "Sales Managers", icon: Users, to: "/sales/users", show: !isSalesManager() },
   ];

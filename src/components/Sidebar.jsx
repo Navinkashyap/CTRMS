@@ -84,6 +84,7 @@ const navItems = [
     to: null,
     sub: [
       { label: "Vendor Manager", to: "/vendors" },
+      { label: "Vendors", to: "/vendors/vendor-users" },
       { label: "Evaluation", to: "/vendors/evaluation" },
     ],
   },

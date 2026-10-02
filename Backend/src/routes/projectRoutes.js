@@ -13,7 +13,7 @@ const UPLOAD_DIR = path.join(__dirname, "../../uploads");
 const router = express.Router();
 
 // Project reference/working file uploads. Served back out at /uploads by server.js.
-const upload = multer({
+export const upload = multer({
   storage: multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
     filename: (_req, file, cb) => {
@@ -26,7 +26,7 @@ const upload = multer({
   limits: { fileSize: 200 * 1024 * 1024 },
 });
 
-const FILE_FIELDS = ["referenceFiles", "workingFiles"];
+export const FILE_FIELDS = ["referenceFiles", "workingFiles"];
 
 // Files are stored as { name, url }, but older rows hold a bare string (the
 // browser's fake path from the previous non-uploading file input). Accept both.
@@ -42,7 +42,7 @@ function normalizeProjectFile(file) {
   return { name: name || url.split("/").pop(), url };
 }
 
-const normalizeProjectFiles = (files) =>
+export const normalizeProjectFiles = (files) =>
   (Array.isArray(files) ? files : []).map(normalizeProjectFile).filter(Boolean);
 
 const OBJECT_ID_FIELDS = [
@@ -209,7 +209,7 @@ export async function buildVmsPayload(projectId) {
 // Push the current state of a project onto the PM's pending copy. Only while it
 // is still Incoming — once the PM accepts it the project is theirs and admin
 // edits must not clobber it. Best-effort: never fails the caller's request.
-async function syncVmsIncoming(projectId) {
+export async function syncVmsIncoming(projectId) {
   try {
     const payload = await buildVmsPayload(projectId);
     if (!payload) return;

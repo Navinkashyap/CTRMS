@@ -67,6 +67,9 @@ const cellInput =
 const cellSelect =
   'w-full min-w-0 px-2 py-1.5 bg-white border-0 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400 cursor-pointer';
 
+const sortDesc = (list, getKey) =>
+  [...list].sort((a, b) => (getKey(b) || '').localeCompare(getKey(a) || ''));
+
 export default function ViewProject() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -135,13 +138,13 @@ export default function ViewProject() {
         ]);
 
         setProject(projRes);
-        setClients(clientsRes);
-        setContacts(contactsRes);
-        setLanguages(langsRes);
-        setTools(toolsRes.filter((t) => t.status === 'Active'));
-        setSpecializations(specsRes.filter((s) => s.status === 'Active'));
-        setUnitsList(unitsRes.filter((u) => u.status !== 'Inactive'));
-        setServices(servicesRes.filter((s) => s.status === 'Active'));
+        setClients(sortDesc(clientsRes, (c) => c.name));
+        setContacts(sortDesc(contactsRes, (c) => `${c.firstName || ''} ${c.lastName || ''}`.trim()));
+        setLanguages(sortDesc(langsRes, (l) => l.localeCode || l.name));
+        setTools(sortDesc(toolsRes.filter((t) => t.status === 'Active'), (t) => t.name));
+        setSpecializations(sortDesc(specsRes.filter((s) => s.status === 'Active'), (s) => s.name));
+        setUnitsList(sortDesc(unitsRes.filter((u) => u.status !== 'Inactive'), (u) => u.name));
+        setServices(sortDesc(servicesRes.filter((s) => s.status === 'Active'), (s) => s.name));
 
         const names = [
           ...new Set(
@@ -149,7 +152,7 @@ export default function ViewProject() {
               .map((p) => p.programName)
               .filter(Boolean)
           ),
-        ].sort((a, b) => a.localeCompare(b));
+        ].sort((a, b) => b.localeCompare(a));
         setProgramNames(names);
 
         const toDatetimeLocal = (dateString) => {
@@ -827,10 +830,10 @@ export default function ViewProject() {
               onChange={(e) => handleInputChange('projectStatus', e.target.value)}
               className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
             >
+              <option value="On Hold">On Hold</option>
               <option value="Project being created">Project being created</option>
               <option value="Not Started">Not Started</option>
               <option value="In Progress">In Progress</option>
-              <option value="On Hold">On Hold</option>
               <option value="Completed">Completed</option>
             </select>
           </div>

@@ -24,6 +24,7 @@ import RoleMenuPermission from "./pages/RoleMenuPermission";
 import ClientList from "./pages/ClientList";
 import ContactList from "./pages/ContactList";
 import ProjectsList from "./pages/ProjectsList";
+import VendorUsers from "./pages/VendorUsers";
 import InvoiceList from "./pages/InvoiceList";
 import AddInvoice from "./pages/AddInvoice";
 import ViewInvoice from "./pages/ViewInvoice";
@@ -53,7 +54,7 @@ import SalesViewClient from "./Sales/pages/ViewClient";
 import SalesContactList from "./Sales/pages/ContactList";
 import SalesContactForm from "./Sales/pages/ContactForm";
 import SalesProjectsList from "./Sales/pages/ProjectsList";
-import SalesProjectForm from "./Sales/pages/ProjectForm";
+import SalesProjectForm from "./Sales/pages/createsalesproject";
 import SalesViewProject from "./Sales/pages/ViewProject";
 import SalesUsersList from "./Sales/pages/SalesUsersList";
 import SalesUserForm from "./Sales/pages/SalesUserForm";
@@ -147,6 +148,7 @@ const App = () => {
           <Route path="vendors" element={<VendorList />} />
           <Route path="vendors/add-vendor" element={<AddVendor />} />
           <Route path="vendors/manage-vendors" element={<VendorList />} />
+          <Route path="vendors/vendor-users" element={<VendorUsers />} />
           <Route path="vendors/evaluation" element={<Evaluation />} />
           <Route path="project-managers" element={<ProjectMangerList />} />
           <Route path="project-managers/add" element={<AddProjectManager />} />

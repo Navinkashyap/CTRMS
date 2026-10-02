@@ -26,7 +26,11 @@ const ProjectsList = () => {
     }
   };
 
-  useEffect(() => { load(""); }, []);
+  // Search as you type (debounced) across code, project name and client name.
+  useEffect(() => {
+    const t = setTimeout(() => load(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -40,7 +44,7 @@ const ProjectsList = () => {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by project name or code..."
+            placeholder="Search by code, project or client..."
             className="w-72 max-w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
           <button type="submit" className="px-4 py-2 text-sm rounded-lg bg-slate-800 text-white hover:bg-slate-900">

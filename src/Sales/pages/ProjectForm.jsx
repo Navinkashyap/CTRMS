@@ -43,8 +43,8 @@ const ProjectForm = () => {
     getContacts({ clientId: form.client }).then(setContacts).catch(() => {});
   }, [form.client]);
 
-  const sortedClients = useMemo(() => [...clients].sort(byNameAsc), [clients]);
-  const sortedContacts = useMemo(() => [...contacts].sort(byFirstNameAsc), [contacts]);
+  const sortedClients = useMemo(() => [...clients].sort((a, b) => byNameAsc(b, a)), [clients]);
+  const sortedContacts = useMemo(() => [...contacts].sort((a, b) => byFirstNameAsc(b, a)), [contacts]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

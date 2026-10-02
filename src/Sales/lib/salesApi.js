@@ -32,6 +32,21 @@ export const getProjects = async (params = {}) => (await salesApi.get("/projects
 export const getProject = async (id) => (await salesApi.get(`/projects/${id}`)).data;
 export const createProject = async (payload) => (await salesApi.post("/projects", payload)).data;
 
+export const uploadProjectFiles = async (id, filesByField) => {
+  const form = new FormData();
+  for (const [field, files] of Object.entries(filesByField)) {
+    Array.from(files || []).forEach((file) => form.append(field, file));
+  }
+  return (await salesApi.post(`/projects/${id}/files`, form)).data;
+};
+
+/* Masters (read-only) */
+export const getLanguages = async () => (await salesApi.get("/masters/languages")).data;
+export const getTools = async () => (await salesApi.get("/masters/tools")).data;
+export const getSpecializations = async () => (await salesApi.get("/masters/specializations")).data;
+export const getUnits = async () => (await salesApi.get("/masters/units")).data;
+export const getServices = async () => (await salesApi.get("/masters/services")).data;
+
 /* Sales Manager accounts (admin only) */
 export const getSalesUsers = async () => (await salesApi.get("/users")).data;
 export const getSalesUser = async (id) => (await salesApi.get(`/users/${id}`)).data;

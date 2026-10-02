@@ -10,7 +10,18 @@ import Contact from "../models/Contact.js";
 import Project from "../models/Project.js";
 import Admin from "../models/Admin.js";
 import VMSProject from "../VMS/models/VMSProject.js";
-import { buildVmsPayload } from "./projectRoutes.js";
+import Language from "../models/Language.js";
+import Tool from "../models/Tool.js";
+import Specialization from "../models/Specialization.js";
+import Unit from "../models/Unit.js";
+import Service from "../models/Service.js";
+import {
+  buildVmsPayload,
+  syncVmsIncoming,
+  upload,
+  FILE_FIELDS,
+  normalizeProjectFiles,
+} from "./projectRoutes.js";
 import { requireAuth, requireRole, requirePermission } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -245,9 +256,13 @@ router.get("/projects", requireAuth, requirePermission("projects", "view"), asyn
     const filter = {};
     if (clientId) filter.client = clientId;
     if (search) {
+      const escaped = search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const matchingClients = await Client.find({ name: { $regex: escaped, $options: "i" } }).select("_id");
       filter.$or = [
-        { projectName: { $regex: search, $options: "i" } },
-        { projectId: { $regex: search, $options: "i" } },
+        { projectName: { $regex: escaped, $options: "i" } },
+        { projectId: { $regex: escaped, $options: "i" } },
+        { projectCode: { $regex: escaped, $options: "i" } },
+        { client: { $in: matchingClients.map((c) => c._id) } },
       ];
     }
     const projects = await Project.find(filter)
@@ -291,6 +306,53 @@ router.post("/projects", requireAuth, requirePermission("projects", "create"), a
     next(error);
   }
 });
+
+// Reference / working files for a project the sales manager just created.
+router.post(
+  "/projects/:id/files",
+  requireAuth,
+  requirePermission("projects", "create"),
+  upload.fields(FILE_FIELDS.map((name) => ({ name, maxCount: 20 }))),
+  async (req, res, next) => {
+    try {
+      const project = await Project.findById(req.params.id);
+      if (!project) return res.status(404).json({ message: "Project not found" });
+
+      for (const field of FILE_FIELDS) {
+        const uploaded = req.files?.[field] || [];
+        if (!uploaded.length) continue;
+        project[field] = [
+          ...normalizeProjectFiles(project[field]),
+          ...uploaded.map((f) => ({ name: f.originalname, url: `/uploads/${f.filename}` })),
+        ];
+      }
+
+      await project.save();
+      res.json(project);
+      await syncVmsIncoming(project._id);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/* ------------------------------------------------------------------ */
+/*  Masters — read-only lists the Create Project form needs            */
+/* ------------------------------------------------------------------ */
+
+const masterList = (Model, sort) => async (_req, res, next) => {
+  try {
+    res.json(await Model.find().sort(sort));
+  } catch (error) {
+    next(error);
+  }
+};
+
+router.get("/masters/languages", requireAuth, masterList(Language, { name: 1 }));
+router.get("/masters/tools", requireAuth, masterList(Tool, { name: 1 }));
+router.get("/masters/specializations", requireAuth, masterList(Specialization, { name: 1 }));
+router.get("/masters/units", requireAuth, masterList(Unit, { name: 1 }));
+router.get("/masters/services", requireAuth, masterList(Service, { priority: 1, name: 1 }));
 
 /* ------------------------------------------------------------------ */
 /*  Dashboard summary                                                   */

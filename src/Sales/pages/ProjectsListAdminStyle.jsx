@@ -13,21 +13,11 @@ import {
   Layers,
   X,
   User,
-  Trash2,
-  Pencil,
   Building2,
   Eye,
-  SlidersHorizontal,
 } from 'lucide-react';
-import { getProjects, deleteProject, updateProject, getProject } from '../lib/projectApi';
-import { getContacts } from '../lib/contactApi';
-import { getClients } from '../lib/clientApi';
-import { getServices } from '../lib/serviceApi';
-
-const sortDesc = (list, getKey) =>
-  [...list].sort((a, b) => (getKey(b) || '').localeCompare(getKey(a) || ''));
-
-const OVERRIDE_ELIGIBLE_PROJECT_IDS = ['PT25260002'];
+import { getProjects, getContacts } from '../lib/salesApi';
+import { hasSalesPermission } from '../lib/permissions';
 
 const formatProject = (project, managerMap = {}) => ({
   ...project,
@@ -64,7 +54,7 @@ const allColumns = [
   { id: 'status', label: 'Status' },
 ];
 
-export default function ProjectsList() {
+export default function SalesProjectsListAdminStyle() {
   const navigate = useNavigate();
 
   const [projects, setProjects] = useState([]);
@@ -87,14 +77,6 @@ export default function ProjectsList() {
   const [tempVisibleColumns, setTempVisibleColumns] =
     useState(visibleColumns);
 
-  const [clients, setClients] = useState([]);
-  const [services, setServices] = useState([]);
-  const [contacts, setContacts] = useState([]);
-  const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
-  const [overrideProjectId, setOverrideProjectId] = useState(null);
-  const [overrideForm, setOverrideForm] = useState(null);
-  const [overrideSaving, setOverrideSaving] = useState(false);
-
   const loadProjects = async () => {
     setLoading(true);
     setErrorMessage('');
@@ -102,7 +84,7 @@ export default function ProjectsList() {
     try {
       const [projectsData, contactsData] = await Promise.all([
         getProjects(),
-        getContacts(),
+        getContacts().catch(() => []),
       ]);
 
       const managerMap = Object.fromEntries(
@@ -134,29 +116,6 @@ export default function ProjectsList() {
   }, []);
 
   useEffect(() => {
-    const loadMasters = async () => {
-      try {
-        const [clientsData, servicesData, contactsData] = await Promise.all([
-          getClients(),
-          getServices(),
-          getContacts(),
-        ]);
-        setClients(sortDesc(clientsData, (c) => c.name));
-        setServices(
-          sortDesc(
-            servicesData.filter((s) => s.status === 'Active'),
-            (s) => s.name
-          )
-        );
-        setContacts(
-          sortDesc(contactsData, (c) => `${c.firstName || ''} ${c.lastName || ''}`.trim())
-        );
-      } catch (error) {
-        console.error('Failed to load master data:', error);
-      }
-    };
-
-    loadMasters();
     loadProjects();
   }, []);
 
@@ -171,87 +130,12 @@ export default function ProjectsList() {
     );
   }, [projects, searchQuery]);
 
-  const handleDelete = async (id) => {
-    if (
-      !window.confirm(
-        'Are you sure you want to delete this project?'
-      )
-    )
-      return;
-
-    try {
-      await deleteProject(id);
-      setProjects((prev) => prev.filter((p) => p.id !== id));
-    } catch (error) {
-      alert(
-        error.response?.data?.message || 'Failed to delete project.'
-      );
-    }
-  };
-
-  const handleEdit = (project) => {
-    navigate('/projects/add-project', {
-      state: { project },
-    });
-  };
-
   const handleView = (project) => {
-    navigate(`/projects/view-project/${project.id}`, {
-      state: { project },
-    });
-  };
-
-  const canShowOverrideOption = (project) =>
-    OVERRIDE_ELIGIBLE_PROJECT_IDS.includes(project.projectId);
-
-  const handleOpenOverride = async (project) => {
-    setActiveMenuId(null);
-    try {
-      const full = await getProject(project.id);
-      setOverrideProjectId(project.id);
-      setOverrideForm({
-        projectId: full.projectId || '',
-        projectName: full.projectName || '',
-        client: full.client?._id || full.client || '',
-        service: full.service?._id || full.service || '',
-        manager: full.manager || full.projectManager?._id || '',
-        budget: full.budget || '',
-        priority: full.priority || 'Medium',
-        deadline: full.deadline
-          ? new Date(full.deadline).toISOString().split('T')[0]
-          : '',
-        progress: full.progress ?? 0,
-        status: full.status || 'Not Started',
-      });
-      setIsOverrideModalOpen(true);
-    } catch (error) {
-      alert(
-        error.response?.data?.message || 'Could not load project for override.'
-      );
-    }
-  };
-
-  const handleSaveOverride = async () => {
-    if (!overrideProjectId || !overrideForm) return;
-
-    setOverrideSaving(true);
-    try {
-      await updateProject(overrideProjectId, overrideForm);
-      setIsOverrideModalOpen(false);
-      setOverrideForm(null);
-      setOverrideProjectId(null);
-      await loadProjects();
-    } catch (error) {
-      alert(
-        error.response?.data?.message || 'Failed to save override changes.'
-      );
-    } finally {
-      setOverrideSaving(false);
-    }
+    navigate(`/sales/projects/view/${project.id}`);
   };
 
   const handleAdd = () => {
-    navigate('/projects/add-project');
+    navigate('/sales/projects/create');
   };
 
   const toggleColumnSelection = (colId) => {
@@ -330,6 +214,7 @@ export default function ProjectsList() {
 
               <div className="w-px h-6 bg-slate-200 hidden md:block" />
 
+              {hasSalesPermission('projects', 'create') && (
               <button
                 onClick={handleAdd}
                 className="flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold shadow-[0_4px_12px_-2px_rgba(79,70,229,0.3)] hover:bg-indigo-700 transition-all active:scale-95"
@@ -337,6 +222,7 @@ export default function ProjectsList() {
                 <Plus className="w-4 h-4" />
                 Add Project
               </button>
+              )}
             </div>
           </div>
         </div>
@@ -394,11 +280,7 @@ export default function ProjectsList() {
                 )}
 
                 {!loading && filteredProjects.map((project, idx) => (
-                  <tr
-                    key={project.id}
-                    onClick={() => handleView(project)}
-                    className="group hover:bg-slate-50/50 transition-colors cursor-pointer"
-                  >
+                  <tr key={project.id} className="group hover:bg-slate-50/50 transition-colors">
 
                     <td className="px-6 py-4">
                       <span className="text-slate-400 font-medium text-sm">{idx + 1}</span>
@@ -413,7 +295,7 @@ export default function ProjectsList() {
                           </div>
 
                           <div>
-                            <span className="font-semibold text-slate-900 block group-hover:text-indigo-600 transition-colors">
+                            <span className="font-semibold text-slate-900 block">
                               {project.projectName}
                             </span>
                             {(project.projectCode || project.projectId) && (
@@ -561,28 +443,15 @@ export default function ProjectsList() {
 
                             <button
                               onClick={() => {
-                                handleEdit(project);
+                                handleView(project);
                                 setActiveMenuId(null);
                               }}
                               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all group/item"
                             >
                               <div className="w-8 h-8 rounded-lg bg-slate-50 group-hover/item:bg-white flex items-center justify-center transition-colors">
-                                <Pencil className="w-4 h-4" />
+                                <Eye className="w-4 h-4" />
                               </div>
-                              Edit Project
-                            </button>
-
-                            <button
-                              onClick={() => {
-                                handleDelete(project.id);
-                                setActiveMenuId(null);
-                              }}
-                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-all group/item"
-                            >
-                              <div className="w-8 h-8 rounded-lg bg-rose-50 group-hover/item:bg-white flex items-center justify-center transition-colors">
-                                <Trash2 className="w-4 h-4" />
-                              </div>
-                              Delete
+                              View Project
                             </button>
                           </div>
                         )}
@@ -610,178 +479,6 @@ export default function ProjectsList() {
           </div>
         </div>
       </div>
-
-      {isOverrideModalOpen && overrideForm && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
-            onClick={() => !overrideSaving && setIsOverrideModalOpen(false)}
-          />
-
-          <div className="relative bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-100 max-h-[90vh] flex flex-col">
-            <div className="bg-violet-700 px-6 py-4 flex items-center justify-between shrink-0">
-              <div>
-                <h2 className="text-white text-lg font-semibold tracking-tight">Override Project</h2>
-                <p className="text-violet-200 text-xs mt-0.5">Change values as per your requirement</p>
-              </div>
-              <button
-                onClick={() => !overrideSaving && setIsOverrideModalOpen(false)}
-                className="text-violet-200 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Project ID</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                  value={overrideForm.projectId}
-                  onChange={(e) => setOverrideForm({ ...overrideForm, projectId: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Project Name</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                  value={overrideForm.projectName}
-                  onChange={(e) => setOverrideForm({ ...overrideForm, projectName: e.target.value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Client</label>
-                  <select
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                    value={overrideForm.client}
-                    onChange={(e) => setOverrideForm({ ...overrideForm, client: e.target.value })}
-                  >
-                    <option value="">Select Client</option>
-                    {clients.map((c) => (
-                      <option key={c._id} value={c._id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Service</label>
-                  <select
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                    value={overrideForm.service}
-                    onChange={(e) => setOverrideForm({ ...overrideForm, service: e.target.value })}
-                  >
-                    <option value="">Select Service</option>
-                    {services.map((s) => (
-                      <option key={s._id} value={s._id}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Manager</label>
-                <select
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                  value={overrideForm.manager}
-                  onChange={(e) => setOverrideForm({ ...overrideForm, manager: e.target.value })}
-                >
-                  <option value="">Select Manager</option>
-                  {contacts.map((c) => (
-                    <option key={c._id} value={c._id}>
-                      {c.firstName} {c.lastName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Budget</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                    value={overrideForm.budget}
-                    onChange={(e) => setOverrideForm({ ...overrideForm, budget: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Priority</label>
-                  <select
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                    value={overrideForm.priority}
-                    onChange={(e) => setOverrideForm({ ...overrideForm, priority: e.target.value })}
-                  >
-                    <option>High</option>
-                    <option>Medium</option>
-                    <option>Low</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Deadline</label>
-                  <input
-                    type="date"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                    value={overrideForm.deadline}
-                    onChange={(e) => setOverrideForm({ ...overrideForm, deadline: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Status</label>
-                  <select
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                    value={overrideForm.status}
-                    onChange={(e) => setOverrideForm({ ...overrideForm, status: e.target.value })}
-                  >
-                    <option>On Hold</option>
-                    <option>Not Started</option>
-                    <option>In Progress</option>
-                    <option>Completed</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Progress ({overrideForm.progress}%)</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  className="w-full accent-violet-600"
-                  value={overrideForm.progress}
-                  onChange={(e) => setOverrideForm({ ...overrideForm, progress: Number(e.target.value) })}
-                />
-              </div>
-            </div>
-
-            <div className="p-6 pt-2 border-t border-slate-100 flex gap-3 shrink-0">
-              <button
-                onClick={() => setIsOverrideModalOpen(false)}
-                disabled={overrideSaving}
-                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-semibold text-sm transition-all disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveOverride}
-                disabled={overrideSaving}
-                className="flex-[2] py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50"
-              >
-                {overrideSaving ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {isSettingsModalOpen && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">

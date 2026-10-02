@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, ArrowLeft, Check, X, Info, ArrowRight, Upload, Trash2 } from 'lucide-react';
-import { createProject, getProjects, updateProject, getProject, uploadProjectFiles, deleteProjectFile, projectFileHref } from '../lib/projectApi';
-import { getClients } from '../lib/clientApi';
-import { getContacts } from '../lib/contactApi';
-import { getLanguages } from '../lib/languageApi';
-import { getTools } from '../lib/toolApi';
-import { getSpecializations } from '../lib/specializationApi';
-import { getUnits } from '../lib/unitApi';
-import { getServices } from '../lib/serviceApi';
+// Sales Manager version of the admin "Create Project" page. Every request goes
+// through the /api/sales routes with the logged-in sales account's bearer token.
+import {
+  createProject,
+  getProjects,
+  getClients,
+  getContacts,
+  getLanguages,
+  getTools,
+  getSpecializations,
+  getUnits,
+  getServices,
+  uploadProjectFiles,
+} from '../lib/salesApi';
 
 const DEFAULT_TRANSLATION_TASKS = [
   { taskName: 'Translation', rate: 1 },
@@ -45,12 +51,9 @@ const createDefaultTasks = (currency = 'INR', defaultUnit = 'Words') =>
 const sortDesc = (list, getKey) =>
   [...list].sort((a, b) => (getKey(b) || '').localeCompare(getKey(a) || ''));
 
-export default function AddProject() {
+export default function CreateSalesProject() {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const editId = location.state?.project?.id || location.state?.project?._id;
-  const isEditMode = Boolean(editId);
+  const [searchParams] = useSearchParams();
 
   const [loading, setLoading] = useState(true);
 
@@ -67,7 +70,7 @@ export default function AddProject() {
   const [formData, setFormData] = useState({
     projectName: '',
     projectCode: '',
-    client: '',
+    client: searchParams.get('clientId') || '',
     clientContact: '',
     clientPO: '',
     clientProjectCode: '',
@@ -100,9 +103,9 @@ export default function AddProject() {
         setLoading(true);
         const [clientsRes, contactsRes, langsRes, allProjects, toolsRes, specsRes, unitsRes, servicesRes] = await Promise.all([
           getClients(),
-          getContacts(),
+          getContacts().catch(() => []),
           getLanguages(),
-          getProjects(),
+          getProjects().catch(() => []),
           getTools(),
           getSpecializations(),
           getUnits(),
@@ -129,56 +132,7 @@ export default function AddProject() {
         const hiIN = langsRes.find((l) => l.localeCode === 'hi-IN' || l.name === 'Hindi');
         const enUS = langsRes.find((l) => l.localeCode === 'en-US' || l.name === 'English' || l.name === 'English (US)');
 
-        let editData = null;
-        if (isEditMode) {
-          editData = await getProject(editId);
-        }
-
         setFormData((prev) => {
-          if (editData) {
-            return {
-              ...prev,
-              projectName: editData.projectName || '',
-              projectCode: editData.projectCode || '',
-              client: editData.client?._id || editData.client || '',
-              clientContact: editData.clientContact?._id || editData.clientContact || '',
-              clientPO: editData.clientPO || '',
-              clientProjectCode: editData.clientProjectCode || '',
-              projectStatus: editData.projectStatus || editData.status || 'In Progress',
-              isProgramGroup: editData.isProgramGroup || false,
-              programName: editData.programName || '',
-              amount: editData.amount || '',
-              dueDate: editData.dueDate ? new Date(editData.dueDate).toISOString().split('T')[0] : '',
-              dueTime: editData.dueTime || '',
-              description: editData.description || '',
-              translationTool: editData.translationTool || '',
-              subjectMatter: editData.subjectMatter || '',
-              gstEnabled: editData.gstEnabled || false,
-              cgstPercent: editData.cgstPercent ?? 9,
-              sgstPercent: editData.sgstPercent ?? 9,
-              igstPercent: editData.igstPercent ?? 18,
-              otherCharges: editData.otherCharges || 0,
-              otherChargesLabel: editData.otherChargesLabel || 'None',
-              targets: editData.targets && editData.targets.length > 0 ? editData.targets.map(t => ({
-                sourceLanguage: t.sourceLanguage?._id || t.sourceLanguage || '',
-                targetLanguage: t.targetLanguage?._id || t.targetLanguage || '',
-                service: t.service?._id || t.service || '',
-                tasks: t.tasks && t.tasks.length > 0 ? t.tasks.map(task => ({
-                  ...task,
-                  startDate: task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '',
-                  endDate: task.endDate ? new Date(task.endDate).toISOString().split('T')[0] : '',
-                })) : createDefaultTasks('INR', unitsRes.length > 0 ? unitsRes[0].name : 'Words')
-              })) : [{
-                sourceLanguage: enUS ? enUS._id : '',
-                targetLanguage: hiIN ? hiIN._id : '',
-                service: '',
-                tasks: createDefaultTasks('INR', unitsRes.length > 0 ? unitsRes[0].name : 'Words')
-              }],
-              referenceFiles: editData.referenceFiles || [],
-              workingFiles: editData.workingFiles || [],
-            };
-          }
-
           if (prev.targets.length === 0) {
             return {
               ...prev,
@@ -269,20 +223,6 @@ export default function AddProject() {
     }));
   };
 
-  const removeSavedFile = async (field, index) => {
-    if (!editId || !window.confirm('Remove this file?')) return;
-    try {
-      const updated = await deleteProjectFile(editId, field, index);
-      setFormData((prev) => ({
-        ...prev,
-        referenceFiles: updated.referenceFiles || [],
-        workingFiles: updated.workingFiles || [],
-      }));
-    } catch (error) {
-      alert(error?.response?.data?.message || 'Failed to remove file.');
-    }
-  };
-
   // Target helpers
   const addTarget = () => {
     const hiIN = languages.find((l) => l.localeCode === 'hi-IN' || l.name === 'Hindi');
@@ -357,29 +297,11 @@ export default function AddProject() {
   };
 
   const renderUploadRow = (label, field) => {
-    const saved = formData[field] || [];
     const queued = pendingFiles[field] || [];
     return (
       <div className="ap-upload-row">
         <span className="ap-upload-label">{label}</span>
         <div className="ap-upload-fields">
-          {saved.map((file, idx) => (
-            <div key={`saved-${idx}`} className="ap-upload-field-row">
-              {file.url ? (
-                <a href={projectFileHref(file.url)} target="_blank" rel="noreferrer" className="ap-file-input" style={{ lineHeight: '2rem' }}>
-                  {file.name}
-                </a>
-              ) : (
-                <span className="ap-file-input" style={{ lineHeight: '2rem', opacity: 0.6 }}>
-                  {file.name} (no file attached)
-                </span>
-              )}
-              <button type="button" onClick={() => removeSavedFile(field, idx)} className="ap-icon-btn ap-icon-btn-red">
-                <Trash2 size={16} />
-              </button>
-            </div>
-          ))}
-
           {queued.map((file, idx) => (
             <div key={`queued-${idx}`} className="ap-upload-field-row">
               <span className="ap-file-input" style={{ lineHeight: '2rem' }}>
@@ -435,12 +357,10 @@ export default function AddProject() {
     }
     setUploadingFiles(true);
     try {
-      const saved = isEditMode
-        ? await updateProject(editId, preparePayload())
-        : await createProject(preparePayload());
+      const saved = await createProject(preparePayload());
 
       // The project exists now, so any queued files can be attached to it.
-      const projectId = isEditMode ? editId : saved?._id;
+      const projectId = saved?._id;
       const hasPending =
         pendingFiles.referenceFiles.length || pendingFiles.workingFiles.length;
       if (hasPending && projectId) {
@@ -452,11 +372,11 @@ export default function AddProject() {
         }
       }
 
-      alert(isEditMode ? 'Project updated successfully!' : 'Project created successfully!');
-      navigate('/projects');
+      alert('Project created successfully!');
+      navigate('/sales/projects');
     } catch (error) {
       console.error(error);
-      alert(isEditMode ? 'Failed to update project' : 'Failed to create project');
+      alert(error?.response?.data?.message || 'Failed to create project');
     } finally {
       setUploadingFiles(false);
     }
@@ -485,18 +405,11 @@ export default function AddProject() {
     <div className="ap-page">
       {/* ── HEADER ── */}
       <header className="ap-header">
-        <div className="ap-header-brand">
-          <h1 className="ap-logo">Perfectrans<sup>™</sup></h1>
-          <p className="ap-logo-sub">A Brand of Convoq Technologies Pvt. Ltd.</p>
-        </div>
         <div className="ap-header-right">
-          <button type="button" onClick={() => navigate('/projects')} className="ap-back-btn">
+          <button type="button" onClick={() => navigate('/sales/projects')} className="ap-back-btn">
             <ArrowLeft size={14} /> Back to Projects
           </button>
-          <h2 className="ap-page-title">{isEditMode ? 'Edit Project' : 'Create Project'}</h2>
-        </div>
-        <div className="ap-avatar-circle">
-          <span style={{ fontSize: '16px' }}>👤</span>
+          <h2 className="ap-page-title">Create Project</h2>
         </div>
       </header>
 
@@ -1066,9 +979,9 @@ export default function AddProject() {
         <div className="ap-actions-container">
           <button type="button" onClick={handleSubmit} disabled={uploadingFiles} className="ap-btn-create">
             <Check size={16} />
-            {uploadingFiles ? 'Saving...' : isEditMode ? 'Update Project' : 'Create Project'}
+            {uploadingFiles ? 'Saving...' : 'Create Project'}
           </button>
-          <button type="button" onClick={() => navigate('/projects')} className="ap-btn-cancel">
+          <button type="button" onClick={() => navigate('/sales/projects')} className="ap-btn-cancel">
             <X size={16} />
             Cancel
           </button>
@@ -1097,7 +1010,7 @@ export default function AddProject() {
           border-top: 3.5px solid #4361ee;
           display: flex;
           align-items: center;
-          justify-content: space-between;
+          justify-content: flex-start;
           padding: 14px 32px;
           box-shadow: 0 1px 4px rgba(0,0,0,0.04);
           position: sticky;
@@ -1121,7 +1034,7 @@ export default function AddProject() {
           font-weight: 400;
         }
         .ap-header-right {
-          text-align: right;
+          text-align: left;
         }
         .ap-back-btn {
           display: inline-flex;
