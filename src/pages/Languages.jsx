@@ -6,7 +6,7 @@ export default function Languages() {
   const [languages, setLanguages] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLanguage, setEditingLanguage] = useState(null);
-  const [formData, setFormData] = useState({ name: '', localeCode: '', status: 'Active' });
+  const [formData, setFormData] = useState({ name: '', iso639_1: '', twoLetterCode: '', threeLetterCode: '', localeCode: '', status: 'Active' });
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -41,13 +41,13 @@ export default function Languages() {
 
   const handleAddClick = () => {
     setEditingLanguage(null);
-    setFormData({ name: '', localeCode: '', status: 'Active' });
+    setFormData({ name: '', iso639_1: '', twoLetterCode: '', threeLetterCode: '', localeCode: '', status: 'Active' });
     setIsModalOpen(true);
   };
 
   const handleEditClick = (language) => {
     setEditingLanguage(language);
-    setFormData({ name: language.name, localeCode: language.localeCode || '', status: language.status });
+    setFormData({ name: language.name, iso639_1: language.iso639_1 || '', twoLetterCode: language.twoLetterCode || '', threeLetterCode: language.threeLetterCode || '', localeCode: language.localeCode || '', status: language.status });
     setIsModalOpen(true);
   };
 
@@ -127,11 +127,14 @@ export default function Languages() {
         {/* Premium Table Card */}
         <div className="bg-white/70 backdrop-blur-xl border border-slate-200 rounded-[2rem] shadow-2xl shadow-slate-200/50 p-2 overflow-hidden">
           <div className="overflow-x-auto rounded-[1.5rem]">
-            <table className="w-full text-left text-[14px] border-collapse min-w-[600px]">
+            <table className="w-full text-left text-[14px] border-collapse min-w-[900px]">
               <thead>
                 <tr className="border-b border-slate-100">
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-16 text-center">#</th>
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Language</th>
+                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">ISO639-1</th>
+                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Two Letter Code</th>
+                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Three Letter Code</th>
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Locale Code</th>
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-32">Status</th>
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-24 text-center">
@@ -154,6 +157,21 @@ export default function Languages() {
                         </div>
                         <span className="font-bold text-slate-800 group-hover:text-blue-700 transition-colors tracking-tight">{lang.name}</span>
                       </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-semibold font-mono border border-slate-200">
+                        {lang.iso639_1 || '-'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5">
+                      <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-semibold font-mono border border-slate-200">
+                        {lang.twoLetterCode || '-'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5">
+                      <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-semibold font-mono border border-slate-200">
+                        {lang.threeLetterCode || '-'}
+                      </span>
                     </td>
                     <td className="px-6 py-5">
                       <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-semibold font-mono border border-slate-200">
@@ -226,6 +244,36 @@ export default function Languages() {
                       className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
                       value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="e.g. French"
+                    />
+                  </div>
+
+                  <div className="space-y-2 group">
+                    <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">ISO639-1</label>
+                    <input
+                      type="text"
+                      className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
+                      value={formData.iso639_1} onChange={(e) => setFormData({ ...formData, iso639_1: e.target.value })}
+                      placeholder="e.g. fr"
+                    />
+                  </div>
+
+                  <div className="space-y-2 group">
+                    <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">Two Letter Code</label>
+                    <input
+                      type="text"
+                      className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
+                      value={formData.twoLetterCode} onChange={(e) => setFormData({ ...formData, twoLetterCode: e.target.value })}
+                      placeholder="e.g. FR"
+                    />
+                  </div>
+
+                  <div className="space-y-2 group">
+                    <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">Three Letter Code</label>
+                    <input
+                      type="text"
+                      className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
+                      value={formData.threeLetterCode} onChange={(e) => setFormData({ ...formData, threeLetterCode: e.target.value })}
+                      placeholder="e.g. FRA"
                     />
                   </div>
 

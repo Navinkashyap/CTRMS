@@ -8,6 +8,9 @@ const languageSchema = new mongoose.Schema(
       trim: true,
       unique: true,
     },
+    iso639_1: { type: String, trim: true, default: "" },
+    twoLetterCode: { type: String, trim: true, default: "" },
+    threeLetterCode: { type: String, trim: true, default: "" },
     localeCode: {
       type: String,
       trim: true,

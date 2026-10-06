@@ -48,8 +48,8 @@ const createDefaultTasks = (currency = 'INR', defaultUnit = 'Words') =>
     status: 'Not Started',
   }));
 
-const sortDesc = (list, getKey) =>
-  [...list].sort((a, b) => (getKey(b) || '').localeCompare(getKey(a) || ''));
+const sortAsc = (list, getKey) =>
+  [...list].sort((a, b) => (getKey(a) || '').localeCompare(getKey(b) || '', undefined, { sensitivity: 'base' }));
 
 export default function CreateSalesProject() {
   const navigate = useNavigate();
@@ -111,13 +111,13 @@ export default function CreateSalesProject() {
           getUnits(),
           getServices(),
         ]);
-        setClients(sortDesc(clientsRes, (c) => c.name));
-        setContacts(sortDesc(contactsRes, (c) => `${c.firstName || ''} ${c.lastName || ''}`.trim()));
-        setLanguages(sortDesc(langsRes, (l) => l.localeCode || l.name));
-        setTools(sortDesc(toolsRes.filter((t) => t.status === 'Active'), (t) => t.name));
-        setSpecializations(sortDesc(specsRes.filter((s) => s.status === 'Active'), (s) => s.name));
-        setUnitsList(sortDesc(unitsRes.filter((u) => u.status !== 'Inactive'), (u) => u.name));
-        setServices(sortDesc(servicesRes.filter((s) => s.status === 'Active'), (s) => s.name));
+        setClients(sortAsc(clientsRes, (c) => c.name));
+        setContacts(sortAsc(contactsRes, (c) => `${c.firstName || ''} ${c.lastName || ''}`.trim()));
+        setLanguages(sortAsc(langsRes, (l) => l.name));
+        setTools(sortAsc(toolsRes.filter((t) => t.status === 'Active'), (t) => t.name));
+        setSpecializations(sortAsc(specsRes.filter((s) => s.status === 'Active'), (s) => s.name));
+        setUnitsList(sortAsc(unitsRes.filter((u) => u.status !== 'Inactive'), (u) => u.name));
+        setServices(sortAsc(servicesRes.filter((s) => s.status === 'Active'), (s) => s.name));
 
         const names = [
           ...new Set(
@@ -125,7 +125,7 @@ export default function CreateSalesProject() {
               .map((p) => p.programName)
               .filter(Boolean)
           ),
-        ].sort((a, b) => b.localeCompare(a));
+        ].sort((a, b) => a.localeCompare(b));
         setProgramNames(names);
 
         // Set default Target Language
@@ -639,7 +639,7 @@ export default function CreateSalesProject() {
                   onChange={(e) => handleInputChange('subjectMatter', e.target.value)}
                   className="ap-meta-select"
                 >
-                  <option value="">Specialization</option>
+                  <option value="">Select Subject Matter</option>
                   {specializations.map((s) => (
                     <option key={s._id} value={s.name}>{s.name}</option>
                   ))}
@@ -679,7 +679,7 @@ export default function CreateSalesProject() {
                         <option value="">Select Source</option>
                         {languages.map((l) => (
                           <option key={l._id} value={l._id}>
-                            {l.localeCode || l.name}
+                            {l.name}{l.localeCode ? ` (${l.localeCode})` : ''}
                           </option>
                         ))}
                       </select>
@@ -695,7 +695,7 @@ export default function CreateSalesProject() {
                         <option value="">Select Target</option>
                         {languages.map((l) => (
                           <option key={l._id} value={l._id}>
-                            {l.localeCode || l.name}
+                            {l.name}{l.localeCode ? ` (${l.localeCode})` : ''}
                           </option>
                         ))}
                       </select>
