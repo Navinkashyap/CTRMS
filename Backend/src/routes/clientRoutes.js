@@ -7,9 +7,25 @@ const router = express.Router();
 
 const upload = createS3Uploader({
   folder: "sadminperfectras_documents",
-  allowedExtensions: [".jpg", ".jpeg", ".png", ".pdf", ".doc", ".docx"],
+  allowedExtensions: [
+    ".jpg", ".jpeg", ".png", ".pdf", ".doc", ".docx",
+    ".xls", ".xlsx", ".csv", ".ppt", ".pptx", ".txt", ".zip",
+  ],
+  maxFileSize: 10 * 1024 * 1024, // 10 MB per file
 });
 
+
+// Optional display names sent by the form, parallel to the uploaded files.
+const takeDocumentNames = (clientData) => {
+  let names = [];
+  try {
+    names = JSON.parse(clientData.documentNames || "[]");
+  } catch (_e) {
+    names = [];
+  }
+  delete clientData.documentNames;
+  return Array.isArray(names) ? names : [];
+};
 
 const formatClient = (client) => ({
   _id: client._id,
@@ -85,9 +101,10 @@ router.get("/:id", async (req, res, next) => {
 router.post("/", upload.array("documents"), async (req, res, next) => {
   try {
     const clientData = { ...req.body };
+    const docNames = takeDocumentNames(clientData);
     if (req.files && req.files.length > 0) {
-      clientData.documents = req.files.map((file) => ({
-        name: file.originalname,
+      clientData.documents = req.files.map((file, i) => ({
+        name: (docNames[i] || "").trim() || file.originalname,
         url: uploadedFileUrl(file),
       }));
     }
@@ -101,7 +118,8 @@ router.post("/", upload.array("documents"), async (req, res, next) => {
 router.put("/:id", upload.array("documents"), async (req, res, next) => {
   try {
     const clientData = { ...req.body };
-    
+    const docNames = takeDocumentNames(clientData);
+
     // If the request body sends existing documents as string (e.g. JSON.stringify)
     if (typeof clientData.existingDocuments === 'string') {
       try {
@@ -118,8 +136,8 @@ router.put("/:id", upload.array("documents"), async (req, res, next) => {
     }
 
     if (req.files && req.files.length > 0) {
-      const newDocs = req.files.map((file) => ({
-        name: file.originalname,
+      const newDocs = req.files.map((file, i) => ({
+        name: (docNames[i] || "").trim() || file.originalname,
         url: uploadedFileUrl(file),
       }));
       clientData.documents = [...clientData.documents, ...newDocs];

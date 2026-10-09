@@ -115,6 +115,10 @@ app.use((err, _req, res, _next) => {
 
   // Errors that already know their own status (e.g. a rejected upload) are
   // client mistakes, so report just the message rather than a 500 + stack.
+  if (err?.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({ message: "File is too large (max 10 MB per file)." });
+  }
+
   if (err?.status >= 400 && err.status < 500) {
     return res.status(err.status).json({ message: err.message });
   }

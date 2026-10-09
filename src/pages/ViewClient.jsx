@@ -21,6 +21,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { getClient as fetchClientById } from '../lib/clientApi';
+import { getContacts } from '../lib/contactApi';
 
 export default function ViewClient() {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ export default function ViewClient() {
   const [client, setClient] = useState(location.state?.client || null);
   const [loading, setLoading] = useState(!client);
   const [error, setError] = useState(null);
+  const [contacts, setContacts] = useState([]);
 
   useEffect(() => {
     if (id) {
@@ -47,6 +49,17 @@ export default function ViewClient() {
       loadClient();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (!client?._id) return;
+    getContacts()
+      .then((all) =>
+        setContacts(
+          all.filter((c) => c.clientId === client._id || (c.company && c.company === client.name))
+        )
+      )
+      .catch(() => setContacts([]));
+  }, [client?._id, client?.name]);
 
   // Documents live in a private S3 bucket, so an absolute URL has to be fetched
   // through /api/files/view, which redirects to a short-lived signed link.
@@ -119,7 +132,7 @@ export default function ViewClient() {
 
   return (
     <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8 animate-in fade-in duration-700">
-      <div className="max-w-[1000px] mx-auto space-y-6">
+      <div className="max-w-[1400px] mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white p-6 sm:px-8 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
           <div className="flex items-center gap-4">
@@ -162,13 +175,15 @@ export default function ViewClient() {
         <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden">
           <div className="p-6 sm:p-8 space-y-8">
 
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="space-y-8">
             {/* Section 1: Primary Info */}
             <div>
               <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                 <Briefcase className="w-5 h-5 text-indigo-500" />
                 Primary Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <DetailItem icon={Building2} label="Company Name" value={client.name} />
                 <DetailItem icon={Award} label="Client Code" value={client.membershipCode?.replace('CLI-', '')} />
                 <DetailItem icon={Globe} label="Domain" value={client.domain} />
@@ -192,15 +207,13 @@ export default function ViewClient() {
               </div>
             </div>
 
-            <hr className="border-slate-100" />
-
             {/* Section 2: Contact Info */}
             <div>
               <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                 <Phone className="w-5 h-5 text-emerald-500" />
                 Contact Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
                 <DetailItem icon={Mail} label="Email Address" value={client.email} />
                 <DetailItem icon={Phone} label="Phone Number" value={client.phone} />
                 <DetailItem icon={Globe} label="Website" value={
@@ -213,8 +226,6 @@ export default function ViewClient() {
               </div>
             </div>
 
-            <hr className="border-slate-100" />
-
             {/* Section 3: Location Details */}
             <div>
               <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -224,7 +235,7 @@ export default function ViewClient() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <DetailItem icon={MapPin} label="Full Address" value={client.address} />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <DetailItem icon={Map} label="City" value={client.city} />
                 <DetailItem icon={MapPin} label="State" value={client.state} />
                 <DetailItem icon={Flag} label="Country" value={client.country} />
@@ -232,22 +243,53 @@ export default function ViewClient() {
               </div>
             </div>
 
-            <hr className="border-slate-100" />
-
             {/* Section 4: Financial */}
             <div>
               <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                 <CircleDollarSign className="w-5 h-5 text-amber-500" />
                 Financial Information
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <DetailItem icon={CircleDollarSign} label="Preferred Currency" value={client.currency} />
                 <DetailItem icon={Award} label="GSTIN" value={client.gstIn} />
                 <DetailItem icon={Award} label="VAT Number" value={client.vat} />
               </div>
             </div>
 
-            <hr className="border-slate-100" />
+              </div>
+              <div className="space-y-8">
+            {/* Contacts */}
+            <div>
+              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <User className="w-5 h-5 text-indigo-500" />
+                Contacts
+                <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold">{contacts.length}</span>
+              </h3>
+              {contacts.length > 0 ? (
+                <div className="space-y-3">
+                  {contacts.map((c) => (
+                    <div
+                      key={c._id}
+                      onClick={() => navigate(`/contacts/view-contact/${c._id}`, { state: { contact: c } })}
+                      className="p-4 rounded-2xl bg-slate-50/50 hover:bg-white border border-transparent hover:border-indigo-100 hover:shadow-md transition-all cursor-pointer"
+                    >
+                      <p className="font-semibold text-slate-800 text-sm capitalize">{c.firstName} {c.lastName}</p>
+                      <p className="text-xs text-slate-500">
+                        {[c.designation, c.department].filter(Boolean).join(' · ') || '—'}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+                        {c.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{c.email}</span>}
+                        {c.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{c.countryCode} {c.phone}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-8 text-center bg-slate-50/30 rounded-3xl border border-dashed border-slate-200">
+                  <p className="text-sm font-medium text-slate-400 italic">No contacts for this client.</p>
+                </div>
+              )}
+            </div>
 
             {/* Section 5: Notes */}
             <div>
@@ -263,8 +305,6 @@ export default function ViewClient() {
               </div>
             </div>
 
-            <hr className="border-slate-100" />
-
             {/* Section 6: Documents */}
             <div>
               <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -272,7 +312,7 @@ export default function ViewClient() {
                 Uploaded Documents
               </h3>
               {client.documents && client.documents.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
                   {client.documents.map((doc, i) => (
                     <a
                       key={i}
@@ -306,6 +346,8 @@ export default function ViewClient() {
               )}
             </div>
 
+              </div>
+            </div>
           </div>
         </div>
       </div>

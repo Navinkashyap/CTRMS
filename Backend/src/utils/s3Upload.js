@@ -124,7 +124,7 @@ class S3Storage {
  * Build a multer instance that streams uploads into `folder/` on S3.
  * `allowedExtensions` (optional, lowercase, with dot) rejects anything else.
  */
-export const createS3Uploader = ({ folder, allowedExtensions } = {}) => {
+export const createS3Uploader = ({ folder, allowedExtensions, maxFileSize } = {}) => {
   const fileFilter = allowedExtensions
     ? (_req, file, cb) => {
         const ext = path.extname(file.originalname).toLowerCase();
@@ -139,7 +139,11 @@ export const createS3Uploader = ({ folder, allowedExtensions } = {}) => {
       }
     : undefined;
 
-  return multer({ fileFilter, storage: new S3Storage({ folder }) });
+  return multer({
+    fileFilter,
+    storage: new S3Storage({ folder }),
+    limits: maxFileSize ? { fileSize: maxFileSize } : undefined,
+  });
 };
 
 // The storage engine exposes the object URL as `file.location`; the previous

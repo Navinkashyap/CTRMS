@@ -47,6 +47,7 @@ const allColumns = [
   { id: 'phone', label: 'Phone no' },
   { id: 'email', label: 'Email' },
   { id: 'designation', label: 'Designation' },
+  { id: 'department', label: 'Department' },
 ];
 
 export default function ContactList() {
@@ -92,7 +93,7 @@ export default function ContactList() {
   };
 
   // Default visible columns as per normal view
-  const [visibleColumns, setVisibleColumns] = useState(['fullName', 'phone', 'email', 'designation']);
+  const [visibleColumns, setVisibleColumns] = useState(['fullName', 'phone', 'email', 'designation', 'department']);
   const [tempVisibleColumns, setTempVisibleColumns] = useState(visibleColumns);
 
   const filteredContacts = React.useMemo(() => {
@@ -184,6 +185,7 @@ export default function ContactList() {
                   {visibleColumns.includes('phone') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Phone</th>}
                   {visibleColumns.includes('email') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Email</th>}
                   {visibleColumns.includes('designation') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Designation</th>}
+                  {visibleColumns.includes('department') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Department</th>}
                   <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider text-center sticky right-0 bg-slate-50 z-30 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] border-l border-slate-100">Action</th>
                 </tr>
               </thead>
@@ -245,6 +247,11 @@ export default function ContactList() {
                       {visibleColumns.includes('designation') && (
                         <td className="px-6 py-4">
                           <span className="font-medium text-slate-700">{contact.designation || '—'}</span>
+                        </td>
+                      )}
+                      {visibleColumns.includes('department') && (
+                        <td className="px-6 py-4">
+                          <span className="font-medium text-slate-700">{contact.department || '—'}</span>
                         </td>
                       )}
 

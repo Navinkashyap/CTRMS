@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, ArrowLeft, Check, X, Info, ArrowRight, Upload, Trash2 } from 'lucide-react';
 import { createProject, getProjects, updateProject, getProject, uploadProjectFiles, deleteProjectFile, projectFileHref } from '../lib/projectApi';
-import { getClients } from '../lib/clientApi';
-import { getContacts } from '../lib/contactApi';
+import { getClients, createClient, getNextMembershipCode } from '../lib/clientApi';
+import { getContacts, createContact } from '../lib/contactApi';
 import { getLanguages } from '../lib/languageApi';
 import { getTools } from '../lib/toolApi';
 import { getSpecializations } from '../lib/specializationApi';
@@ -200,6 +200,53 @@ export default function AddProject() {
     };
     fetchAll();
   }, []);
+
+  const [quickAdd, setQuickAdd] = useState(null); // 'client' | 'contact' | null
+  const [quickForm, setQuickForm] = useState({});
+  const [quickSaving, setQuickSaving] = useState(false);
+
+  const openQuickAdd = (type) => {
+    if (type === 'contact' && !formData.client) {
+      alert('Please select a client first.');
+      return;
+    }
+    setQuickForm({});
+    setQuickAdd(type);
+  };
+
+  const handleQuickSave = async (e) => {
+    e.preventDefault();
+    try {
+      setQuickSaving(true);
+      if (quickAdd === 'client') {
+        const membershipCode = await getNextMembershipCode();
+        const created = await createClient({
+          name: quickForm.name,
+          email: quickForm.email || '',
+          phone: quickForm.phone || '',
+          membershipCode,
+        });
+        setClients((prev) => [...prev, created]);
+        handleInputChange('client', created._id);
+      } else {
+        const created = await createContact({
+          firstName: quickForm.firstName,
+          lastName: quickForm.lastName,
+          email: quickForm.email,
+          phone: quickForm.phone || '',
+          company: selectedClient?.name || '',
+          clientId: formData.client,
+        });
+        setContacts((prev) => [...prev, created]);
+        handleInputChange('clientContact', created._id);
+      }
+      setQuickAdd(null);
+    } catch (err) {
+      alert(err?.response?.data?.message || `Failed to add ${quickAdd}.`);
+    } finally {
+      setQuickSaving(false);
+    }
+  };
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => {
@@ -483,6 +530,31 @@ export default function AddProject() {
 
   return (
     <div className="ap-page">
+      {quickAdd && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <form onSubmit={handleQuickSave} style={{ background: '#fff', borderRadius: 12, padding: 24, width: 380, maxWidth: '92vw', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <h3 style={{ margin: 0 }}>{quickAdd === 'client' ? 'Add Client' : `Add Contact${selectedClient ? ` for ${selectedClient.name}` : ''}`}</h3>
+            {(quickAdd === 'client'
+              ? [['name', 'Client Name', true], ['email', 'Email'], ['phone', 'Phone']]
+              : [['firstName', 'First Name', true], ['lastName', 'Last Name', true], ['email', 'Email', true], ['phone', 'Phone']]
+            ).map(([key, label, req]) => (
+              <input
+                key={key}
+                className="ap-input"
+                placeholder={label + (req ? ' *' : '')}
+                required={!!req}
+                type={key === 'email' ? 'email' : 'text'}
+                value={quickForm[key] || ''}
+                onChange={(e) => setQuickForm({ ...quickForm, [key]: e.target.value })}
+              />
+            ))}
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button type="button" className="ap-btn-cancel" onClick={() => setQuickAdd(null)}>Cancel</button>
+              <button type="submit" className="ap-btn-create" disabled={quickSaving}>{quickSaving ? 'Saving…' : 'Save'}</button>
+            </div>
+          </form>
+        </div>
+      )}
       {/* ── HEADER ── */}
       <header className="ap-header">
         <div className="ap-header-brand">
@@ -549,11 +621,12 @@ export default function AddProject() {
                 <label className="ap-label">Client</label>
                 <select
                   value={formData.client}
-                  onChange={(e) => handleInputChange('client', e.target.value)}
+                  onChange={(e) => e.target.value === '__add_new__' ? openQuickAdd('client') : handleInputChange('client', e.target.value)}
                   className="ap-input"
                 >
                   <option value="">Select Client</option>
                   {clients.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                  <option value="__add_new__">+ Add new client…</option>
                 </select>
               </div>
               {/* Client Contact */}
@@ -561,13 +634,14 @@ export default function AddProject() {
                 <label className="ap-label">Client Contact</label>
                 <select
                   value={formData.clientContact}
-                  onChange={(e) => handleInputChange('clientContact', e.target.value)}
+                  onChange={(e) => e.target.value === '__add_new__' ? openQuickAdd('contact') : handleInputChange('clientContact', e.target.value)}
                   className="ap-input"
                 >
                   <option value="">Select Contact</option>
                   {contacts
                     .filter(c => !formData.client || c.company === clients.find(cl => cl._id === formData.client)?.name || c.clientId === formData.client)
                     .map(c => <option key={c._id} value={c._id}>{c.firstName} {c.lastName}</option>)}
+                  <option value="__add_new__">+ Add new contact…</option>
                 </select>
               </div>
               {/* Amount */}

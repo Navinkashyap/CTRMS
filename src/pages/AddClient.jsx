@@ -15,6 +15,9 @@ import {
   MapPin,
   Phone,
   UploadCloud,
+  Plus,
+  Minus,
+  HelpCircle,
   FileText,
   X,
   Briefcase,
@@ -124,6 +127,9 @@ const getStatusBadgeClass = (status) => {
   return 'text-slate-600 bg-slate-100 border border-slate-200';
 };
 
+const ALLOWED_DOC_EXTENSIONS = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.csv', '.ppt', '.pptx', '.txt', '.zip', '.jpg', '.jpeg', '.png'];
+const MAX_DOC_SIZE_MB = 10;
+
 export default function AddClient() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -135,7 +141,8 @@ export default function AddClient() {
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [docRows, setDocRows] = useState([{ name: '', file: null }]);
+  const selectedFiles = docRows.filter((r) => r.file);
 
   const [domains, setDomains] = useState([]);
   const [memberships, setMemberships] = useState([]);
@@ -297,15 +304,32 @@ export default function AddClient() {
     }
   };
 
-  const handleFileChange = (e) => {
-    if (e.target.files) {
-      setSelectedFiles(prev => [...prev, ...Array.from(e.target.files)]);
-    }
+  const updateDocRow = (index, patch) => {
+    setDocRows((prev) => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)));
   };
 
-  const removeSelectedFile = (index) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  const handleRowFile = (index, e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+    if (!ALLOWED_DOC_EXTENSIONS.includes(ext)) {
+      alert(`Unsupported file type "${ext}". Supported: ${ALLOWED_DOC_EXTENSIONS.join(', ')}`);
+      return;
+    }
+    if (file.size > MAX_DOC_SIZE_MB * 1024 * 1024) {
+      alert(`"${file.name}" is larger than ${MAX_DOC_SIZE_MB} MB.`);
+      return;
+    }
+    setDocRows((prev) =>
+      prev.map((r, i) => (i === index ? { ...r, file, name: r.name || file.name.replace(/\.[^.]+$/, '') } : r))
+    );
   };
+
+  const addDocRow = () => setDocRows((prev) => [...prev, { name: '', file: null }]);
+
+  const removeDocRow = (index) =>
+    setDocRows((prev) => (prev.length === 1 ? [{ name: '', file: null }] : prev.filter((_, i) => i !== index)));
 
   const removeExistingDocument = (index) => {
     setFormData(prev => ({
@@ -366,8 +390,9 @@ export default function AddClient() {
         formDataToSend.append('existingDocuments', JSON.stringify(formData.existingDocuments || []));
       }
 
-      selectedFiles.forEach(file => {
-        formDataToSend.append('documents', file);
+      formDataToSend.append('documentNames', JSON.stringify(selectedFiles.map((r) => r.name.trim())));
+      selectedFiles.forEach((r) => {
+        formDataToSend.append('documents', r.file);
       });
 
       if (isEditMode) {
@@ -764,23 +789,52 @@ export default function AddClient() {
               <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                 <Paperclip className="w-5 h-5 text-indigo-500" />
                 Uploaded Documents
+                <span
+                  className="relative group inline-flex"
+                  tabIndex={0}
+                >
+                  <HelpCircle className="w-4 h-4 text-slate-400 cursor-help" />
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 z-20 hidden group-hover:block group-focus:block w-72 p-3 rounded-xl bg-slate-900 text-white text-xs font-medium leading-relaxed shadow-xl">
+                    Supported formats: PDF, DOC, DOCX, XLS, XLSX, CSV, PPT, PPTX, TXT, ZIP, JPG, JPEG, PNG.
+                    Maximum file size: {MAX_DOC_SIZE_MB} MB per file.
+                  </span>
+                </span>
               </h3>
 
-              <div className="relative border-2 border-dashed border-slate-200 rounded-2xl p-8 hover:bg-slate-50/50 transition-colors group cursor-pointer mb-4">
-                <input
-                  type="file"
-                  multiple
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  onChange={handleFileChange}
-                />
-                <div className="flex flex-col items-center justify-center text-slate-500 group-hover:text-indigo-500 transition-colors">
-                  <UploadCloud className="w-8 h-8 mb-3" />
-                  <p className="text-sm font-semibold">Click to upload or drag and drop</p>
-                  <p className="text-xs font-medium text-slate-400 mt-1">PDF, DOCX, JPG, PNG up to 10MB each</p>
-                </div>
+              <div className="space-y-3 mb-4">
+                {docRows.map((row, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Name of document"
+                      value={row.name}
+                      onChange={(e) => updateDocRow(idx, { name: e.target.value })}
+                      className="flex-1 min-w-0 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-400"
+                    />
+                    <label
+                      className="inline-flex items-center gap-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-sm cursor-pointer hover:bg-indigo-50 hover:text-indigo-600 max-w-[200px]"
+                      title={row.file ? row.file.name : 'Choose file'}
+                    >
+                      <UploadCloud className="w-4 h-4 shrink-0" />
+                      <span className="truncate">{row.file ? row.file.name : 'Upload'}</span>
+                      <input
+                        type="file"
+                        accept={ALLOWED_DOC_EXTENSIONS.join(',')}
+                        className="hidden"
+                        onChange={(e) => handleRowFile(idx, e)}
+                      />
+                    </label>
+                    <button type="button" onClick={addDocRow} title="Add another document" className="p-2 rounded-lg text-indigo-600 hover:bg-indigo-50">
+                      <Plus className="w-4 h-4" />
+                    </button>
+                    <button type="button" onClick={() => removeDocRow(idx)} title="Remove" className="p-2 rounded-lg text-rose-500 hover:bg-rose-50">
+                      <Minus className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
               </div>
 
-              {(formData.existingDocuments?.length > 0 || selectedFiles.length > 0) ? (
+              {formData.existingDocuments?.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {formData.existingDocuments?.map((doc, idx) => (
                     <div
@@ -805,30 +859,6 @@ export default function AddClient() {
                       <button
                         type="button"
                         onClick={() => removeExistingDocument(idx)}
-                        className="p-1.5 ml-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-
-                  {selectedFiles.map((file, idx) => (
-                    <div
-                      key={`new-${idx}`}
-                      className="flex items-center justify-between p-4 rounded-2xl bg-indigo-50/30 border border-indigo-100 transition-all"
-                    >
-                      <div className="flex items-center gap-3 overflow-hidden flex-1 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
-                          <FileText className="w-5 h-5 text-indigo-500" />
-                        </div>
-                        <div className="overflow-hidden">
-                          <p className="font-semibold text-slate-800 text-sm truncate" title={file.name}>{file.name}</p>
-                          <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">New upload</p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeSelectedFile(idx)}
                         className="p-1.5 ml-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
                       >
                         <X className="w-4 h-4" />
