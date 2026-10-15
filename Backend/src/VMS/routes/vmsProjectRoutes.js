@@ -3,9 +3,20 @@ import mongoose from "mongoose";
 import VMSProject from "../models/VMSProject.js";
 import vmsAuth from "../middleware/vmsAuth.js";
 import { flagAdminProjectPmStatus, syncAdminProjectStatus } from "../utils/adminProjectSync.js";
+import { createS3Uploader, uploadedFileUrl } from "../../utils/s3Upload.js";
 
 const router = express.Router();
 router.use(vmsAuth);
+
+const upload = createS3Uploader({ folder: "sadminperfectras_pm_deliveries" });
+
+// Same shape PMSales shows ("1.2 MB"), so server-uploaded and legacy rows match.
+const formatBytes = (bytes) => {
+  if (!bytes) return "0 B";
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), sizes.length - 1);
+  return `${parseFloat((bytes / 1024 ** i).toFixed(1))} ${sizes[i]}`;
+};
 
 // A malformed/undefined :id (e.g. a frontend bug sending "undefined" as a
 // literal string) otherwise reaches Mongoose's ObjectId cast and surfaces as
@@ -74,6 +85,14 @@ router.post("/incoming/:id/accept", async (req, res, next) => {
     delete data.__v;
     data.status = data.status && data.status !== "Incoming" ? data.status : "In Progress";
 
+    // Freeze the brief as sales sent it, so the PM's later edits to targets,
+    // files and instructions don't rewrite what the Sales tab shows.
+    const src = incoming.toObject();
+    if (!data.salesTargets?.length) data.salesTargets = src.targets || [];
+    if (!data.salesReferenceFiles?.length) data.salesReferenceFiles = src.referenceFiles || [];
+    if (!data.salesWorkingFiles?.length) data.salesWorkingFiles = src.workingFiles || [];
+    if (!data.salesInstructions) data.salesInstructions = src.instructions || src.description || "";
+
     const accepted = await VMSProject.create(data);
     await VMSProject.deleteOne({ _id: incoming._id });
     await flagAdminProjectPmStatus(incoming.projectId, "Accepted");
@@ -97,6 +116,29 @@ router.post("/incoming/:id/reject", async (req, res, next) => {
     await VMSProject.deleteOne({ _id: incoming._id });
 
     res.json({ message: "Incoming project rejected" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/vms/projects/uploads — PM-side file uploads (delivery files on the
+// project view, files delivered back to sales). Stores the files and hands back
+// [{ name, url, size, uploadedAt }]; the caller saves them onto the project via
+// PUT, the same way /api/jobs/uploads works for task files.
+router.post("/uploads", upload.array("files"), async (req, res, next) => {
+  try {
+    if (!req.files?.length) {
+      return res.status(400).json({ message: "files are required" });
+    }
+    const uploadedAt = new Date().toISOString();
+    res.status(201).json(
+      req.files.map((file) => ({
+        name: file.originalname,
+        url: uploadedFileUrl(file),
+        size: formatBytes(file.size),
+        uploadedAt,
+      }))
+    );
   } catch (error) {
     next(error);
   }

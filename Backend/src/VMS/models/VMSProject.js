@@ -29,6 +29,17 @@ const FileRefSchema = new mongoose.Schema(
   { strict: false, _id: false }
 );
 
+// A link the PM hands back to sales alongside (or instead of) uploaded files.
+// Unlike Job.deliveredLinks these carry a title, so they're objects, not strings.
+const DeliveredLinkSchema = new mongoose.Schema(
+  {
+    id: { type: mongoose.Schema.Types.Mixed },
+    name: { type: String, trim: true, default: "" },
+    url: { type: String, trim: true, default: "" },
+  },
+  { strict: false, _id: false }
+);
+
 const VMSProjectSchema = new mongoose.Schema(
   {
     projectId: { type: String, trim: true },
@@ -65,6 +76,30 @@ const VMSProjectSchema = new mongoose.Schema(
     manager: { type: String, trim: true, default: "" },
     assignedVendor: { type: String, trim: true, default: "" },
     assignedDate: { type: String, trim: true, default: "" },
+
+    // The project exactly as sales/admin sent it. The PM reworks `targets`,
+    // files and instructions freely; these keep the original brief readable on
+    // the Sales tab. Snapshotted on accept (see vmsProjectRoutes).
+    salesTargets: { type: [TargetSchema], default: [] },
+    salesReferenceFiles: { type: [FileRefSchema], default: [] },
+    salesWorkingFiles: { type: [FileRefSchema], default: [] },
+    salesInstructions: { type: String, trim: true, default: "" },
+
+    // Per-task delivery uploads on the PM's project view, keyed by the
+    // frontend's delivery key (target/task) → list of files.
+    deliveryFiles: { type: mongoose.Schema.Types.Mixed, default: {} },
+
+    // What the PM delivers back to sales when closing the project (PMSales).
+    // The sales* twins are what the frontend sends alongside; both are kept so
+    // either name reads back.
+    deliveredFiles: { type: [FileRefSchema], default: [] },
+    salesDeliveredFiles: { type: [FileRefSchema], default: [] },
+    deliveredLinks: { type: [DeliveredLinkSchema], default: [] },
+    salesDeliveredLinks: { type: [DeliveredLinkSchema], default: [] },
+    notesForPm: { type: String, trim: true, default: "" },
+    notes: { type: String, trim: true, default: "" },
+    completedDate: { type: String, trim: true, default: "" },
+    completedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

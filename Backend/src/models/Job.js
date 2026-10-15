@@ -35,6 +35,12 @@ const jobFileSchema = new mongoose.Schema(
 const jobSchema = new mongoose.Schema(
   {
     po: { type: String, required: [true, "PO number is required"], trim: true, unique: true },
+    // One project task can be offered to several vendors at once — one PO each,
+    // numbered `<basePo>-<vendorCode>`. basePo/taskId/targetId tie those sibling
+    // offers together so the first vendor to accept closes the others.
+    basePo: { type: String, trim: true, default: "", index: true },
+    taskId: { type: String, trim: true, default: "" },
+    targetId: { type: String, trim: true, default: "" },
 
     project: { type: mongoose.Schema.Types.ObjectId, ref: "VMSProject", default: null },
     projectId: { type: String, trim: true, default: "" },
@@ -80,7 +86,7 @@ const jobSchema = new mongoose.Schema(
     // PO's own financial/issuance lifecycle (PM-facing, independent of the vendor's response).
     status: {
       type: String,
-      enum: ["Not Issued", "Pending", "Issued", "Paid"],
+      enum: ["Not Issued", "Pending", "Issued", "Paid", "Cancelled"],
       default: "Not Issued",
     },
 
@@ -88,12 +94,23 @@ const jobSchema = new mongoose.Schema(
     // Pending: offer sent, awaiting vendor accept/reject.
     // Rejected: vendor declined.
     // In Progress: vendor accepted, work underway.
-    // Completed: vendor submitted deliverables.
+    // Completed: vendor submitted deliverables, awaiting PM review.
+    // Accepted: PM approved the submission.
+    // Rejected (after a submission): PM sent the work back — see reviewStatus.
+    // Changes Requested: PM asked for revisions.
+    // Cancelled: another vendor accepted the same task first.
     vendorStatus: {
       type: String,
-      enum: ["", "Pending", "Rejected", "In Progress", "Completed"],
+      enum: ["", "Pending", "Rejected", "In Progress", "Completed", "Accepted", "Changes Requested", "Cancelled"],
       default: "",
     },
+    // "Rejected" on its own can't tell a declined offer from rejected work, so
+    // the PM's verdict on a submission is recorded separately.
+    reviewStatus: { type: String, enum: ["", "Accepted", "Rejected", "Changes Requested"], default: "" },
+    pmFeedback: { type: String, trim: true, default: "" },
+    submittedAt: { type: Date, default: null },
+    reviewedAt: { type: Date, default: null },
+    cancelledAt: { type: Date, default: null },
     // When the vendor most recently rejected this offer. Cleared whenever the
     // PM reassigns/republishes it. Lets the PM see *that* and *when* a vendor
     // said no instead of the rejection being silently invisible.
