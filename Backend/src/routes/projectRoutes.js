@@ -148,6 +148,7 @@ export async function buildVmsPayload(projectId) {
   if (!project) return null;
 
   const currency = project.client?.currency || "INR";
+  const toDay = (d) => (d ? new Date(d).toISOString().slice(0, 10) : "");
 
   const targets = (project.targets || []).map((t, i) => ({
     id: i + 1,
@@ -162,6 +163,8 @@ export async function buildVmsPayload(projectId) {
       currency: task.currency || currency,
       fees: task.fees ?? calcTaskFees(task.quantity, task.rate),
       status: task.status || "Not Started",
+      startDate: toDay(task.startDate) || toDay(project.startDate),
+      endDate: toDay(task.endDate) || toDay(project.deadline || project.dueDate),
     })),
   }));
 
@@ -182,6 +185,9 @@ export async function buildVmsPayload(projectId) {
     priority: project.priority || "Normal",
     amount: project.amount || "",
     currency,
+    startDate: project.startDate
+      ? new Date(project.startDate).toISOString().slice(0, 10)
+      : "",
     deadline: project.deadline
       ? new Date(project.deadline).toISOString().slice(0, 10)
       : "",

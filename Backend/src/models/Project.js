@@ -41,6 +41,7 @@ const ProjectSchema = new mongoose.Schema(
     type: { type: String, enum: ["Extended", "Non Extended"], default: "Non Extended" },
     projectStatus: { type: String, default: "In Progress" },
     receivingDate: { type: Date },
+    startDate: { type: Date },
     dueDate: { type: Date },
     dueTime: { type: String, trim: true },
     dateOfDelivery: { type: Date },

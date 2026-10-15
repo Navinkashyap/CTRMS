@@ -75,6 +75,7 @@ export default function AddProject() {
     isProgramGroup: false,
     programName: '',
     amount: '',
+    startDate: '',
     dueDate: '',
     dueTime: '',
     description: '',
@@ -148,6 +149,7 @@ export default function AddProject() {
               isProgramGroup: editData.isProgramGroup || false,
               programName: editData.programName || '',
               amount: editData.amount || '',
+              startDate: editData.startDate ? new Date(editData.startDate).toISOString().split('T')[0] : '',
               dueDate: editData.dueDate ? new Date(editData.dueDate).toISOString().split('T')[0] : '',
               dueTime: editData.dueTime || '',
               description: editData.description || '',
@@ -657,6 +659,16 @@ export default function AddProject() {
                   />
                   <span className="ap-input-suffix">₹</span>
                 </div>
+              </div>
+              {/* Start Date */}
+              <div className="ap-field">
+                <label className="ap-label">Start Date</label>
+                <input
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => handleInputChange('startDate', e.target.value)}
+                  className="ap-input"
+                />
               </div>
               {/* Due Date + Due Time */}
               <div className="ap-field-row">

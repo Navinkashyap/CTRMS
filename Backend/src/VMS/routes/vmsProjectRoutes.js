@@ -96,6 +96,8 @@ router.post("/incoming/:id/accept", async (req, res, next) => {
     const accepted = await VMSProject.create(data);
     await VMSProject.deleteOne({ _id: incoming._id });
     await flagAdminProjectPmStatus(incoming.projectId, "Accepted");
+    // Admin's list shows "Project being created" until the PM takes it on.
+    await syncAdminProjectStatus(incoming.projectId, accepted.status || "In Progress");
 
     res.status(201).json(accepted);
   } catch (error) {
@@ -169,11 +171,32 @@ router.post("/", async (req, res, next) => {
 // PUT /api/vms/projects/:id
 router.put("/:id", async (req, res, next) => {
   try {
-    const project = await VMSProject.findByIdAndUpdate(req.params.id, req.body, {
+    let project = await VMSProject.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
     if (!project) return res.status(404).json({ message: "Project not found" });
+
+    // PM submitting deliverables (files or links) completes the project.
+    const touchedDeliverables = ["deliveryFiles", "deliveredFiles", "salesDeliveredFiles", "deliveredLinks", "salesDeliveredLinks"]
+      .some((k) => req.body[k] !== undefined);
+    if (touchedDeliverables && project.status !== "Completed") {
+      const df = project.deliveryFiles;
+      const nested = df
+        ? Object.values(typeof df.toObject === "function" ? df.toObject() : df).flat().length
+        : 0;
+      const hasDeliverables =
+        nested > 0 ||
+        (project.deliveredFiles?.length || 0) > 0 ||
+        (project.salesDeliveredFiles?.length || 0) > 0 ||
+        (project.deliveredLinks?.length || 0) > 0 ||
+        (project.salesDeliveredLinks?.length || 0) > 0;
+      if (hasDeliverables) {
+        project.status = "Completed";
+        await project.save();
+        req.body.status = "Completed";
+      }
+    }
     res.json(project);
 
     // Keep the admin's own dashboard from freezing at creation-time status —
