@@ -78,6 +78,7 @@ export default function CreateSalesProject() {
     isProgramGroup: false,
     programName: '',
     amount: '',
+    startDate: '',
     dueDate: '',
     dueTime: '',
     description: '',
@@ -416,564 +417,565 @@ export default function CreateSalesProject() {
       {/* ── MAIN CONTENT ── */}
       <main className="ap-main">
 
-        {/* ═══ SECTION 01 — PROJECT INFORMATION ═══ */}
-        <section className="ap-card">
-          <div className="ap-card-header">
-            <div className="ap-card-header-left">
-              <span className="ap-step-num">01</span>
-              <div>
-                <h3 className="ap-card-title">Project Information</h3>
-                <p className="ap-card-subtitle">Provide basic details about the project</p>
-              </div>
-            </div>
-            <button type="button" className="ap-icon-btn-ghost"><Info size={18} /></button>
-          </div>
-
-          <div className="ap-card-body">
-            <div className="ap-form-grid-2">
-              {/* Project Code */}
-              <div className="ap-field">
-                <label className="ap-label">Project Code</label>
-                <input
-                  type="text"
-                  value={formData.projectCode}
-                  onChange={(e) => handleInputChange('projectCode', e.target.value)}
-                  className="ap-input"
-                  placeholder="e.g. PRJ-001"
-                />
-              </div>
-              {/* Status */}
-              <div className="ap-field">
-                <label className="ap-label">Status</label>
-                <select
-                  value={formData.projectStatus}
-                  onChange={(e) => handleInputChange('projectStatus', e.target.value)}
-                  className="ap-input"
-                >
-                  <option value="On Hold">On Hold</option>
-                  <option value="Project being created">Project being created</option>
-                  <option value="Not Started">Not Started</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Completed">Completed</option>
-                </select>
-              </div>
-              {/* Client */}
-              <div className="ap-field">
-                <label className="ap-label">Client</label>
-                <select
-                  value={formData.client}
-                  onChange={(e) => handleInputChange('client', e.target.value)}
-                  className="ap-input"
-                >
-                  <option value="">Select Client</option>
-                  {clients.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-                </select>
-              </div>
-              {/* Client Contact */}
-              <div className="ap-field">
-                <label className="ap-label">Client Contact</label>
-                <select
-                  value={formData.clientContact}
-                  onChange={(e) => handleInputChange('clientContact', e.target.value)}
-                  className="ap-input"
-                >
-                  <option value="">Select Contact</option>
-                  {contacts
-                    .filter(c => !formData.client || c.company === clients.find(cl => cl._id === formData.client)?.name || c.clientId === formData.client)
-                    .map(c => <option key={c._id} value={c._id}>{c.firstName} {c.lastName}</option>)}
-                </select>
-              </div>
-              {/* Amount */}
-              <div className="ap-field">
-                <label className="ap-label">Amount ({clientCurrency})</label>
-                <div className="ap-input-icon-wrap">
-                  <input
-                    type="text"
-                    placeholder="e.g. 120"
-                    value={formData.amount}
-                    onChange={(e) => handleInputChange('amount', e.target.value)}
-                    className="ap-input"
-                  />
-                  <span className="ap-input-suffix">₹</span>
+        {/* ═══ UNIFIED FORM CONTAINER ═══ */}
+        <div className="ap-card">
+          {/* ═══ SECTION 01 — PROJECT INFORMATION ═══ */}
+          <div className="ap-section-block">
+            <div className="ap-card-header">
+              <div className="ap-card-header-left">
+                <span className="ap-step-num">01</span>
+                <div>
+                  <h3 className="ap-card-title">Project Information</h3>
+                  <p className="ap-card-subtitle">Provide basic details about the project</p>
                 </div>
               </div>
-              {/* Due Date + Due Time */}
-              <div className="ap-field-row">
-                <div className="ap-field" style={{ flex: 1 }}>
-                  <label className="ap-label">Due Date</label>
+              <button type="button" className="ap-icon-btn-ghost"><Info size={18} /></button>
+            </div>
+
+            <div className="ap-card-body">
+              <div className="ap-form-grid-2">
+                {/* Project Code */}
+                <div className="ap-field">
+                  <label className="ap-label">Project Code</label>
+                  <input
+                    type="text"
+                    value={formData.projectCode}
+                    onChange={(e) => handleInputChange('projectCode', e.target.value)}
+                    className="ap-input"
+                    placeholder="e.g. PRJ-001"
+                  />
+                </div>
+                {/* Status */}
+                <div className="ap-field">
+                  <label className="ap-label">Status</label>
+                  <select
+                    value={formData.projectStatus}
+                    onChange={(e) => handleInputChange('projectStatus', e.target.value)}
+                    className="ap-input"
+                  >
+                    <option value="On Hold">On Hold</option>
+                    <option value="Project being created">Project being created</option>
+                    <option value="Not Started">Not Started</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+                {/* Client */}
+                <div className="ap-field">
+                  <label className="ap-label">Client</label>
+                  <select
+                    value={formData.client}
+                    onChange={(e) => handleInputChange('client', e.target.value)}
+                    className="ap-input"
+                  >
+                    <option value="">Select Client</option>
+                    {clients.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                  </select>
+                </div>
+                {/* Client Contact */}
+                <div className="ap-field">
+                  <label className="ap-label">Client Contact</label>
+                  <select
+                    value={formData.clientContact}
+                    onChange={(e) => handleInputChange('clientContact', e.target.value)}
+                    className="ap-input"
+                  >
+                    <option value="">Select Contact</option>
+                    {contacts
+                      .filter(c => !formData.client || c.company === clients.find(cl => cl._id === formData.client)?.name || c.clientId === formData.client)
+                      .map(c => <option key={c._id} value={c._id}>{c.firstName} {c.lastName}</option>)}
+                  </select>
+                </div>
+                {/* Start Date */}
+                <div className="ap-field">
+                  <label className="ap-label">Start Date</label>
                   <input
                     type="date"
-                    value={formData.dueDate}
-                    onChange={(e) => handleInputChange('dueDate', e.target.value)}
+                    value={formData.startDate}
+                    onChange={(e) => handleInputChange('startDate', e.target.value)}
                     className="ap-input"
                   />
                 </div>
-                <div className="ap-field" style={{ flex: 1 }}>
-                  <label className="ap-label">Due Time</label>
-                  <input
-                    type="time"
-                    value={formData.dueTime}
-                    onChange={(e) => handleInputChange('dueTime', e.target.value)}
-                    className="ap-input"
-                  />
-                </div>
-              </div>
-              {/* Client PO# */}
-              <div className="ap-field">
-                <label className="ap-label">Client PO#</label>
-                <input
-                  type="text"
-                  value={formData.clientPO}
-                  onChange={(e) => handleInputChange('clientPO', e.target.value)}
-                  className="ap-input"
-                  placeholder="e.g. PO#12345"
-                />
-              </div>
-              {/* Client Project Code */}
-              <div className="ap-field">
-                <label className="ap-label">Client Project Code (CPC)</label>
-                <input
-                  type="text"
-                  value={formData.clientProjectCode}
-                  onChange={(e) => handleInputChange('clientProjectCode', e.target.value)}
-                  className="ap-input"
-                  placeholder="e.g. MS-0076565"
-                />
-              </div>
-              {/* Instruction */}
-              <div className="ap-field ap-full-width">
-                <label className="ap-label">Instruction</label>
-                <textarea
-                  rows={4}
-                  placeholder="Enter project instruction..."
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  className="ap-input ap-textarea"
-                />
-              </div>
-              {/* Program / Project Group */}
-              <div className="ap-field ap-full-width">
-                <label className="ap-label">Program / Project Group</label>
-                <div className="ap-radio-group">
-                  <label className="ap-radio-label">
+
+                {/* Due Date + Due Time */}
+                <div className="ap-field-row">
+                  <div className="ap-field" style={{ flex: 1 }}>
+                    <label className="ap-label">Due Date</label>
                     <input
-                      type="radio"
-                      name="isProgramGroup"
-                      checked={formData.isProgramGroup === true}
-                      onChange={() => handleInputChange('isProgramGroup', true)}
-                      className="ap-radio"
+                      type="date"
+                      value={formData.dueDate}
+                      onChange={(e) => handleInputChange('dueDate', e.target.value)}
+                      className="ap-input"
                     />
-                    <span>Yes</span>
-                  </label>
-                  <label className="ap-radio-label">
+                  </div>
+                  <div className="ap-field" style={{ flex: 1 }}>
+                    <label className="ap-label">Due Time</label>
                     <input
-                      type="radio"
-                      name="isProgramGroup"
-                      checked={formData.isProgramGroup === false}
-                      onChange={() => handleInputChange('isProgramGroup', false)}
-                      className="ap-radio"
+                      type="time"
+                      value={formData.dueTime}
+                      onChange={(e) => handleInputChange('dueTime', e.target.value)}
+                      className="ap-input"
                     />
-                    <span>No</span>
-                  </label>
+                  </div>
                 </div>
-              </div>
-              {/* Program Name (conditional) */}
-              {formData.isProgramGroup && (
-                <div className="ap-field ap-full-width">
-                  <label className="ap-label">
-                    Program Name <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
+                {/* Client PO# */}
+                <div className="ap-field">
+                  <label className="ap-label">Client PO#</label>
                   <input
                     type="text"
-                    list="program-name-list"
-                    required
-                    placeholder="Select or enter program name"
-                    value={formData.programName}
-                    onChange={(e) => handleInputChange('programName', e.target.value)}
+                    value={formData.clientPO}
+                    onChange={(e) => handleInputChange('clientPO', e.target.value)}
                     className="ap-input"
+                    placeholder="e.g. PO#12345"
                   />
-                  <datalist id="program-name-list">
-                    {programNames.map((name) => (
-                      <option key={name} value={name} />
-                    ))}
-                  </datalist>
                 </div>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* ═══ SECTION 02 — TASK DETAILS ═══ */}
-        <section className="ap-card">
-          <div className="ap-card-header">
-            <div className="ap-card-header-left">
-              <span className="ap-step-num">02</span>
-              <div>
-                <h3 className="ap-card-title">Task Details</h3>
-                <p className="ap-card-subtitle">Define tasks, targets, languages and pricing</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="ap-card-body">
-            {/* Tool / Subject Matter / Specialization / No. of Targets */}
-            <div className="ap-meta-row">
-              <div className="ap-meta-item">
-                <span className="ap-meta-icon">📊</span>
-                <span className="ap-meta-label-text">Tool</span>
-                <select
-                  value={formData.translationTool}
-                  onChange={(e) => handleInputChange('translationTool', e.target.value)}
-                  className="ap-meta-select"
-                >
-                  <option value="">Select Tool</option>
-                  {tools.map((t) => (
-                    <option key={t._id} value={t.name}>{t.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="ap-meta-item">
-                <span className="ap-meta-label-text">Subject Matter</span>
-                <select
-                  value={formData.subjectMatter}
-                  onChange={(e) => handleInputChange('subjectMatter', e.target.value)}
-                  className="ap-meta-select"
-                >
-                  <option value="">Select Subject Matter</option>
-                  {specializations.map((s) => (
-                    <option key={s._id} value={s.name}>{s.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="ap-meta-item">
-                <span className="ap-meta-label-text">Specialization</span>
-                <select className="ap-meta-select" disabled>
-                  <option>{formData.subjectMatter || '—'}</option>
-                </select>
-              </div>
-              <div className="ap-meta-item ap-meta-item-targets">
-                <span className="ap-meta-label-text">No. of Targets</span>
-                <span className="ap-meta-value">{formData.targets.length}</span>
-                {targetSummary.length > 0 && (
-                  <span className="ap-meta-hint">({targetSummary.join(', ')})</span>
+                {/* Client Project Code */}
+                <div className="ap-field">
+                  <label className="ap-label">Client Project Code (CPC)</label>
+                  <input
+                    type="text"
+                    value={formData.clientProjectCode}
+                    onChange={(e) => handleInputChange('clientProjectCode', e.target.value)}
+                    className="ap-input"
+                    placeholder="e.g. MS-0076565"
+                  />
+                </div>
+                {/* Instruction */}
+                <div className="ap-field ap-full-width">
+                  <label className="ap-label">Instruction</label>
+                  <textarea
+                    rows={4}
+                    placeholder="Enter project instruction..."
+                    value={formData.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    className="ap-input ap-textarea"
+                  />
+                </div>
+                {/* Program / Project Group */}
+                <div className="ap-field ap-full-width">
+                  <label className="ap-label">Program / Project Group</label>
+                  <div className="ap-radio-group">
+                    <label className="ap-radio-label">
+                      <input
+                        type="radio"
+                        name="isProgramGroup"
+                        checked={formData.isProgramGroup === true}
+                        onChange={() => handleInputChange('isProgramGroup', true)}
+                        className="ap-radio"
+                      />
+                      <span>Yes</span>
+                    </label>
+                    <label className="ap-radio-label">
+                      <input
+                        type="radio"
+                        name="isProgramGroup"
+                        checked={formData.isProgramGroup === false}
+                        onChange={() => handleInputChange('isProgramGroup', false)}
+                        className="ap-radio"
+                      />
+                      <span>No</span>
+                    </label>
+                  </div>
+                </div>
+                {/* Program Name (conditional) */}
+                {formData.isProgramGroup && (
+                  <div className="ap-field ap-full-width">
+                    <label className="ap-label">
+                      Program Name <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      list="program-name-list"
+                      required
+                      placeholder="Select or enter program name"
+                      value={formData.programName}
+                      onChange={(e) => handleInputChange('programName', e.target.value)}
+                      className="ap-input"
+                    />
+                    <datalist id="program-name-list">
+                      {programNames.map((name) => (
+                        <option key={name} value={name} />
+                      ))}
+                    </datalist>
+                  </div>
                 )}
               </div>
             </div>
+          </div>
 
-            {/* Target language blocks */}
-            {formData.targets.map((target, idx) => {
-              const targetName = getLangName(target.targetLanguage, languages);
+          <div className="ap-section-divider" />
 
-              return (
-                <div key={idx} className="ap-target-block">
-                  {/* Source → Target language row */}
-                  <div className="ap-lang-row">
-                    <div className="ap-lang-pair">
-                      <span className="ap-lang-icon">🌐</span>
-                      <span className="ap-lang-label">Source</span>
-                      <select
-                        value={target.sourceLanguage || ''}
-                        onChange={(e) => handleTargetChange(idx, 'sourceLanguage', e.target.value)}
-                        className="ap-lang-select"
+          {/* ═══ SECTION 02 — TASK DETAILS ═══ */}
+          <div className="ap-section-block">
+            <div className="ap-card-header">
+              <div className="ap-card-header-left">
+                <span className="ap-step-num">02</span>
+                <div>
+                  <h3 className="ap-card-title">Task Details</h3>
+                  <p className="ap-card-subtitle">Define tasks, targets, languages and pricing</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="ap-card-body">
+              {/* Tool / Subject Matter / Specialization / No. of Targets */}
+              <div className="ap-meta-row">
+                <div className="ap-meta-item">
+
+                  <span className="ap-meta-label-text">Tool</span>
+                  <select
+                    value={formData.translationTool}
+                    onChange={(e) => handleInputChange('translationTool', e.target.value)}
+                    className="ap-meta-select"
+                  >
+                    <option value="">Select Tool</option>
+                    {tools.map((t) => (
+                      <option key={t._id} value={t.name}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="ap-meta-item">
+                  <span className="ap-meta-label-text">Subject Matter</span>
+                  <select
+                    value={formData.subjectMatter}
+                    onChange={(e) => handleInputChange('subjectMatter', e.target.value)}
+                    className="ap-meta-select"
+                  >
+                    <option value="">Select Subject Matter</option>
+                    {specializations.map((s) => (
+                      <option key={s._id} value={s.name}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="ap-meta-item ap-meta-item-targets">
+                  <span className="ap-meta-label-text">No. of Targets</span>
+                  <span className="ap-meta-value">{formData.targets.length}</span>
+                  {targetSummary.length > 0 && (
+                    <span className="ap-meta-hint">({targetSummary.join(', ')})</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Target language blocks */}
+              {formData.targets.map((target, idx) => {
+                const targetName = getLangName(target.targetLanguage, languages);
+
+                return (
+                  <div key={idx} className="ap-target-block">
+                    {/* Source → Target language row */}
+                    <div className="ap-lang-row">
+                      <div className="ap-lang-pair">
+
+                        <span className="ap-lang-label">Source</span>
+                        <select
+                          value={target.sourceLanguage || ''}
+                          onChange={(e) => handleTargetChange(idx, 'sourceLanguage', e.target.value)}
+                          className="ap-lang-select"
+                        >
+                          <option value="">Select Source</option>
+                          {languages.map((l) => (
+                            <option key={l._id} value={l._id}>
+                              {l.name}{l.localeCode ? ` (${l.localeCode})` : ''}
+                            </option>
+                          ))}
+                        </select>
+
+                        <ArrowRight size={16} className="ap-lang-arrow" />
+
+                        <span className="ap-lang-label">Target Language</span>
+                        <select
+                          value={target.targetLanguage}
+                          onChange={(e) => handleTargetChange(idx, 'targetLanguage', e.target.value)}
+                          className="ap-lang-select"
+                        >
+                          <option value="">Select Target</option>
+                          {languages.map((l) => (
+                            <option key={l._id} value={l._id}>
+                              {l.name}{l.localeCode ? ` (${l.localeCode})` : ''}
+                            </option>
+                          ))}
+                        </select>
+
+                        {targetName && <span className="ap-lang-name">({targetName})</span>}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => removeTarget(idx)}
+                        className="ap-btn-remove-target"
                       >
-                        <option value="">Select Source</option>
-                        {languages.map((l) => (
-                          <option key={l._id} value={l._id}>
-                            {l.name}{l.localeCode ? ` (${l.localeCode})` : ''}
-                          </option>
-                        ))}
-                      </select>
-
-                      <ArrowRight size={16} className="ap-lang-arrow" />
-
-                      <span className="ap-lang-label">Target Language</span>
-                      <select
-                        value={target.targetLanguage}
-                        onChange={(e) => handleTargetChange(idx, 'targetLanguage', e.target.value)}
-                        className="ap-lang-select"
-                      >
-                        <option value="">Select Target</option>
-                        {languages.map((l) => (
-                          <option key={l._id} value={l._id}>
-                            {l.name}{l.localeCode ? ` (${l.localeCode})` : ''}
-                          </option>
-                        ))}
-                      </select>
-
-                      {targetName && <span className="ap-lang-name">({targetName})</span>}
+                        Remove Target
+                      </button>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => removeTarget(idx)}
-                      className="ap-btn-remove-target"
-                    >
-                      Remove Target
-                    </button>
-                  </div>
-
-                  {/* Task table */}
-                  <div className="ap-task-table-wrap">
-                    <table className="ap-task-table">
-                      <thead>
-                        <tr>
-                          <th>Task</th>
-                          <th>Quantity</th>
-                          <th>Unit</th>
-                          <th>Rate</th>
-                          <th>Currency</th>
-                          <th>Fees</th>
-                          <th style={{ width: '70px' }}></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {target.tasks.map((task, tIdx) => (
-                          <tr key={tIdx}>
-                            <td>
-                              <select
-                                value={task.taskName}
-                                onChange={(e) => handleTaskChange(idx, tIdx, 'taskName', e.target.value)}
-                                className="ap-cell-select"
-                              >
-                                <option value="">Select Service</option>
-                                {services.map((s) => (
-                                  <option key={s._id} value={s.name}>{s.name}</option>
-                                ))}
-                              </select>
-                            </td>
-                            <td>
-                              <input
-                                type="number"
-                                min="0"
-                                value={task.quantity}
-                                onChange={(e) => handleTaskChange(idx, tIdx, 'quantity', e.target.value)}
-                                className="ap-cell-input"
-                              />
-                            </td>
-                            <td>
-                              <select
-                                value={task.unit}
-                                onChange={(e) => handleTaskChange(idx, tIdx, 'unit', e.target.value)}
-                                className="ap-cell-select"
-                              >
-                                {unitsList.length > 0 ? (
-                                  unitsList.map(u => <option key={u._id} value={u.name}>{u.name}</option>)
-                                ) : (
-                                  <option value="Words">Words</option>
-                                )}
-                              </select>
-                            </td>
-                            <td>
-                              <input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                value={task.rate}
-                                onChange={(e) => handleTaskChange(idx, tIdx, 'rate', e.target.value)}
-                                className="ap-cell-input"
-                              />
-                            </td>
-                            <td>
-                              <input
-                                type="text"
-                                value={task.currency || ''}
-                                onChange={(e) => handleTaskChange(idx, tIdx, 'currency', e.target.value.toUpperCase())}
-                                className="ap-cell-input ap-cell-currency"
-                                placeholder={clientCurrency}
-                              />
-                            </td>
-                            <td className="ap-cell-fees">
-                              {calcTaskFees(task.quantity, task.rate).toFixed(2)}
-                            </td>
-                            <td>
-                              <div className="ap-cell-actions">
-                                <button
-                                  type="button"
-                                  onClick={() => addTask(idx)}
-                                  className="ap-icon-btn ap-icon-btn-blue"
-                                  title="Add row"
-                                >
-                                  <Plus size={14} />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => removeTask(idx, tIdx)}
-                                  disabled={target.tasks.length <= 1}
-                                  className="ap-icon-btn ap-icon-btn-red"
-                                  title="Remove row"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            </td>
+                    {/* Task table */}
+                    <div className="ap-task-table-wrap">
+                      <table className="ap-task-table">
+                        <thead>
+                          <tr>
+                            <th>Task</th>
+                            <th>Quantity</th>
+                            <th>Unit</th>
+                            <th>Rate</th>
+                            <th>Currency</th>
+                            <th>Fees</th>
+                            <th style={{ width: '70px' }}></th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {target.tasks.map((task, tIdx) => (
+                            <tr key={tIdx}>
+                              <td>
+                                <select
+                                  value={task.taskName}
+                                  onChange={(e) => handleTaskChange(idx, tIdx, 'taskName', e.target.value)}
+                                  className="ap-cell-select"
+                                >
+                                  <option value="">Select Service</option>
+                                  {services.map((s) => (
+                                    <option key={s._id} value={s.name}>{s.name}</option>
+                                  ))}
+                                </select>
+                              </td>
+                              <td>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={task.quantity}
+                                  onChange={(e) => handleTaskChange(idx, tIdx, 'quantity', e.target.value)}
+                                  className="ap-cell-input"
+                                />
+                              </td>
+                              <td>
+                                <select
+                                  value={task.unit}
+                                  onChange={(e) => handleTaskChange(idx, tIdx, 'unit', e.target.value)}
+                                  className="ap-cell-select"
+                                >
+                                  {unitsList.length > 0 ? (
+                                    unitsList.map(u => <option key={u._id} value={u.name}>{u.name}</option>)
+                                  ) : (
+                                    <option value="Words">Words</option>
+                                  )}
+                                </select>
+                              </td>
+                              <td>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  value={task.rate}
+                                  onChange={(e) => handleTaskChange(idx, tIdx, 'rate', e.target.value)}
+                                  className="ap-cell-input"
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  type="text"
+                                  value={task.currency || ''}
+                                  onChange={(e) => handleTaskChange(idx, tIdx, 'currency', e.target.value.toUpperCase())}
+                                  className="ap-cell-input ap-cell-currency"
+                                  placeholder={clientCurrency}
+                                />
+                              </td>
+                              <td className="ap-cell-fees">
+                                {calcTaskFees(task.quantity, task.rate).toFixed(2)}
+                              </td>
+                              <td>
+                                <div className="ap-cell-actions">
+                                  <button
+                                    type="button"
+                                    onClick={() => addTask(idx)}
+                                    className="ap-icon-btn ap-icon-btn-blue"
+                                    title="Add row"
+                                  >
+                                    <Plus size={14} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeTask(idx, tIdx)}
+                                    disabled={target.tasks.length <= 1}
+                                    className="ap-icon-btn ap-icon-btn-red"
+                                    title="Remove row"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
 
-            <button
-              type="button"
-              onClick={addTarget}
-              className="ap-btn-add-target"
-            >
-              <Plus size={16} /> Add Target Language
-            </button>
-          </div>
-        </section>
-
-        {/* ═══ SECTION 03 — PAYMENT & BILLING ═══ */}
-        <section className="ap-card">
-          <div className="ap-card-header">
-            <div className="ap-card-header-left">
-              <span className="ap-step-num">03</span>
-              <div>
-                <h3 className="ap-card-title">Payment &amp; Billing</h3>
-                <p className="ap-card-subtitle">Set GST and review price summary</p>
-              </div>
+              <button
+                type="button"
+                onClick={addTarget}
+                className="ap-btn-add-target"
+              >
+                <Plus size={16} /> Add Target Language
+              </button>
             </div>
           </div>
 
-          <div className="ap-card-body">
-            <div className="ap-billing-layout">
-              {/* Left — GST */}
-              <div className="ap-billing-left">
-                <label className="ap-label" style={{ fontWeight: 700, fontSize: '14px' }}>GST</label>
-                <div className="ap-radio-group" style={{ marginTop: '8px' }}>
-                  <label className="ap-radio-label">
-                    <input
-                      type="radio"
-                      name="gstEnabled"
-                      checked={formData.gstEnabled === true}
-                      onChange={() => handleInputChange('gstEnabled', true)}
-                      className="ap-radio"
-                    />
-                    <span>Yes</span>
-                  </label>
-                  <label className="ap-radio-label">
-                    <input
-                      type="radio"
-                      name="gstEnabled"
-                      checked={formData.gstEnabled === false}
-                      onChange={() => handleInputChange('gstEnabled', false)}
-                      className="ap-radio"
-                    />
-                    <span>No</span>
-                  </label>
+          <div className="ap-section-divider" />
+
+          {/* ═══ SECTION 03 — PAYMENT & BILLING ═══ */}
+          <div className="ap-section-block">
+            <div className="ap-card-header">
+              <div className="ap-card-header-left">
+                <span className="ap-step-num">03</span>
+                <div>
+                  <h3 className="ap-card-title">Payment &amp; Billing</h3>
+                  <p className="ap-card-subtitle">Set GST and review price summary</p>
                 </div>
-                {formData.gstEnabled && (
-                  <div className="ap-gst-inputs">
-                    {isUP ? (
-                      <>
+              </div>
+            </div>
+
+            <div className="ap-card-body">
+              <div className="ap-billing-layout">
+                {/* Left — GST */}
+                <div className="ap-billing-left">
+                  <label className="ap-label" style={{ fontWeight: 700, fontSize: '14px' }}>GST</label>
+                  <div className="ap-radio-group" style={{ marginTop: '8px' }}>
+                    <label className="ap-radio-label">
+                      <input
+                        type="radio"
+                        name="gstEnabled"
+                        checked={formData.gstEnabled === true}
+                        onChange={() => handleInputChange('gstEnabled', true)}
+                        className="ap-radio"
+                      />
+                      <span>Yes</span>
+                    </label>
+                    <label className="ap-radio-label">
+                      <input
+                        type="radio"
+                        name="gstEnabled"
+                        checked={formData.gstEnabled === false}
+                        onChange={() => handleInputChange('gstEnabled', false)}
+                        className="ap-radio"
+                      />
+                      <span>No</span>
+                    </label>
+                  </div>
+                  {formData.gstEnabled && (
+                    <div className="ap-gst-inputs">
+                      {isUP ? (
+                        <>
+                          <label className="ap-gst-field">
+                            CGST (%):
+                            <input
+                              type="number"
+                              min="0"
+                              value={formData.cgstPercent}
+                              onChange={(e) => handleInputChange('cgstPercent', e.target.value)}
+                              className="ap-gst-input"
+                            />
+                          </label>
+                          <label className="ap-gst-field">
+                            SGST (%):
+                            <input
+                              type="number"
+                              min="0"
+                              value={formData.sgstPercent}
+                              onChange={(e) => handleInputChange('sgstPercent', e.target.value)}
+                              className="ap-gst-input"
+                            />
+                          </label>
+                        </>
+                      ) : (
                         <label className="ap-gst-field">
-                          CGST (%):
+                          IGST (%):
                           <input
                             type="number"
                             min="0"
-                            value={formData.cgstPercent}
-                            onChange={(e) => handleInputChange('cgstPercent', e.target.value)}
+                            value={formData.igstPercent}
+                            onChange={(e) => handleInputChange('igstPercent', e.target.value)}
                             className="ap-gst-input"
                           />
                         </label>
-                        <label className="ap-gst-field">
-                          SGST (%):
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Right — Summary Table */}
+                <div className="ap-billing-right">
+                  <table className="ap-summary-table">
+                    <tbody>
+                      <tr>
+                        <td className="ap-summary-label">Sub-Total</td>
+                        <td className="ap-summary-value">{subTotal.toFixed(2)}</td>
+                      </tr>
+                      <tr>
+                        <td className="ap-summary-label">
+                          Tax{formData.gstEnabled ? (isUP ? ` (CGST ${formData.cgstPercent}% & SGST ${formData.sgstPercent}%)` : ` (IGST ${formData.igstPercent}%)`) : ''}
+                        </td>
+                        <td className="ap-summary-value">
+                          {formData.gstEnabled ? taxAmount.toFixed(2) : '0.00'}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="ap-summary-label">Other</td>
+                        <td className="ap-summary-value-other">
+                          <input
+                            type="text"
+                            value={formData.otherChargesLabel}
+                            onChange={(e) => handleInputChange('otherChargesLabel', e.target.value)}
+                            className="ap-other-label-input"
+                            placeholder="None"
+                          />
                           <input
                             type="number"
                             min="0"
-                            value={formData.sgstPercent}
-                            onChange={(e) => handleInputChange('sgstPercent', e.target.value)}
-                            className="ap-gst-input"
+                            step="0.01"
+                            value={formData.otherCharges}
+                            onChange={(e) => handleInputChange('otherCharges', e.target.value)}
+                            className="ap-other-amount-input"
                           />
-                        </label>
-                      </>
-                    ) : (
-                      <label className="ap-gst-field">
-                        IGST (%):
-                        <input
-                          type="number"
-                          min="0"
-                          value={formData.igstPercent}
-                          onChange={(e) => handleInputChange('igstPercent', e.target.value)}
-                          className="ap-gst-input"
-                        />
-                      </label>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Right — Summary Table */}
-              <div className="ap-billing-right">
-                <table className="ap-summary-table">
-                  <tbody>
-                    <tr>
-                      <td className="ap-summary-label">Sub-Total</td>
-                      <td className="ap-summary-value">{subTotal.toFixed(2)}</td>
-                    </tr>
-                    <tr>
-                      <td className="ap-summary-label">
-                        Tax{formData.gstEnabled ? (isUP ? ` (CGST ${formData.cgstPercent}% & SGST ${formData.sgstPercent}%)` : ` (IGST ${formData.igstPercent}%)`) : ''}
-                      </td>
-                      <td className="ap-summary-value">
-                        {formData.gstEnabled ? taxAmount.toFixed(2) : '0.00'}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="ap-summary-label">Other</td>
-                      <td className="ap-summary-value-other">
-                        <input
-                          type="text"
-                          value={formData.otherChargesLabel}
-                          onChange={(e) => handleInputChange('otherChargesLabel', e.target.value)}
-                          className="ap-other-label-input"
-                          placeholder="None"
-                        />
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={formData.otherCharges}
-                          onChange={(e) => handleInputChange('otherCharges', e.target.value)}
-                          className="ap-other-amount-input"
-                        />
-                      </td>
-                    </tr>
-                    <tr className="ap-summary-total-row">
-                      <td className="ap-summary-total-label">Total</td>
-                      <td className="ap-summary-total-value">
-                        <span className="ap-currency-badge">{clientCurrency}</span>
-                        <span className="ap-total-amount">{grandTotal.toFixed(2)}</span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ═══ SECTION 04 — UPLOAD FILES ═══ */}
-        <section className="ap-card">
-          <div className="ap-card-header">
-            <div className="ap-card-header-left">
-              <span className="ap-step-num ap-step-num-pink">04</span>
-              <div>
-                <h3 className="ap-card-title">Upload Files</h3>
-                <p className="ap-card-subtitle">Upload reference and working files</p>
+                        </td>
+                      </tr>
+                      <tr className="ap-summary-total-row">
+                        <td className="ap-summary-total-label">Total</td>
+                        <td className="ap-summary-total-value">
+                          <span className="ap-currency-badge">{clientCurrency}</span>
+                          <span className="ap-total-amount">{grandTotal.toFixed(2)}</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="ap-card-body">
-            <div className="ap-upload-section">
-              {renderUploadRow('Reference files', 'referenceFiles')}
-              {renderUploadRow('Working files', 'workingFiles')}
+          <div className="ap-section-divider" />
+
+          {/* ═══ SECTION 04 — UPLOAD FILES ═══ */}
+          <div className="ap-section-block">
+            <div className="ap-card-header">
+              <div className="ap-card-header-left">
+                <span className="ap-step-num ap-step-num-pink">04</span>
+                <div>
+                  <h3 className="ap-card-title">Upload Files</h3>
+                  <p className="ap-card-subtitle">Upload reference and working files</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="ap-card-body">
+              <div className="ap-upload-section">
+                {renderUploadRow('Reference files', 'referenceFiles')}
+                {renderUploadRow('Working files', 'workingFiles')}
+              </div>
             </div>
           </div>
-        </section>
+        </div>
 
         {/* ── ACTIONS ── */}
         <div className="ap-actions-container">
@@ -1079,7 +1081,7 @@ export default function CreateSalesProject() {
           padding: 12px 6px;
         }
 
-        /* ===== CARDS ===== */
+        /* ===== CARDS & UNIFIED SECTIONS ===== */
         .ap-card {
           background: #fff;
           border-radius: 14px;
@@ -1087,6 +1089,13 @@ export default function CreateSalesProject() {
           margin-bottom: 0px;
           overflow: visible;
           border: 1px solid #f1f5f9;
+        }
+        .ap-section-block {
+          position: relative;
+        }
+        .ap-section-divider {
+          border-top: 1px solid #f1f5f9;
+          margin: 0 28px;
         }
         .ap-card-header {
           display: flex;

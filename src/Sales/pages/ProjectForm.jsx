@@ -16,6 +16,7 @@ const emptyProject = {
   clientContact: "",
   jobType: "",
   priority: "Medium",
+  startDate: "",
   deadline: "",
   amount: "",
   description: "",
@@ -108,7 +109,7 @@ const ProjectForm = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div>
             <label className={labelCls}>Job Type</label>
             <input name="jobType" value={form.jobType} onChange={handleChange} className={inputCls} placeholder="e.g. Translation" />
@@ -122,7 +123,11 @@ const ProjectForm = () => {
             </select>
           </div>
           <div>
-            <label className={labelCls}>Deadline</label>
+            <label className={labelCls}>Start Date</label>
+            <input type="date" name="startDate" value={form.startDate} onChange={handleChange} className={inputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>Due Date</label>
             <input type="date" name="deadline" value={form.deadline} onChange={handleChange} className={inputCls} />
           </div>
         </div>
