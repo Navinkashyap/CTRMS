@@ -18,6 +18,8 @@ salesApi.interceptors.request.use((config) => {
 /* Clients */
 export const getClients = async (params = {}) => (await salesApi.get("/clients", { params })).data;
 export const getClient = async (id) => (await salesApi.get(`/clients/${id}`)).data;
+export const getNextClientCode = async () => (await salesApi.get("/clients/next-code")).data.membershipCode;
+// payload may be FormData (to carry documents) or a plain object.
 export const createClient = async (payload) => (await salesApi.post("/clients", payload)).data;
 export const updateClient = async (id, payload) => (await salesApi.put(`/clients/${id}`, payload)).data;
 
@@ -46,6 +48,13 @@ export const getTools = async () => (await salesApi.get("/masters/tools")).data;
 export const getSpecializations = async () => (await salesApi.get("/masters/specializations")).data;
 export const getUnits = async () => (await salesApi.get("/masters/units")).data;
 export const getServices = async () => (await salesApi.get("/masters/services")).data;
+export const getDomains = async () => (await salesApi.get("/masters/domains")).data;
+export const getMemberships = async () => (await salesApi.get("/masters/memberships")).data;
+export const getCurrencies = async () => (await salesApi.get("/masters/currencies")).data;
+export const getCountries = async () => (await salesApi.get("/masters/countries")).data;
+export const getStates = async () => (await salesApi.get("/masters/states")).data;
+export const getCities = async () => (await salesApi.get("/masters/cities")).data;
+export const getDepartments = async () => (await salesApi.get("/masters/departments")).data;
 
 /* Sales Manager accounts (admin only) */
 export const getSalesUsers = async () => (await salesApi.get("/users")).data;

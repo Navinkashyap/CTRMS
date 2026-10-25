@@ -15,6 +15,13 @@ import Tool from "../models/Tool.js";
 import Specialization from "../models/Specialization.js";
 import Unit from "../models/Unit.js";
 import Service from "../models/Service.js";
+import Type from "../models/Type.js";
+import Membership from "../models/Membership.js";
+import Currency from "../models/Currency.js";
+import Country from "../models/Country.js";
+import State from "../models/State.js";
+import City from "../models/City.js";
+import Department from "../models/Department.js";
 import {
   buildVmsPayload,
   syncVmsIncoming,
@@ -22,6 +29,8 @@ import {
   FILE_FIELDS,
   normalizeProjectFiles,
 } from "./projectRoutes.js";
+import { upload as clientDocumentUpload, takeDocumentNames } from "./clientRoutes.js";
+import { uploadedFileUrl } from "../utils/s3Upload.js";
 import { requireAuth, requireRole, requirePermission } from "../middleware/auth.js";
 
 const router = express.Router();
@@ -126,6 +135,51 @@ router.delete("/users/:id", requireAuth, requireRole("superadmin"), async (req, 
 /*  Clients — Add / View / Edit                                        */
 /* ------------------------------------------------------------------ */
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+// Highest MEM-<n> in use + 1. Compared as numbers — sorting the strings would
+// put MEM-99 after MEM-195.
+const nextMembershipCode = async () => {
+  const [latest] = await Client.aggregate([
+    { $match: { membershipCode: /^MEM-\d+$/ } },
+    { $project: { n: { $toInt: { $arrayElemAt: [{ $split: ["$membershipCode", "-"] }, 1] } } } },
+    { $sort: { n: -1 } },
+    { $limit: 1 },
+  ]);
+  return `MEM-${String((latest?.n || 0) + 1).padStart(3, "0")}`;
+};
+
+const clientNameTaken = (name, excludeId) =>
+  Client.exists({
+    name: { $regex: `^${escapeRegex(name.trim())}$`, $options: "i" },
+    ...(excludeId ? { _id: { $ne: excludeId } } : {}),
+  });
+
+// The client form posts multipart (so it can carry documents), which means
+// arrays arrive as JSON strings. A plain JSON body passes through unchanged.
+const parseJsonField = (value, fallback) => {
+  if (typeof value !== "string") return value ?? fallback;
+  try {
+    return JSON.parse(value);
+  } catch (_e) {
+    return value ? [value] : fallback;
+  }
+};
+
+const uploadedDocuments = (files = [], names = []) =>
+  files.map((file, i) => ({
+    name: (names[i] || "").trim() || file.originalname,
+    url: uploadedFileUrl(file),
+  }));
+
+router.get("/clients/next-code", requireAuth, requirePermission("clients", "add"), async (_req, res, next) => {
+  try {
+    res.json({ membershipCode: await nextMembershipCode() });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get("/clients", requireAuth, requirePermission("clients", "view"), async (req, res, next) => {
   try {
     const { search } = req.query;
@@ -154,30 +208,82 @@ router.get("/clients/:id", requireAuth, requirePermission("clients", "view"), as
   }
 });
 
-router.post("/clients", requireAuth, requirePermission("clients", "add"), async (req, res, next) => {
-  try {
-    const client = await Client.create({
-      ...req.body,
-      createdBy: req.user.name || req.user.email,
-    });
-    res.status(201).json(client);
-  } catch (error) {
-    next(error);
-  }
-});
+router.post(
+  "/clients",
+  requireAuth,
+  requirePermission("clients", "add"),
+  clientDocumentUpload.array("documents"),
+  async (req, res, next) => {
+    try {
+      const data = { ...req.body };
+      const docNames = takeDocumentNames(data);
+      delete data.existingDocuments;
 
-router.put("/clients/:id", requireAuth, requirePermission("clients", "edit"), async (req, res, next) => {
-  try {
-    const client = await Client.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!client) return res.status(404).json({ message: "Client not found" });
-    res.json(client);
-  } catch (error) {
-    next(error);
+      if (!data.name?.trim()) return res.status(400).json({ message: "Client name is required" });
+      if (await clientNameTaken(data.name)) {
+        return res.status(409).json({ message: "A client with this name already exists." });
+      }
+
+      const client = await Client.create({
+        ...data,
+        membership: parseJsonField(data.membership, []),
+        // Generated here rather than trusted from the form, so two people
+        // adding clients at once can't both save the code they were shown.
+        membershipCode: await nextMembershipCode(),
+        createdBy: req.user.name || req.user.email,
+        documents: uploadedDocuments(req.files, docNames),
+      });
+      res.status(201).json(client);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
+
+router.put(
+  "/clients/:id",
+  requireAuth,
+  requirePermission("clients", "edit"),
+  clientDocumentUpload.array("documents"),
+  async (req, res, next) => {
+    try {
+      const client = await Client.findById(req.params.id);
+      if (!client) return res.status(404).json({ message: "Client not found" });
+
+      const data = { ...req.body };
+      const docNames = takeDocumentNames(data);
+      // The code and author are fixed once the client exists.
+      delete data.membershipCode;
+      delete data.createdBy;
+      delete data._id;
+
+      if (data.name !== undefined) {
+        if (!data.name.trim()) return res.status(400).json({ message: "Client name is required" });
+        if (await clientNameTaken(data.name, client._id)) {
+          return res.status(409).json({ message: "A client with this name already exists." });
+        }
+      }
+      if (data.membership !== undefined) data.membership = parseJsonField(data.membership, []);
+
+      // existingDocuments is the list the user kept; when it isn't sent at all
+      // the stored documents stay as they are.
+      const keptDocuments =
+        data.existingDocuments !== undefined
+          ? parseJsonField(data.existingDocuments, [])
+          : client.documents;
+      delete data.existingDocuments;
+
+      client.set({
+        ...data,
+        documents: [...keptDocuments, ...uploadedDocuments(req.files, docNames)],
+      });
+      await client.save();
+      res.json(client);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 /* ------------------------------------------------------------------ */
 /*  Client Contacts — Add / View / Edit                                */
@@ -353,6 +459,15 @@ router.get("/masters/tools", requireAuth, masterList(Tool, { name: 1 }));
 router.get("/masters/specializations", requireAuth, masterList(Specialization, { name: 1 }));
 router.get("/masters/units", requireAuth, masterList(Unit, { name: 1 }));
 router.get("/masters/services", requireAuth, masterList(Service, { priority: 1, name: 1 }));
+
+// Client / Contact form dropdowns
+router.get("/masters/domains", requireAuth, masterList(Type, { type: 1 }));
+router.get("/masters/memberships", requireAuth, masterList(Membership, { name: 1 }));
+router.get("/masters/currencies", requireAuth, masterList(Currency, { name: 1 }));
+router.get("/masters/countries", requireAuth, masterList(Country, { name: 1 }));
+router.get("/masters/states", requireAuth, masterList(State, { name: 1 }));
+router.get("/masters/cities", requireAuth, masterList(City, { name: 1 }));
+router.get("/masters/departments", requireAuth, masterList(Department, { name: 1 }));
 
 /* ------------------------------------------------------------------ */
 /*  Dashboard summary                                                   */

@@ -8,10 +8,23 @@ import {
   X,
   CircleAlert,
 } from "lucide-react";
-import { createClient, getClient, updateClient } from "../lib/salesApi";
+import {
+  createClient,
+  getClient,
+  updateClient,
+  getNextClientCode,
+  getDomains,
+  getMemberships,
+  getCurrencies,
+  getCountries,
+  getStates,
+  getCities,
+} from "../lib/salesApi";
+import { getCurrentUser } from "../../lib/authApi";
 import { countryCodes } from "../../lib/countryCodes";
 
-// Predefined Country, State, City master data
+// Fallback Country, State, City data — used only where the admin's
+// Country / State / City masters have nothing for the selection.
 const COUNTRY_DATA = [
   {
     name: "India",
@@ -360,6 +373,7 @@ const COUNTRY_DATA = [
   },
 ];
 
+// Fallbacks for when the Membership / Type / Currency masters are empty.
 const DEFAULT_MEMBERSHIPS = [
   "CITLOB",
   "EUATC",
@@ -379,13 +393,23 @@ const DEFAULT_DOMAINS = [
   "Automotive & Engineering",
 ];
 
+const DEFAULT_CURRENCIES = ["USD", "EUR", "GBP", "INR"];
+
+const isActive = (item) => item?.status !== "Inactive";
+const sameText = (a, b) => (a || "").trim().toLowerCase() === (b || "").trim().toLowerCase();
+const uniqueSorted = (list) =>
+  [...new Set(list.filter(Boolean))].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+// Keeps a saved value selectable even after it was removed from the master.
+const withCurrent = (options, current) =>
+  current && !options.some((o) => sameText(o, current)) ? [current, ...options] : options;
+
 const emptyClient = {
   name: "",
-  membershipCode: "MEM-195",
-  domain: "Gaming Company",
+  membershipCode: "",
+  domain: "",
   status: "Client",
   registrationDate: new Date().toISOString().split("T")[0],
-  createdBy: "Sales",
+  createdBy: "",
   membership: [],
   email: "",
   countryCode: "+91",
@@ -533,13 +557,63 @@ const ClientForm = () => {
   const isEdit = Boolean(id);
   const navigate = useNavigate();
 
-  const [form, setForm] = useState(emptyClient);
+  const [form, setForm] = useState(() => ({
+    ...emptyClient,
+    createdBy: getCurrentUser()?.name || getCurrentUser()?.email || "",
+  }));
   const [loading, setLoading] = useState(isEdit);
+  const [loadingCode, setLoadingCode] = useState(!isEdit);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [existingDocuments, setExistingDocuments] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
+
+  const [masters, setMasters] = useState({
+    domains: [],
+    memberships: [],
+    currencies: [],
+    countries: [],
+    states: [],
+    cities: [],
+  });
+
+  useEffect(() => {
+    Promise.all([
+      getDomains().catch(() => []),
+      getMemberships().catch(() => []),
+      getCurrencies().catch(() => []),
+      getCountries().catch(() => []),
+      getStates().catch(() => []),
+      getCities().catch(() => []),
+    ]).then(([domains, memberships, currencies, countries, states, cities]) => {
+      const loaded = {
+        domains: uniqueSorted(domains.filter(isActive).map((t) => t.type)),
+        memberships: uniqueSorted(memberships.filter(isActive).map((m) => m.name)),
+        currencies: uniqueSorted(currencies.filter(isActive).map((c) => c.name)),
+        countries: countries.filter(isActive),
+        states: states.filter(isActive),
+        cities: cities.filter(isActive),
+      };
+      setMasters(loaded);
+
+      if (!isEdit) {
+        const domainList = loaded.domains.length ? loaded.domains : DEFAULT_DOMAINS;
+        setForm((prev) => ({
+          ...prev,
+          domain: prev.domain || domainList.find((d) => d === "Gaming Company") || domainList[0] || "",
+        }));
+      }
+    });
+
+    if (!isEdit) {
+      getNextClientCode()
+        .then((membershipCode) => setForm((prev) => ({ ...prev, membershipCode })))
+        .catch(() => {})
+        .finally(() => setLoadingCode(false));
+    }
+  }, [isEdit]);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -562,35 +636,58 @@ const ClientForm = () => {
             : emptyClient.registrationDate,
           membership: Array.isArray(client.membership) ? client.membership : [],
         });
+        setExistingDocuments(Array.isArray(client.documents) ? client.documents : []);
       })
+      .catch((err) => setError(err.response?.data?.message || "Failed to load client"))
       .finally(() => setLoading(false));
   }, [id, isEdit]);
 
   const handleChange = (e) => setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   const updateField = (field, val) => setForm((prev) => ({ ...prev, [field]: val }));
 
-  // Country -> State -> City cascading logic
-  const availableStates = useMemo(() => {
-    const selectedCountryObj = COUNTRY_DATA.find(
-      (c) => c.name.toLowerCase() === (form.country || "").toLowerCase()
-    );
-    return selectedCountryObj ? selectedCountryObj.states : [];
-  }, [form.country]);
+  const domainOptions = withCurrent(masters.domains.length ? masters.domains : DEFAULT_DOMAINS, form.domain);
+  const currencyOptions = withCurrent(
+    masters.currencies.length ? masters.currencies : DEFAULT_CURRENCIES,
+    form.currency
+  );
+  const membershipOptions = uniqueSorted([
+    ...(masters.memberships.length ? masters.memberships : DEFAULT_MEMBERSHIPS),
+    ...form.membership,
+  ]);
 
-  const availableCities = useMemo(() => {
-    const stateObj = availableStates.find(
-      (s) => s.name.toLowerCase() === (form.state || "").toLowerCase()
-    );
-    return stateObj ? stateObj.cities : [];
-  }, [availableStates, form.state]);
+  // Country -> State -> City cascade: the admin's masters merged with the
+  // bundled COUNTRY_DATA, since the masters only cover part of each country.
+  const fallbackCountry = (country) => COUNTRY_DATA.find((c) => sameText(c.name, country));
+
+  const statesFor = (country) =>
+    uniqueSorted([
+      ...masters.states.filter((s) => sameText(s.country, country)).map((s) => s.name),
+      ...(fallbackCountry(country)?.states.map((s) => s.name) || []),
+    ]);
+
+  // The City master records a district rather than a state, so cities are
+  // matched to the selected state through that field.
+  const citiesFor = (country, state) =>
+    uniqueSorted([
+      ...masters.cities.filter((c) => sameText(c.district, state)).map((c) => c.name),
+      ...(fallbackCountry(country)?.states.find((s) => sameText(s.name, state))?.cities || []),
+    ]);
+
+  const countryOptions = withCurrent(
+    uniqueSorted([...masters.countries.map((c) => c.name), ...COUNTRY_DATA.map((c) => c.name)]),
+    form.country
+  );
+  // Empty means "no list for this selection" and the field becomes free text.
+  const stateList = statesFor(form.country);
+  const cityList = citiesFor(form.country, form.state);
+  const availableStates = stateList.length ? withCurrent(stateList, form.state) : [];
+  const availableCities = cityList.length ? withCurrent(cityList, form.city) : [];
 
   const handleCountryChange = (e) => {
     const newCountry = e.target.value;
-    const countryObj = COUNTRY_DATA.find((c) => c.name === newCountry);
-    const newStates = countryObj ? countryObj.states : [];
-    const firstState = newStates[0]?.name || "";
-    const firstCity = newStates[0]?.cities[0] || "";
-    const newCurrency = countryObj?.currency || "USD";
+    const firstState = statesFor(newCountry)[0] || "";
+    const firstCity = citiesFor(newCountry, firstState)[0] || "";
+    const newCurrency = fallbackCountry(newCountry)?.currency || "USD";
 
     setForm((prev) => ({
       ...prev,
@@ -603,13 +700,10 @@ const ClientForm = () => {
 
   const handleStateChange = (e) => {
     const newState = e.target.value;
-    const stateObj = availableStates.find((s) => s.name === newState);
-    const firstCity = stateObj ? stateObj.cities[0] || "" : "";
-
     setForm((prev) => ({
       ...prev,
       state: newState,
-      city: firstCity,
+      city: citiesFor(prev.country, newState)[0] || "",
     }));
   };
 
@@ -664,21 +758,63 @@ const ClientForm = () => {
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const removeExistingDocument = (index) => {
+    setExistingDocuments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const getFileUrl = (url) => {
+    if (!url) return "";
+    const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return `${apiBase}/files/view?url=${encodeURIComponent(url)}`;
+    }
+    return `${apiBase.replace("/api", "")}${url}`;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSaving(true);
     try {
-      const payload = {
-        ...form,
-        name: form.name || form.membershipCode || "Client",
+      const trim = (value) => String(value ?? "").trim();
+      // Client code and Created By are set by the server.
+      const fields = {
+        name: trim(form.name),
+        domain: form.domain,
+        status: form.status,
+        registrationDate: form.registrationDate,
+        email: trim(form.email),
         phone: form.phone ? `${form.countryCode} ${form.phone}`.trim() : "",
+        website: trim(form.website),
+        address: trim(form.address),
+        country: trim(form.country),
+        state: trim(form.state),
+        city: trim(form.city),
+        zip: trim(form.zip),
+        currency: form.currency,
+        gstIn: trim(form.gstIn),
+        vat: trim(form.vat),
+        notes: form.notes,
       };
+
+      const payload = new FormData();
+      Object.entries(fields).forEach(([key, value]) => payload.append(key, value ?? ""));
+      payload.append("membership", JSON.stringify(form.membership));
+      if (isEdit) payload.append("existingDocuments", JSON.stringify(existingDocuments));
+      payload.append("documentNames", JSON.stringify(uploadedFiles.map((d) => d.name.trim())));
+      uploadedFiles.forEach((d) => payload.append("documents", d.file));
+
       if (isEdit) await updateClient(id, payload);
       else await createClient(payload);
       navigate("/sales/clients");
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to save client");
+      const apiErrors = err.response?.data?.errors;
+      setError(
+        Array.isArray(apiErrors) && apiErrors.length
+          ? apiErrors.join(", ")
+          : err.response?.data?.message || "Failed to save client"
+      );
+      document.querySelector("main")?.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setSaving(false);
     }
@@ -730,13 +866,26 @@ const ClientForm = () => {
               Primary Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <FormField label="Company Name" required>
+                <input
+                  name="name"
+                  type="text"
+                  required
+                  className={inputClass}
+                  placeholder="Company Name"
+                  value={form.name}
+                  onChange={handleChange}
+                />
+              </FormField>
+
               <FormField label="Client Code">
                 <input
                   name="membershipCode"
                   type="text"
                   readOnly
+                  title={isEdit ? "" : "Final code is assigned when the client is saved"}
                   className={`${inputClass} bg-slate-50 text-slate-600 cursor-not-allowed`}
-                  value={form.membershipCode || "MEM-195"}
+                  value={loadingCode ? "Loading..." : form.membershipCode || "Assigned on save"}
                 />
               </FormField>
 
@@ -754,10 +903,9 @@ const ClientForm = () => {
                 <input
                   name="createdBy"
                   type="text"
-                  className={inputClass}
-                  placeholder="Sales"
+                  readOnly
+                  className={`${inputClass} bg-slate-50 text-slate-600 cursor-not-allowed`}
                   value={form.createdBy}
-                  onChange={handleChange}
                 />
               </FormField>
 
@@ -766,7 +914,8 @@ const ClientForm = () => {
                   value={form.domain}
                   onChange={(e) => updateField("domain", e.target.value)}
                 >
-                  {DEFAULT_DOMAINS.map((dom) => (
+                  <option value="">Select domain</option>
+                  {domainOptions.map((dom) => (
                     <option key={dom} value={dom}>
                       {dom}
                     </option>
@@ -792,7 +941,7 @@ const ClientForm = () => {
               {/* Membership Checkboxes */}
               <FormField label="Membership" className="md:col-span-2 lg:col-span-3">
                 <div className="flex flex-wrap items-center gap-4 px-4 py-3 bg-white border border-slate-200/90 rounded-xl min-h-[46px]">
-                  {DEFAULT_MEMBERSHIPS.map((mName) => {
+                  {membershipOptions.map((mName) => {
                     const isChecked = form.membership.includes(mName);
                     return (
                       <label key={mName} className="inline-flex items-center gap-2 cursor-pointer select-none group">
@@ -904,36 +1053,58 @@ const ClientForm = () => {
                 <FormField label="Country">
                   <SelectField value={form.country} onChange={handleCountryChange}>
                     <option value="" disabled>Select Country</option>
-                    {COUNTRY_DATA.map((c) => (
-                      <option key={c.name} value={c.name}>
-                        {c.name}
+                    {countryOptions.map((name) => (
+                      <option key={name} value={name}>
+                        {name}
                       </option>
                     ))}
                   </SelectField>
                 </FormField>
 
-                {/* 2. State Dropdown (populated based on Country) */}
+                {/* 2. State Dropdown (populated based on Country); free text when no list exists */}
                 <FormField label="State">
-                  <SelectField value={form.state} onChange={handleStateChange}>
-                    <option value="" disabled>Select State</option>
-                    {availableStates.map((s) => (
-                      <option key={s.name} value={s.name}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </SelectField>
+                  {availableStates.length > 0 ? (
+                    <SelectField value={form.state} onChange={handleStateChange}>
+                      <option value="" disabled>Select State</option>
+                      {availableStates.map((name) => (
+                        <option key={name} value={name}>
+                          {name}
+                        </option>
+                      ))}
+                    </SelectField>
+                  ) : (
+                    <input
+                      name="state"
+                      type="text"
+                      className={inputClass}
+                      placeholder="State"
+                      value={form.state}
+                      onChange={handleChange}
+                    />
+                  )}
                 </FormField>
 
-                {/* 3. City Dropdown (populated based on State) */}
+                {/* 3. City Dropdown (populated based on State); free text when no list exists */}
                 <FormField label="City">
-                  <SelectField value={form.city} onChange={handleCityChange}>
-                    <option value="" disabled>Select City</option>
-                    {availableCities.map((cityName) => (
-                      <option key={cityName} value={cityName}>
-                        {cityName}
-                      </option>
-                    ))}
-                  </SelectField>
+                  {availableCities.length > 0 ? (
+                    <SelectField value={form.city} onChange={handleCityChange}>
+                      <option value="" disabled>Select City</option>
+                      {availableCities.map((cityName) => (
+                        <option key={cityName} value={cityName}>
+                          {cityName}
+                        </option>
+                      ))}
+                    </SelectField>
+                  ) : (
+                    <input
+                      name="city"
+                      type="text"
+                      className={inputClass}
+                      placeholder="City"
+                      value={form.city}
+                      onChange={handleChange}
+                    />
+                  )}
                 </FormField>
 
                 {/* 4. ZIP Code */}
@@ -964,10 +1135,11 @@ const ClientForm = () => {
                   value={form.currency}
                   onChange={(e) => updateField("currency", e.target.value)}
                 >
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                  <option value="GBP">GBP</option>
-                  <option value="INR">INR (Rs.)</option>
+                  {currencyOptions.map((code) => (
+                    <option key={code} value={code}>
+                      {code === "INR" ? "INR (Rs.)" : code}
+                    </option>
+                  ))}
                 </SelectField>
               </FormField>
 
@@ -1067,6 +1239,41 @@ const ClientForm = () => {
               </button>
             </div>
 
+            {/* Documents already saved on this client (edit mode) */}
+            {existingDocuments.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Saved Documents ({existingDocuments.length})</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {existingDocuments.map((doc, idx) => (
+                    <div
+                      key={`${doc.url}-${idx}`}
+                      className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/80 hover:bg-white hover:border-indigo-200 transition-all shadow-xs"
+                    >
+                      <a
+                        href={getFileUrl(doc.url)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-3 overflow-hidden flex-1 min-w-0 mr-2"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                          <FileText className="w-4 h-4" />
+                        </div>
+                        <span className="text-xs font-bold text-slate-800 truncate hover:text-indigo-600">{doc.name}</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => removeExistingDocument(idx)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
+                        title="Remove document"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* List of uploaded/dragged files */}
             {uploadedFiles.length > 0 ? (
               <div className="mt-4 space-y-2">
@@ -1109,7 +1316,7 @@ const ClientForm = () => {
                   ))}
                 </div>
               </div>
-            ) : (
+            ) : existingDocuments.length === 0 && (
               <p className="text-center text-xs font-medium text-slate-400 mt-3">
                 No documents uploaded for this client yet.
               </p>

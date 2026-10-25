@@ -6,8 +6,7 @@ import {
   CircleAlert,
   CircleCheckBig,
 } from "lucide-react";
-import { createContact, getClients, getContact, updateContact } from "../lib/salesApi";
-import { getDepartments } from "../../lib/departmentApi";
+import { createContact, getClients, getContact, getDepartments, updateContact } from "../lib/salesApi";
 import { countryCodes } from "../../lib/countryCodes";
 
 const byNameAsc = (a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" });
@@ -170,7 +169,7 @@ const ContactForm = () => {
       getDepartments().catch(() => []),
     ]).then(([clientsData, deptData]) => {
       setClients(clientsData || []);
-      setDepartments(deptData || []);
+      setDepartments((deptData || []).filter((d) => d.status !== "Inactive"));
 
       const paramClientId = searchParams.get("clientId");
       if (paramClientId && clientsData?.length) {

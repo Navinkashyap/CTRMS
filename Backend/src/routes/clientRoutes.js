@@ -5,7 +5,9 @@ import Client from "../models/Client.js";
 
 const router = express.Router();
 
-const upload = createS3Uploader({
+// Exported so the Sales Portal's client routes (routes/salesRoutes.js) store
+// client documents in the same place with the same rules.
+export const upload = createS3Uploader({
   folder: "sadminperfectras_documents",
   allowedExtensions: [
     ".jpg", ".jpeg", ".png", ".pdf", ".doc", ".docx",
@@ -16,7 +18,7 @@ const upload = createS3Uploader({
 
 
 // Optional display names sent by the form, parallel to the uploaded files.
-const takeDocumentNames = (clientData) => {
+export const takeDocumentNames = (clientData) => {
   let names = [];
   try {
     names = JSON.parse(clientData.documentNames || "[]");
