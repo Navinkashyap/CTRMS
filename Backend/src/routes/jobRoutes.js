@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import { createS3Uploader, uploadedFileUrl } from "../utils/s3Upload.js";
 
 import Job from "../models/Job.js";
+import VMSProject from "../VMS/models/VMSProject.js";
+import { transferDeliverablesToNextTask, getSequentialTaskContext } from "../utils/sequentialFileTransfer.js";
 
 const router = express.Router();
 
@@ -29,25 +31,102 @@ const deriveBasePo = (po, vendorCode) =>
 // Once one vendor accepts a task, the other pending offers for that same task
 // are closed so nobody else starts on it. Best-effort; never throws.
 async function cancelSiblingOffers(job) {
-  const sameTask = [];
-  if (job.taskId) {
-    const scope = { taskId: job.taskId };
-    if (job.targetId) scope.targetId = job.targetId;
-    if (job.project) scope.project = job.project;
-    else if (job.projectId) scope.projectId = job.projectId;
-    else return;
-    sameTask.push(scope);
-  }
-  if (job.basePo && job.basePo !== job.po) sameTask.push({ basePo: job.basePo });
-  if (!sameTask.length) return;
-
   try {
+    const basePo = job.basePo || deriveBasePo(job.po, job.vendorCode);
+    const conditions = [];
+
+    if (job.taskId) {
+      const c = { taskId: String(job.taskId) };
+      if (job.targetId) c.targetId = String(job.targetId);
+      if (job.project) c.project = job.project;
+      else if (job.projectId) c.projectId = job.projectId;
+      conditions.push(c);
+    }
+
+    if (basePo && basePo !== job.po) {
+      const c = { basePo: basePo };
+      if (job.targetId) c.targetId = String(job.targetId);
+      if (job.project) c.project = job.project;
+      else if (job.projectId) c.projectId = job.projectId;
+      conditions.push(c);
+    }
+
+    if (!conditions.length) return;
+
     await Job.updateMany(
-      { _id: { $ne: job._id }, vendorStatus: "Pending", $or: sameTask },
+      { _id: { $ne: job._id }, vendorStatus: "Pending", $or: conditions },
       { vendorStatus: "Cancelled", status: "Cancelled", cancelledAt: new Date() }
     );
   } catch (error) {
     console.error("Failed to cancel competing offers:", error.message);
+  }
+}
+
+// Keep VMSProject.targets[].tasks[].assignedVendors in sync when a vendor accepts or rejects
+async function syncProjectVendorStatus(job, action) {
+  try {
+    const query = [];
+    if (job.project && mongoose.Types.ObjectId.isValid(job.project)) {
+      query.push({ _id: job.project });
+    }
+    if (job.projectId) {
+      query.push({ projectId: job.projectId });
+    }
+    if (!query.length) return;
+
+    const project = await VMSProject.findOne({ $or: query });
+    if (!project || !Array.isArray(project.targets)) return;
+
+    let modified = false;
+    for (const target of project.targets) {
+      if (job.targetId && String(target.id) !== String(job.targetId)) {
+        continue;
+      }
+      if (!Array.isArray(target.tasks)) continue;
+
+      for (const task of target.tasks) {
+        const isTaskMatch = (job.taskId && String(task.id) === String(job.taskId)) ||
+          (job.basePo && (task.basePo === job.basePo || task.po === job.basePo)) ||
+          (task.po === job.po);
+
+        if (!isTaskMatch) continue;
+
+        if (Array.isArray(task.assignedVendors)) {
+          task.assignedVendors.forEach(v => {
+            const isVendorMatch = (job.vendorCode && v.code === job.vendorCode) ||
+              (job.po && v.po === job.po) ||
+              (job.vendorName && v.name === job.vendorName);
+
+            if (isVendorMatch) {
+              if (action === "accept") {
+                v.status = "In Progress";
+              } else if (action === "reject") {
+                v.status = "Rejected";
+              }
+              modified = true;
+            } else if (action === "accept" && (v.status === "Pending" || !v.status)) {
+              v.status = "Cancelled";
+              modified = true;
+            }
+          });
+        }
+
+        if (action === "accept") {
+          task.vendor = job.vendorName || job.vendor || task.vendor;
+          task.vendorCode = job.vendorCode || task.vendorCode;
+          task.po = job.po;
+          task.status = "In Progress";
+          modified = true;
+        }
+      }
+    }
+
+    if (modified) {
+      project.markModified("targets");
+      await project.save();
+    }
+  } catch (err) {
+    console.error("Failed to sync project vendor status:", err.message);
   }
 }
 
@@ -159,6 +238,30 @@ router.post("/", async (req, res, next) => {
 
     if (data.status && !PO_STATUSES.includes(data.status)) delete data.status;
 
+    // Apply sequential workflow rules:
+    // Only the first task receives original files; subsequent tasks only receive deliverables from previous vendor
+    try {
+      const seqContext = await getSequentialTaskContext(
+        data.project || data.projectId,
+        data.targetId,
+        data.taskId,
+        data.serviceType || data.jobType || data.service,
+        data.sourceLanguage,
+        data.targetLanguages || data.targetLanguage
+      );
+      if (data.isFirstTask === undefined) data.isFirstTask = seqContext.isFirstTask;
+      if (data.taskIndex === undefined) data.taskIndex = seqContext.taskIndex;
+      if (data.isWaitingForPrevious === undefined) data.isWaitingForPrevious = seqContext.isWaitingForPrevious;
+      if (!data.previousTaskName && seqContext.previousTaskName) data.previousTaskName = seqContext.previousTaskName;
+
+      if (!seqContext.isFirstTask) {
+        // Subsequent task: must NOT have original files
+        data.workingFiles = seqContext.workingFiles;
+      }
+    } catch (e) {
+      console.warn("Could not determine sequential task context in POST /api/jobs:", e.message);
+    }
+
     const autoNumbered = !data.po;
     if (autoNumbered) {
       data.po = await nextPoNumber(data.projectId);
@@ -251,6 +354,12 @@ router.put("/:id", async (req, res, next) => {
 
     Object.assign(job, updates);
     await job.save();
+
+    // Trigger sequential file transfer if task is completed or approved
+    if (job.vendorStatus === "Completed" || updates.vendorStatus === "Completed" || updates.vendorStatus === "Accepted" || updates.vendorStatus === "Approved" || updates.deliveredFiles) {
+      await transferDeliverablesToNextTask(job, updates.deliveredFiles);
+    }
+
     res.json(job);
   } catch (error) {
     next(error);
@@ -295,6 +404,7 @@ router.put("/:id/respond", async (req, res, next) => {
     }
     await job.save();
     if (action === "accept") await cancelSiblingOffers(job);
+    await syncProjectVendorStatus(job, action);
     res.json(job);
   } catch (error) {
     next(error);
@@ -317,6 +427,11 @@ router.post("/:id/deliverables", upload.array("files"), async (req, res, next) =
       }));
       job.deliveredFiles.push(...newFiles);
       await job.save();
+
+      // If job is already completed/accepted, automatically transfer new deliverables to next task
+      if (job.vendorStatus === "Completed" || job.vendorStatus === "Accepted") {
+        await transferDeliverablesToNextTask(job);
+      }
     }
 
     res.status(201).json(job);
@@ -356,12 +471,16 @@ router.put("/:id/complete", async (req, res, next) => {
     }
     // The vendor portal fires this right after its own PUT {vendorStatus:
     // "Completed"}, so an already-submitted job is a no-op, not a conflict.
-    if (job.vendorStatus === "Completed") return res.json(job);
+    if (job.vendorStatus === "Completed") {
+      await transferDeliverablesToNextTask(job);
+      return res.json(job);
+    }
     if (!SUBMITTABLE.includes(job.vendorStatus)) {
       return res.status(409).json({ message: "Only jobs in progress or sent back for changes can be submitted" });
     }
     markSubmitted(job);
     await job.save();
+    await transferDeliverablesToNextTask(job);
     res.json(job);
   } catch (error) {
     next(error);

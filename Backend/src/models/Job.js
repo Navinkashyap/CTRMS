@@ -41,6 +41,10 @@ const jobSchema = new mongoose.Schema(
     basePo: { type: String, trim: true, default: "", index: true },
     taskId: { type: String, trim: true, default: "" },
     targetId: { type: String, trim: true, default: "" },
+    taskIndex: { type: Number, default: 0 },
+    isFirstTask: { type: Boolean, default: true },
+    isWaitingForPrevious: { type: Boolean, default: false },
+    previousTaskName: { type: String, trim: true, default: "" },
 
     project: { type: mongoose.Schema.Types.ObjectId, ref: "VMSProject", default: null },
     projectId: { type: String, trim: true, default: "" },
@@ -125,7 +129,7 @@ const jobSchema = new mongoose.Schema(
     deliveredFiles: { type: [deliveredFileSchema], default: [] },
     deliveredLinks: { type: [String], default: [] },
 
-    invoiceId: { type: mongoose.Schema.Types.ObjectId, ref: "Invoice", default: null },
+    invoiceId: { type: mongoose.Schema.Types.Mixed, default: null },
     paymentStatus: { type: String, enum: ["Not Invoiced", "Invoiced", "Paid"], default: "Not Invoiced" },
   },
   { timestamps: true }

@@ -8,7 +8,13 @@ import mongoose from "mongoose";
 // vendor data into fields that mean something else.
 const particularSchema = new mongoose.Schema(
   {
+    jobId: { type: String, trim: true, default: "" },
+    po: { type: String, trim: true, default: "" },
+    project: { type: String, trim: true, default: "" },
+    cpc: { type: String, trim: true, default: "" },
+    langPair: { type: String, trim: true, default: "" },
     task: { type: String, trim: true, default: "" },
+    service: { type: String, trim: true, default: "" },
     text: { type: String, trim: true, default: "" },
     src: { type: String, trim: true, default: "" },
     trgt: { type: String, trim: true, default: "" },
@@ -16,8 +22,9 @@ const particularSchema = new mongoose.Schema(
     unit: { type: String, trim: true, default: "" },
     rate: { type: Number, default: 0 },
     amount: { type: Number, default: 0 },
+    certificate: { type: Boolean, default: false },
   },
-  { _id: false }
+  { _id: false, strict: false }
 );
 
 const vendorInvoiceSchema = new mongoose.Schema(
@@ -34,6 +41,7 @@ const vendorInvoiceSchema = new mongoose.Schema(
     // The job this invoice bills for, if created from a completed job. Kept
     // in sync with Job.invoiceId/paymentStatus (see vendorInvoiceRoutes.js).
     job: { type: mongoose.Schema.Types.ObjectId, ref: "Job", default: null },
+    jobs: { type: [mongoose.Schema.Types.Mixed], default: [] },
 
     applyGst: { type: Boolean, default: true },
     paymentCountry: { type: String, trim: true, default: "US" },
@@ -54,9 +62,16 @@ const vendorInvoiceSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["Pending", "Paid", "Overdue", "Draft"],
+      enum: ["Pending", "Approved", "Paid", "Rejected", "Processing", "Overdue", "Draft", "Unpaid"],
       default: "Pending",
     },
+    paymentReference: { type: String, trim: true, default: "" },
+    approvedAt: { type: Date, default: null },
+    payoutDueDate: { type: Date, default: null },
+    paidAt: { type: Date, default: null },
+    paidAmount: { type: Number, default: 0 },
+    rejectionReason: { type: String, trim: true, default: "" },
+    accountantNotes: { type: String, trim: true, default: "" },
   },
   { timestamps: true }
 );

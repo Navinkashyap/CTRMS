@@ -346,6 +346,52 @@ router.post("/forgot-password", async (req, res, next) => {
   }
 });
 
+// ─── POST /api/vms/auth/reset-password ─── Reset or update password ────────
+router.post("/reset-password", async (req, res, next) => {
+  try {
+    const { email, newPassword, currentPassword } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: "Email and new password are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+    }
+
+    const user = await VMSUser.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      const vendor = await Vendor.findOne({ email: email.toLowerCase() });
+      if (vendor) {
+        if (currentPassword) {
+          const isMatch = await vendor.comparePassword(currentPassword);
+          if (!isMatch) {
+            return res.status(400).json({ message: "Current password does not match" });
+          }
+        }
+        vendor.password = newPassword;
+        await vendor.save();
+        return res.json({ message: "Password updated successfully" });
+      }
+      return res.status(404).json({ message: "User account not found" });
+    }
+
+    if (currentPassword) {
+      const isMatch = await user.comparePassword(currentPassword);
+      if (!isMatch) {
+        return res.status(400).json({ message: "Current password does not match" });
+      }
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return res.json({ message: "Password updated successfully" });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ─── POST /api/vms/auth/logout ─── Logout ───────────────────────────────────
 router.post("/logout", (_req, res) => {
   // JWT is stateless — client-side token removal handles logout

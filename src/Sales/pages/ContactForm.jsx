@@ -373,8 +373,61 @@ const ContactForm = () => {
           </div>
 
           <hr className="border-slate-100" />
+          {/* Section 2: Contact Information */}
+          <div>
+            <h3 className="text-base font-bold text-slate-900 mb-4">
+              Contact Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Email Address */}
+              <FormField label="Email Address" required>
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  className={inputClass}
+                  placeholder="contact@company.com"
+                  value={form.email}
+                  onChange={handleChange}
+                />
+              </FormField>
 
-          {/* Section 2: Professional Information */}
+              {/* Phone Number with WhatsApp toggle */}
+              <FormField label="Phone Number">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2.5 w-full">
+                    <NumericCountryCodeSearch
+                      value={form.countryCode}
+                      onChange={(val) => updateField("countryCode", val)}
+                    />
+                    <input
+                      name="phone"
+                      type="tel"
+                      inputMode="numeric"
+                      maxLength={15}
+                      className="flex-1 min-w-0 px-3.5 py-2.5 bg-white border border-slate-200/90 rounded-xl text-sm font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
+                      placeholder="Phone Number"
+                      value={form.phone}
+                      onChange={(e) => updateField("phone", e.target.value.replace(/\D/g, ""))}
+                    />
+                  </div>
+                  <label className="inline-flex items-center gap-2 cursor-pointer select-none pt-1">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20 cursor-pointer"
+                      checked={form.isWhatsapp}
+                      onChange={(e) => updateField("isWhatsapp", e.target.checked)}
+                    />
+                    <span className="text-xs font-semibold text-slate-600">Available on WhatsApp</span>
+                  </label>
+                </div>
+              </FormField>
+            </div>
+          </div>
+
+          <hr className="border-slate-100" />
+
+          {/* Section 3: Professional Information */}
           <div>
             <h3 className="text-base font-bold text-slate-900 mb-4">
               Professional Information
@@ -433,59 +486,7 @@ const ContactForm = () => {
 
           <hr className="border-slate-100" />
 
-          {/* Section 3: Contact Information */}
-          <div>
-            <h3 className="text-base font-bold text-slate-900 mb-4">
-              Contact Information
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Email Address */}
-              <FormField label="Email Address" required>
-                <input
-                  name="email"
-                  type="email"
-                  required
-                  className={inputClass}
-                  placeholder="contact@company.com"
-                  value={form.email}
-                  onChange={handleChange}
-                />
-              </FormField>
 
-              {/* Phone Number with WhatsApp toggle */}
-              <FormField label="Phone Number">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2.5 w-full">
-                    <NumericCountryCodeSearch
-                      value={form.countryCode}
-                      onChange={(val) => updateField("countryCode", val)}
-                    />
-                    <input
-                      name="phone"
-                      type="tel"
-                      inputMode="numeric"
-                      maxLength={15}
-                      className="flex-1 min-w-0 px-3.5 py-2.5 bg-white border border-slate-200/90 rounded-xl text-sm font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
-                      placeholder="Phone Number"
-                      value={form.phone}
-                      onChange={(e) => updateField("phone", e.target.value.replace(/\D/g, ""))}
-                    />
-                  </div>
-                  <label className="inline-flex items-center gap-2 cursor-pointer select-none pt-1">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20 cursor-pointer"
-                      checked={form.isWhatsapp}
-                      onChange={(e) => updateField("isWhatsapp", e.target.checked)}
-                    />
-                    <span className="text-xs font-semibold text-slate-600">Available on WhatsApp</span>
-                  </label>
-                </div>
-              </FormField>
-            </div>
-          </div>
-
-          <hr className="border-slate-100" />
 
           {/* Section 4: Additional Information */}
           <div>
