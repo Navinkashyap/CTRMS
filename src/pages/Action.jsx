@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
+import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, Zap, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 const initialActionData = [
   { id: 1, action: 'Download Document', description: 'Allow to download documents only to mapped Role.', status: 'Active' },
@@ -19,14 +19,39 @@ export default function Action() {
   const [formData, setFormData] = useState({ action: '', description: '', status: 'Active' });
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
-  // Filtering actions based on search query
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === 'asc') direction = 'desc';
+      else if (sortConfig.direction === 'desc') direction = null;
+    }
+    setSortConfig({ key: direction ? key : null, direction: direction || 'asc' });
+  };
+
+  // Filtering and sorting actions
   const filteredActions = useMemo(() => {
-    return actions.filter(a =>
+    let result = actions.filter(a =>
       a.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
       a.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [actions, searchQuery]);
+
+    if (sortConfig.key) {
+      result = [...result].sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+
+        if (aVal === null || aVal === undefined) return 1;
+        if (bVal === null || bVal === undefined) return -1;
+
+        const comp = String(aVal).localeCompare(String(bVal), undefined, { numeric: true, sensitivity: 'base' });
+        return sortConfig.direction === 'asc' ? comp : -comp;
+      });
+    }
+
+    return result;
+  }, [actions, searchQuery, sortConfig]);
 
   const showNotification = (msg) => {
     setNotification(msg);
@@ -60,6 +85,28 @@ export default function Action() {
       showNotification(`Added ${formData.action} successfully!`);
     }
     setIsModalOpen(false);
+  };
+
+  const renderSortableHeader = (label, sortKey, extraClasses = '') => {
+    const isSorted = sortConfig.key === sortKey;
+    return (
+      <th
+        onClick={() => requestSort(sortKey)}
+        className={`px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] cursor-pointer select-none group/th hover:text-blue-600 transition-colors ${extraClasses}`}
+        title={`Sort by ${label}`}
+      >
+        <div className="inline-flex items-center gap-1.5">
+          <span>{label}</span>
+          <span className={`transition-all duration-200 ${isSorted ? 'text-blue-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+            {isSorted ? (
+              sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+            ) : (
+              <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+            )}
+          </span>
+        </div>
+      </th>
+    );
   };
 
   return (
@@ -114,9 +161,9 @@ export default function Action() {
               <thead>
                 <tr className="border-b border-slate-100">
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-16 text-center">#</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-1/4">Action</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Description</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-32">Status</th>
+                  {renderSortableHeader('Action', 'action', 'w-1/4')}
+                  {renderSortableHeader('Description', 'description')}
+                  {renderSortableHeader('Status', 'status', 'w-32')}
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-24 text-center text-slate-500/60">
                     <MoreHorizontal className="w-4 h-4 mx-auto" />
                   </th>

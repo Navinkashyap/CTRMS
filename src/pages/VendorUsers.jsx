@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Search, Pencil, Trash2, X, Eye, EyeOff } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, X, Eye, EyeOff, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import axios from 'axios';
 
 // Same endpoint the Vendor Manager portal uses to create vendors (VMSUser, role "Vendor").
@@ -43,6 +43,16 @@ export default function VendorUsers() {
   const [form, setForm] = useState(emptyForm);
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === 'asc') direction = 'desc';
+      else if (sortConfig.direction === 'desc') direction = null;
+    }
+    setSortConfig({ key: direction ? key : null, direction: direction || 'asc' });
+  };
 
   const loadVendors = async () => {
     setLoading(true);
@@ -62,13 +72,33 @@ export default function VendorUsers() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return vendors.filter(
+    let result = vendors.filter(
       (v) =>
         (v.name || '').toLowerCase().includes(q) ||
         (v.email || '').toLowerCase().includes(q) ||
         (v.contactNo || '').includes(q)
     );
-  }, [vendors, search]);
+
+    if (sortConfig.key) {
+      result = [...result].sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+
+        if (sortConfig.key === 'status') {
+          aVal = a.isActive === false ? 'Inactive' : 'Active';
+          bVal = b.isActive === false ? 'Inactive' : 'Active';
+        }
+
+        if (aVal === null || aVal === undefined) return 1;
+        if (bVal === null || bVal === undefined) return -1;
+
+        const comp = String(aVal).localeCompare(String(bVal), undefined, { numeric: true, sensitivity: 'base' });
+        return sortConfig.direction === 'asc' ? comp : -comp;
+      });
+    }
+
+    return result;
+  }, [vendors, search, sortConfig]);
 
   const openAdd = () => {
     setEditingId(null);
@@ -172,11 +202,36 @@ export default function VendorUsers() {
           <table className="w-full text-left text-sm border-collapse min-w-[800px]">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-100">
-                {['S.No.', 'Name', 'Email', 'Contact', 'DOB', 'Status', 'Action'].map((h) => (
-                  <th key={h} className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">
-                    {h}
-                  </th>
-                ))}
+                <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">S.No.</th>
+                {[
+                  { label: 'Name', key: 'name' },
+                  { label: 'Email', key: 'email' },
+                  { label: 'Contact', key: 'contactNo' },
+                  { label: 'DOB', key: 'dob' },
+                  { label: 'Status', key: 'status' }
+                ].map(({ label, key }) => {
+                  const isSorted = sortConfig.key === key;
+                  return (
+                    <th
+                      key={key}
+                      onClick={() => requestSort(key)}
+                      className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
+                      title={`Sort by ${label}`}
+                    >
+                      <div className="inline-flex items-center gap-1.5">
+                        <span>{label}</span>
+                        <span className={`transition-all duration-200 ${isSorted ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+                          {isSorted ? (
+                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                          ) : (
+                            <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+                          )}
+                        </span>
+                      </div>
+                    </th>
+                  );
+                })}
+                <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

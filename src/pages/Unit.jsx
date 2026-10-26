@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, SquarePen, X, Search, Layers } from 'lucide-react';
+import { Plus, SquarePen, X, Search, Layers, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { getUnits, createUnit, updateUnit } from '../lib/unitApi';
 
 export default function Unit() {
@@ -28,11 +28,33 @@ export default function Unit() {
     }
   };
 
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const requestSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        if (prev.direction === 'asc') return { key, direction: 'desc' };
+        return { key: null, direction: 'asc' };
+      }
+      return { key, direction: 'asc' };
+    });
+  };
+
   const filteredUnits = useMemo(() => {
-    return units.filter(u =>
-      u.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const query = searchQuery.trim().toLowerCase();
+    const result = units.filter(u =>
+      (u.name || '').toLowerCase().includes(query)
     );
-  }, [units, searchQuery]);
+
+    if (!sortConfig.key) return result;
+
+    return [...result].sort((a, b) => {
+      const aVal = (a[sortConfig.key] ?? '').toString().trim();
+      const bVal = (b[sortConfig.key] ?? '').toString().trim();
+      const cmp = aVal.localeCompare(bVal, undefined, { numeric: true, sensitivity: 'base' });
+      return sortConfig.direction === 'asc' ? cmp : -cmp;
+    });
+  }, [units, searchQuery, sortConfig]);
 
   const showNotification = (msg) => {
     setNotification(msg);
@@ -116,7 +138,37 @@ export default function Unit() {
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/50">
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-16 text-center">#</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Unit Name</th>
+                  {(() => {
+                    const isSorted = sortConfig.key === 'name';
+                    return (
+                      <th
+                        onClick={() => requestSort('name')}
+                        className={`px-6 py-5 font-bold uppercase tracking-widest text-[11px] cursor-pointer select-none group/th transition-all ${
+                          isSorted ? 'text-indigo-600 bg-indigo-50/40' : 'text-slate-500 hover:text-indigo-600'
+                        }`}
+                        title={`Sort by Unit Name (${
+                          isSorted
+                            ? sortConfig.direction === 'asc'
+                              ? 'Ascending - click for Descending'
+                              : 'Descending - click to clear'
+                            : 'Click to sort'
+                        })`}
+                      >
+                        <div className="inline-flex items-center gap-1.5">
+                          <span>Unit Name</span>
+                          {isSorted ? (
+                            sortConfig.direction === 'asc' ? (
+                              <ArrowUp className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                            ) : (
+                              <ArrowDown className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                            )
+                          ) : (
+                            <ArrowUpDown className="w-3.5 h-3.5 text-slate-300 opacity-60 group-hover/th:opacity-100 group-hover/th:text-slate-400 transition-all shrink-0" />
+                          )}
+                        </div>
+                      </th>
+                    );
+                  })()}
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-24 text-center">Action</th>
                 </tr>
               </thead>

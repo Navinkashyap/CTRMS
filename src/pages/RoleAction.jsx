@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Save, ShieldCheck, CheckSquare, Square, Search, Filter, Info, FileDown, Star, UserSearch, Layers, CheckCircle, Trash2, PlusCircle, ClipboardCheck, Send, UserCog, Store, Eye } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Save, ShieldCheck, CheckSquare, Square, Search, Filter, Info, FileDown, Star, UserSearch, Layers, CheckCircle, Trash2, PlusCircle, ClipboardCheck, Send, UserCog, Store, Eye, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 const roles = [
     'Super Admin', 'Admin', 'Project Head', 'Accountant', 'Project Manager',
@@ -28,6 +28,16 @@ export default function RoleAction() {
     const [permissions, setPermissions] = useState({});
     const [searchQuery, setSearchQuery] = useState('');
     const [isSaving, setIsSaving] = useState(false);
+    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+    const requestSort = (key) => {
+        let direction = 'asc';
+        if (sortConfig.key === key) {
+            if (sortConfig.direction === 'asc') direction = 'desc';
+            else if (sortConfig.direction === 'desc') direction = null;
+        }
+        setSortConfig({ key: direction ? key : null, direction: direction || 'asc' });
+    };
 
     const togglePermission = (role, action) => {
         const key = `${role}-${action}`;
@@ -45,9 +55,26 @@ export default function RoleAction() {
         }, 1500);
     };
 
-    const filteredActions = actions.filter(action =>
-        action.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredActions = useMemo(() => {
+        let result = actions.filter(action =>
+            action.name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+
+        if (sortConfig.key) {
+            result = [...result].sort((a, b) => {
+                let aVal = a[sortConfig.key];
+                let bVal = b[sortConfig.key];
+
+                if (aVal === null || aVal === undefined) return 1;
+                if (bVal === null || bVal === undefined) return -1;
+
+                const comp = String(aVal).localeCompare(String(bVal), undefined, { numeric: true, sensitivity: 'base' });
+                return sortConfig.direction === 'asc' ? comp : -comp;
+            });
+        }
+
+        return result;
+    }, [searchQuery, sortConfig]);
 
     return (
         <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
@@ -88,7 +115,22 @@ export default function RoleAction() {
                         <table className="w-full text-left text-[13px] border-collapse min-w-[1200px]">
                             <thead className="sticky top-0 z-10">
                                 <tr className="bg-slate-50/80 backdrop-blur-md border-b border-slate-100">
-                                    <th className="px-8 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px] bg-slate-50/50 sticky left-0 z-20 w-[280px]">Action</th>
+                                    <th
+                                        onClick={() => requestSort('name')}
+                                        className="px-8 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px] bg-slate-50/50 sticky left-0 z-20 w-[280px] cursor-pointer select-none group/th hover:text-blue-600 transition-colors"
+                                        title="Sort by Action"
+                                    >
+                                        <div className="inline-flex items-center gap-1.5">
+                                            <span>Action</span>
+                                            <span className={`transition-all duration-200 ${sortConfig.key === 'name' ? 'text-blue-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+                                                {sortConfig.key === 'name' ? (
+                                                    sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                                                ) : (
+                                                    <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+                                                )}
+                                            </span>
+                                        </div>
+                                    </th>
                                     {roles.map(role => (
                                         <th key={role} className="px-4 py-6 font-black text-slate-900 text-center whitespace-nowrap min-w-[120px]">
                                             <div className="flex flex-col items-center gap-1">

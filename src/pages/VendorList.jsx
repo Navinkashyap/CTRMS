@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Filter,
   Settings,
   ChevronDown,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   Star,
   Plus,
   Search,
@@ -77,15 +79,47 @@ export default function VendorList() {
     }
   };
 
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === 'asc') direction = 'desc';
+      else if (sortConfig.direction === 'desc') direction = null;
+    }
+    setSortConfig({ key: direction ? key : null, direction: direction || 'asc' });
+  };
+
   const handleEdit = (vendor) => {
     navigate('/vendors/add-vendor', { state: { vendor } });
   };
 
-  const filteredVendors = vendors.filter(vendor =>
-    Object.keys(filters).every(key =>
-      vendor[key]?.toString().toLowerCase().includes(filters[key].toLowerCase())
-    )
-  );
+  const filteredVendors = useMemo(() => {
+    let result = vendors.filter(vendor =>
+      Object.keys(filters).every(key =>
+        vendor[key]?.toString().toLowerCase().includes(filters[key].toLowerCase())
+      )
+    );
+
+    if (sortConfig.key) {
+      result = [...result].sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+
+        if (aVal === null || aVal === undefined) return 1;
+        if (bVal === null || bVal === undefined) return -1;
+
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+
+        const comp = String(aVal).localeCompare(String(bVal), undefined, { numeric: true, sensitivity: 'base' });
+        return sortConfig.direction === 'asc' ? comp : -comp;
+      });
+    }
+
+    return result;
+  }, [vendors, filters, sortConfig]);
 
   return (
     <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8 animate-in fade-in duration-700">
@@ -175,9 +209,19 @@ export default function VendorList() {
                 <tr className="bg-slate-50/80 border-b border-slate-100/80">
                   <th className="px-6 py-3 w-32">
                     <div className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between px-1">
-                        <span className="font-semibold text-slate-500 text-xs uppercase tracking-wider">Code</span>
-                        <ArrowUpDown className="w-3 h-3 text-slate-300 pointer-events-none" />
+                      <div
+                        onClick={() => requestSort('code')}
+                        className="flex items-center justify-between px-1 cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
+                        title="Sort by Code"
+                      >
+                        <span className={`font-semibold text-xs uppercase tracking-wider ${sortConfig.key === 'code' ? 'text-indigo-600' : 'text-slate-500 group-hover/th:text-indigo-600'}`}>Code</span>
+                        <span className={`transition-all duration-200 ${sortConfig.key === 'code' ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+                          {sortConfig.key === 'code' ? (
+                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                          ) : (
+                            <ArrowUpDown className="w-3 h-3 opacity-60 group-hover/th:opacity-100" />
+                          )}
+                        </span>
                       </div>
                       <input
                         type="text"
@@ -190,9 +234,19 @@ export default function VendorList() {
                   </th>
                   <th className="px-6 py-3">
                     <div className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between px-1">
-                        <span className="font-semibold text-slate-500 text-xs uppercase tracking-wider">Full Name</span>
-                        <ArrowUpDown className="w-3 h-3 text-slate-300 pointer-events-none" />
+                      <div
+                        onClick={() => requestSort('name')}
+                        className="flex items-center justify-between px-1 cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
+                        title="Sort by Full Name"
+                      >
+                        <span className={`font-semibold text-xs uppercase tracking-wider ${sortConfig.key === 'name' ? 'text-indigo-600' : 'text-slate-500 group-hover/th:text-indigo-600'}`}>Full Name</span>
+                        <span className={`transition-all duration-200 ${sortConfig.key === 'name' ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+                          {sortConfig.key === 'name' ? (
+                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                          ) : (
+                            <ArrowUpDown className="w-3 h-3 opacity-60 group-hover/th:opacity-100" />
+                          )}
+                        </span>
                       </div>
                       <input
                         type="text"
@@ -205,9 +259,19 @@ export default function VendorList() {
                   </th>
                   <th className="px-6 py-3">
                     <div className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between px-1">
-                        <span className="font-semibold text-slate-500 text-xs uppercase tracking-wider">Email Contact</span>
-                        <ArrowUpDown className="w-3 h-3 text-slate-300 pointer-events-none" />
+                      <div
+                        onClick={() => requestSort('email')}
+                        className="flex items-center justify-between px-1 cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
+                        title="Sort by Email Contact"
+                      >
+                        <span className={`font-semibold text-xs uppercase tracking-wider ${sortConfig.key === 'email' ? 'text-indigo-600' : 'text-slate-500 group-hover/th:text-indigo-600'}`}>Email Contact</span>
+                        <span className={`transition-all duration-200 ${sortConfig.key === 'email' ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+                          {sortConfig.key === 'email' ? (
+                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                          ) : (
+                            <ArrowUpDown className="w-3 h-3 opacity-60 group-hover/th:opacity-100" />
+                          )}
+                        </span>
                       </div>
                       <input
                         type="text"
@@ -220,7 +284,20 @@ export default function VendorList() {
                   </th>
                   <th className="px-6 py-3 w-40">
                     <div className="flex flex-col gap-2 text-center h-[52px] justify-between">
-                      <span className="font-semibold text-slate-500 text-xs uppercase tracking-wider mt-1">Ratings</span>
+                      <div
+                        onClick={() => requestSort('rating')}
+                        className="inline-flex items-center justify-center gap-1.5 cursor-pointer select-none group/th hover:text-indigo-600 transition-colors mt-1"
+                        title="Sort by Ratings"
+                      >
+                        <span className={`font-semibold text-xs uppercase tracking-wider ${sortConfig.key === 'rating' ? 'text-indigo-600' : 'text-slate-500 group-hover/th:text-indigo-600'}`}>Ratings</span>
+                        <span className={`transition-all duration-200 ${sortConfig.key === 'rating' ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+                          {sortConfig.key === 'rating' ? (
+                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                          ) : (
+                            <ArrowUpDown className="w-3 h-3 opacity-60 group-hover/th:opacity-100" />
+                          )}
+                        </span>
+                      </div>
                     </div>
                   </th>
                   <th className="px-6 py-3 font-semibold text-slate-500 text-xs text-center uppercase tracking-wider flex-col justify-end pt-[28px]">Actions</th>

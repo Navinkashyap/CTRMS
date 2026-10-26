@@ -443,8 +443,8 @@ const inputClass =
   'w-full px-3.5 py-2.5 bg-white border border-slate-200/90 rounded-xl text-sm font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs';
 
 const FormField = ({ label, required, children, className = '' }) => (
-  <div className={`p-4 rounded-2xl bg-[#f8faff] hover:bg-white border border-slate-100/90 hover:border-slate-200/80 focus-within:border-indigo-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/10 transition-all ${className}`}>
-    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+  <div className={className}>
+    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
       {label}
       {required && <span className="text-rose-500 ml-0.5">*</span>}
     </label>
@@ -884,9 +884,8 @@ export default function AddClient() {
   );
 
   return (
-    <div className="font-sans text-slate-900 pb-12 min-h-screen bg-[#fafbfc] px-4 sm:px-6 py-6 animate-in fade-in duration-500">
-      <div className="w-full space-y-6">
-        {/* Header with back button */}
+    <div className="font-sans text-slate-900 pb-12 w-full space-y-6">
+      {/* Header with back button */}
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -1046,7 +1045,7 @@ export default function AddClient() {
               <h3 className="text-base font-bold text-slate-900 mb-4">
                 Contact Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField label="Email Address">
                   <input
                     type="email"
@@ -1316,33 +1315,34 @@ export default function AddClient() {
 
               {/* Existing documents (edit mode) */}
               {formData.existingDocuments?.length > 0 && (
-                <div className="mt-4">
+                <div className="mt-4 space-y-2">
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Existing Documents ({formData.existingDocuments.length})</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {formData.existingDocuments.map((doc, idx) => (
                       <div
                         key={`existing-${idx}`}
-                        className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/60 hover:bg-white border border-slate-100 hover:border-indigo-100 hover:shadow-md transition-all group"
+                        className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/80 group hover:bg-white hover:border-indigo-200 transition-all shadow-xs"
                       >
                         <a
                           href={getFileUrl(doc.url)}
                           target="_blank"
                           rel="noreferrer"
                           onClick={(e) => handleViewDocument(e, doc.url, doc.name)}
-                          className="flex items-center gap-3 overflow-hidden flex-1 min-w-0"
+                          className="flex items-center gap-3 overflow-hidden flex-1 min-w-0 mr-2"
                         >
-                          <div className="w-10 h-10 rounded-xl bg-indigo-50 group-hover:bg-indigo-100 flex items-center justify-center shrink-0 transition-colors">
-                            <FileText className="w-5 h-5 text-indigo-500" />
+                          <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                            <FileText className="w-4 h-4" />
                           </div>
-                          <div className="overflow-hidden">
-                            <p className="font-semibold text-slate-800 text-sm truncate" title={doc.name}>{doc.name}</p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Click to view</p>
+                          <div className="overflow-hidden flex-1 min-w-0">
+                            <p className="w-full text-xs font-bold text-slate-800 truncate" title={doc.name}>{doc.name}</p>
+                            <p className="text-[10px] text-slate-400 font-medium">Click to view document</p>
                           </div>
                         </a>
                         <button
                           type="button"
                           onClick={() => removeExistingDocument(idx)}
-                          className="p-1.5 ml-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
+                          title="Remove file"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -1379,6 +1379,5 @@ export default function AddClient() {
           </form>
         </div>
       </div>
-    </div>
   );
 }

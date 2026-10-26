@@ -18,6 +18,9 @@ import {
   Building2,
   Eye,
   SlidersHorizontal,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import { getProjects, deleteProject, updateProject, getProject } from '../lib/projectApi';
 import { getContacts } from '../lib/contactApi';
@@ -160,16 +163,46 @@ export default function ProjectsList() {
     loadProjects();
   }, []);
 
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === 'asc') direction = 'desc';
+      else if (sortConfig.direction === 'desc') direction = null;
+    }
+    setSortConfig({ key: direction ? key : null, direction: direction || 'asc' });
+  };
+
   const filteredProjects = React.useMemo(() => {
     const query = searchQuery.toLowerCase();
-    return projects.filter(
+    let result = projects.filter(
       (project) =>
         (project.projectName || '').toLowerCase().includes(query) ||
         (project.client || '').toLowerCase().includes(query) ||
         (project.service || '').toLowerCase().includes(query) ||
         (project.projectId || '').toLowerCase().includes(query)
     );
-  }, [projects, searchQuery]);
+
+    if (sortConfig.key) {
+      result = [...result].sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+
+        if (aVal === null || aVal === undefined) return 1;
+        if (bVal === null || bVal === undefined) return -1;
+
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+
+        const comp = String(aVal).localeCompare(String(bVal), undefined, { numeric: true, sensitivity: 'base' });
+        return sortConfig.direction === 'asc' ? comp : -comp;
+      });
+    }
+
+    return result;
+  }, [projects, searchQuery, sortConfig]);
 
   const handleDelete = async (id) => {
     if (
@@ -291,6 +324,29 @@ export default function ProjectsList() {
     }
   };
 
+  const renderSortableHeader = (id, label) => {
+    const isSorted = sortConfig.key === id;
+    return (
+      <th
+        key={id}
+        onClick={() => requestSort(id)}
+        className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
+        title={`Sort by ${label}`}
+      >
+        <div className="inline-flex items-center gap-1.5">
+          <span>{label}</span>
+          <span className={`transition-all duration-200 ${isSorted ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+            {isSorted ? (
+              sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+            ) : (
+              <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+            )}
+          </span>
+        </div>
+      </th>
+    );
+  };
+
   return (
     <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8">
       <div className="max-w-[1400px] mx-auto space-y-6">
@@ -354,18 +410,18 @@ export default function ProjectsList() {
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-100/80">
                   <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">S.No.</th>
-                  {visibleColumns.includes('projectName') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Project Name</th>}
-                  {visibleColumns.includes('client') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Client</th>}
-                  {visibleColumns.includes('service') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Service</th>}
-                  {visibleColumns.includes('manager') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Manager</th>}
-                  {visibleColumns.includes('budget') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Budget</th>}
-                  {visibleColumns.includes('cgst') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">CGST</th>}
-                  {visibleColumns.includes('sgst') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">SGST</th>}
-                  {visibleColumns.includes('igst') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">IGST</th>}
-                  {visibleColumns.includes('priority') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Priority</th>}
-                  {visibleColumns.includes('deadline') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Deadline</th>}
-                  {visibleColumns.includes('progress') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Progress</th>}
-                  {visibleColumns.includes('status') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Status</th>}
+                  {visibleColumns.includes('projectName') && renderSortableHeader('projectName', 'Project Name')}
+                  {visibleColumns.includes('client') && renderSortableHeader('client', 'Client')}
+                  {visibleColumns.includes('service') && renderSortableHeader('service', 'Service')}
+                  {visibleColumns.includes('manager') && renderSortableHeader('manager', 'Manager')}
+                  {visibleColumns.includes('budget') && renderSortableHeader('budget', 'Budget')}
+                  {visibleColumns.includes('cgst') && renderSortableHeader('cgst', 'CGST')}
+                  {visibleColumns.includes('sgst') && renderSortableHeader('sgst', 'SGST')}
+                  {visibleColumns.includes('igst') && renderSortableHeader('igst', 'IGST')}
+                  {visibleColumns.includes('priority') && renderSortableHeader('priority', 'Priority')}
+                  {visibleColumns.includes('deadline') && renderSortableHeader('deadline', 'Deadline')}
+                  {visibleColumns.includes('progress') && renderSortableHeader('progress', 'Progress')}
+                  {visibleColumns.includes('status') && renderSortableHeader('status', 'Status')}
                   <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider text-center sticky right-0 bg-slate-50 z-30 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] border-l border-slate-100">Action</th>
                 </tr>
               </thead>

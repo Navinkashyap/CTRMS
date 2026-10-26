@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   Building2,
   CheckCircle2,
   ChevronDown,
@@ -165,10 +167,11 @@ export default function ClientList() {
 
   const requestSort = (key) => {
     let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === 'asc') direction = 'desc';
+      else if (sortConfig.direction === 'desc') direction = null;
     }
-    setSortConfig({ key, direction });
+    setSortConfig({ key: direction ? key : null, direction: direction || 'asc' });
   };
 
 
@@ -207,24 +210,34 @@ export default function ClientList() {
     setIsSettingsModalOpen(false);
   };
 
-  const renderSortableHeader = (id, label) => (
-    <th
-      key={id}
-      style={colWidths[id] ? { width: `${colWidths[id]}px`, minWidth: `${colWidths[id]}px`, maxWidth: `${colWidths[id]}px` } : undefined}
-      className="relative px-4 py-3 font-semibold text-slate-500 text-xs uppercase tracking-wider hover:bg-slate-100/50 transition-colors select-none"
-    >
-      <div className="flex items-center gap-1.5 whitespace-nowrap overflow-hidden cursor-pointer" onClick={() => requestSort(id)}>
-        <span className="truncate">{label}</span>
-        <ArrowUpDown className={`w-3 h-3 shrink-0 ${sortConfig.key === id ? 'text-indigo-500' : 'text-slate-300'}`} />
-      </div>
-      {/* Drag handle to manually resize this column */}
-      <div
-        onMouseDown={(e) => startResize(e, id)}
-        onClick={(e) => e.stopPropagation()}
-        className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-indigo-200/60 active:bg-indigo-300"
-      />
-    </th>
-  );
+  const renderSortableHeader = (id, label) => {
+    const isSorted = sortConfig.key === id;
+    return (
+      <th
+        key={id}
+        style={colWidths[id] ? { width: `${colWidths[id]}px`, minWidth: `${colWidths[id]}px`, maxWidth: `${colWidths[id]}px` } : undefined}
+        className="relative px-4 py-3 font-semibold text-slate-500 text-xs uppercase tracking-wider hover:bg-slate-100/50 transition-colors select-none group/th hover:text-indigo-600"
+        title={`Sort by ${label}`}
+      >
+        <div className="flex items-center gap-1.5 whitespace-nowrap overflow-hidden cursor-pointer" onClick={() => requestSort(id)}>
+          <span className="truncate">{label}</span>
+          <span className={`shrink-0 transition-all duration-200 ${isSorted ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+            {isSorted ? (
+              sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+            ) : (
+              <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+            )}
+          </span>
+        </div>
+        {/* Drag handle to manually resize this column */}
+        <div
+          onMouseDown={(e) => startResize(e, id)}
+          onClick={(e) => e.stopPropagation()}
+          className="absolute top-0 right-0 h-full w-2 cursor-col-resize hover:bg-indigo-200/60 active:bg-indigo-300"
+        />
+      </th>
+    );
+  };
 
   return (
     <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8">

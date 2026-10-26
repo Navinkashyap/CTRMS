@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { getCities, createCity, updateCity, deleteCity } from '../lib/cityApi';
 import { getStates } from '../lib/stateApi';
 
@@ -34,12 +34,35 @@ export default function City() {
     }
   };
 
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const requestSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        if (prev.direction === 'asc') return { key, direction: 'desc' };
+        return { key: null, direction: 'asc' };
+      }
+      return { key, direction: 'asc' };
+    });
+  };
+
   const filteredCities = useMemo(() => {
-    return cities.filter(c =>
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.shortName.toLowerCase().includes(searchQuery.toLowerCase())
+    const query = searchQuery.trim().toLowerCase();
+    const result = cities.filter(c =>
+      (c.name || '').toLowerCase().includes(query) ||
+      (c.shortName || '').toLowerCase().includes(query) ||
+      (c.district || '').toLowerCase().includes(query)
     );
-  }, [cities, searchQuery]);
+
+    if (!sortConfig.key) return result;
+
+    return [...result].sort((a, b) => {
+      const aVal = (a[sortConfig.key] ?? '').toString().trim();
+      const bVal = (b[sortConfig.key] ?? '').toString().trim();
+      const cmp = aVal.localeCompare(bVal, undefined, { numeric: true, sensitivity: 'base' });
+      return sortConfig.direction === 'asc' ? cmp : -cmp;
+    });
+  }, [cities, searchQuery, sortConfig]);
 
   const showNotification = (msg) => {
     setNotification(msg);
@@ -125,10 +148,47 @@ export default function City() {
               <thead className="sticky top-0 z-10 bg-white">
                 <tr className="border-b border-slate-100">
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-16 text-center">#</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">City</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Short Name</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">District</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-32">Status</th>
+                  {(() => {
+                    const renderSortableHeader = (key, label, className = '') => {
+                      const isSorted = sortConfig.key === key;
+                      return (
+                        <th
+                          key={key}
+                          onClick={() => requestSort(key)}
+                          className={`px-6 py-5 font-bold uppercase tracking-widest text-[11px] cursor-pointer select-none group/th transition-all ${
+                            isSorted ? 'text-blue-600 bg-blue-50/40' : 'text-slate-500 hover:text-blue-600'
+                          } ${className}`}
+                          title={`Sort by ${label} (${
+                            isSorted
+                              ? sortConfig.direction === 'asc'
+                                ? 'Ascending - click for Descending'
+                                : 'Descending - click to clear'
+                              : 'Click to sort'
+                          })`}
+                        >
+                          <div className="inline-flex items-center gap-1.5">
+                            <span>{label}</span>
+                            {isSorted ? (
+                              sortConfig.direction === 'asc' ? (
+                                <ArrowUp className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                              ) : (
+                                <ArrowDown className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                              )
+                            ) : (
+                              <ArrowUpDown className="w-3.5 h-3.5 text-slate-300 opacity-60 group-hover/th:opacity-100 group-hover/th:text-slate-400 transition-all shrink-0" />
+                            )}
+                          </div>
+                        </th>
+                      );
+                    };
+
+                    return [
+                      renderSortableHeader('name', 'City'),
+                      renderSortableHeader('shortName', 'Short Name'),
+                      renderSortableHeader('district', 'District'),
+                      renderSortableHeader('status', 'Status', 'w-32'),
+                    ];
+                  })()}
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-24 text-center">
                     <MoreHorizontal className="w-4 h-4 mx-auto" />
                   </th>

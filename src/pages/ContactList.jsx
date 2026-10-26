@@ -26,7 +26,10 @@ import {
   Pencil,
   Eye,
   Briefcase,
-  Users
+  Users,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { getContacts, deleteContact } from '../lib/contactApi';
 
@@ -95,16 +98,47 @@ export default function ContactList() {
   // Default visible columns as per normal view
   const [visibleColumns, setVisibleColumns] = useState(['fullName', 'phone', 'email', 'designation', 'department']);
   const [tempVisibleColumns, setTempVisibleColumns] = useState(visibleColumns);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === 'asc') direction = 'desc';
+      else if (sortConfig.direction === 'desc') direction = null;
+    }
+    setSortConfig({ key: direction ? key : null, direction: direction || 'asc' });
+  };
 
   const filteredContacts = React.useMemo(() => {
     const query = searchQuery.toLowerCase();
-    return contacts.filter(contact =>
+    let result = contacts.filter(contact =>
       (contact.firstName?.toLowerCase() || '').includes(query) ||
       (contact.lastName?.toLowerCase() || '').includes(query) ||
       (contact.email?.toLowerCase() || '').includes(query) ||
       (contact.company?.toLowerCase() || '').includes(query)
     );
-  }, [contacts, searchQuery]);
+
+    if (sortConfig.key) {
+      result = [...result].sort((a, b) => {
+        let aVal, bVal;
+        if (sortConfig.key === 'fullName') {
+          aVal = `${a.firstName || ''} ${a.lastName || ''}`.trim();
+          bVal = `${b.firstName || ''} ${b.lastName || ''}`.trim();
+        } else {
+          aVal = a[sortConfig.key];
+          bVal = b[sortConfig.key];
+        }
+
+        if (aVal === null || aVal === undefined) return 1;
+        if (bVal === null || bVal === undefined) return -1;
+
+        const comp = String(aVal).localeCompare(String(bVal), undefined, { numeric: true, sensitivity: 'base' });
+        return sortConfig.direction === 'asc' ? comp : -comp;
+      });
+    }
+
+    return result;
+  }, [contacts, searchQuery, sortConfig]);
 
   const handleEdit = (contact) => {
     navigate('/contacts/add-contact', { state: { contact } });
@@ -123,6 +157,29 @@ export default function ContactList() {
   const applyColumnSettings = () => {
     setVisibleColumns(tempVisibleColumns);
     setIsSettingsModalOpen(false);
+  };
+
+  const renderSortableHeader = (id, label) => {
+    const isSorted = sortConfig.key === id;
+    return (
+      <th
+        key={id}
+        onClick={() => requestSort(id)}
+        className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
+        title={`Sort by ${label}`}
+      >
+        <div className="inline-flex items-center gap-1.5">
+          <span>{label}</span>
+          <span className={`transition-all duration-200 ${isSorted ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+            {isSorted ? (
+              sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+            ) : (
+              <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+            )}
+          </span>
+        </div>
+      </th>
+    );
   };
 
   return (
@@ -180,12 +237,12 @@ export default function ContactList() {
             <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-100">
-                  {visibleColumns.includes('fullName') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Full Name</th>}
-                  {visibleColumns.includes('countryCode') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Country Code</th>}
-                  {visibleColumns.includes('phone') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Phone</th>}
-                  {visibleColumns.includes('email') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Email</th>}
-                  {visibleColumns.includes('designation') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Designation</th>}
-                  {visibleColumns.includes('department') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Department</th>}
+                  {visibleColumns.includes('fullName') && renderSortableHeader('fullName', 'Full Name')}
+                  {visibleColumns.includes('countryCode') && renderSortableHeader('countryCode', 'Country Code')}
+                  {visibleColumns.includes('phone') && renderSortableHeader('phone', 'Phone')}
+                  {visibleColumns.includes('email') && renderSortableHeader('email', 'Email')}
+                  {visibleColumns.includes('designation') && renderSortableHeader('designation', 'Designation')}
+                  {visibleColumns.includes('department') && renderSortableHeader('department', 'Department')}
                   <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider text-center sticky right-0 bg-slate-50 z-30 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] border-l border-slate-100">Action</th>
                 </tr>
               </thead>
