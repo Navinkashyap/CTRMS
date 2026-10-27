@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Users,
   Search,
@@ -7,7 +7,10 @@ import {
   Edit3,
   ChevronDown,
   LayoutGrid,
-  X
+  X,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 
 const initialUsers = [
@@ -62,14 +65,46 @@ export default function UsersList() {
     status: 'All'
   });
 
-  const filteredUsers = users.filter(user => {
-    const matchesName = user.name.toLowerCase().includes(filters.name.toLowerCase());
-    const matchesEmail = user.email.toLowerCase().includes(filters.email.toLowerCase());
-    const matchesRole = filters.role === 'All' || user.role === filters.role;
-    const matchesMobile = user.mobile.toLowerCase().includes(filters.mobile.toLowerCase());
-    const matchesStatus = filters.status === 'All' || user.status === filters.status;
-    return matchesName && matchesEmail && matchesRole && matchesMobile && matchesStatus;
-  });
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === 'asc') direction = 'desc';
+      else if (sortConfig.direction === 'desc') direction = null;
+    }
+    setSortConfig({ key: direction ? key : null, direction: direction || 'asc' });
+  };
+
+  const filteredUsers = useMemo(() => {
+    let result = users.filter(user => {
+      const matchesName = user.name.toLowerCase().includes(filters.name.toLowerCase());
+      const matchesEmail = user.email.toLowerCase().includes(filters.email.toLowerCase());
+      const matchesRole = filters.role === 'All' || user.role === filters.role;
+      const matchesMobile = user.mobile.toLowerCase().includes(filters.mobile.toLowerCase());
+      const matchesStatus = filters.status === 'All' || user.status === filters.status;
+      return matchesName && matchesEmail && matchesRole && matchesMobile && matchesStatus;
+    });
+
+    if (sortConfig.key) {
+      result = [...result].sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+
+        if (aVal === null || aVal === undefined) return 1;
+        if (bVal === null || bVal === undefined) return -1;
+
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+
+        const comp = String(aVal).localeCompare(String(bVal), undefined, { numeric: true, sensitivity: 'base' });
+        return sortConfig.direction === 'asc' ? comp : -comp;
+      });
+    }
+
+    return result;
+  }, [users, filters, sortConfig]);
 
   const handleAdd = () => {
     setEditingUser(null);
@@ -148,12 +183,42 @@ export default function UsersList() {
                 <tr className="bg-slate-50/50 border-b border-slate-100">
                   <th className="px-6 py-5 font-black text-slate-700 uppercase tracking-wider text-[11px] border-r border-slate-100 w-16 text-center">#</th>
 
-                  {visibleColumns.includes('id') && <th className="px-6 py-5 border-r border-slate-100 font-black text-slate-700 uppercase tracking-wider text-[11px]">User id</th>}
+                  {visibleColumns.includes('id') && (
+                    <th
+                      onClick={() => requestSort('id')}
+                      className="px-6 py-5 border-r border-slate-100 font-black text-slate-700 uppercase tracking-wider text-[11px] cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
+                      title="Sort by User ID"
+                    >
+                      <div className="inline-flex items-center gap-1.5">
+                        <span>User id</span>
+                        <span className={`transition-all duration-200 ${sortConfig.key === 'id' ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+                          {sortConfig.key === 'id' ? (
+                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                          ) : (
+                            <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+                          )}
+                        </span>
+                      </div>
+                    </th>
+                  )}
 
                   <th className="px-6 py-5 border-r border-slate-100 min-w-[200px]">
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Full Name</span>
+                      <div
+                        onClick={() => requestSort('name')}
+                        className="flex items-center justify-between cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
+                        title="Sort by Full Name"
+                      >
+                        <div className="inline-flex items-center gap-1.5">
+                          <span className="font-black text-slate-700 group-hover/th:text-indigo-600 uppercase tracking-wider text-[11px]">Full Name</span>
+                          <span className={`transition-all duration-200 ${sortConfig.key === 'name' ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+                            {sortConfig.key === 'name' ? (
+                              sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                            ) : (
+                              <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+                            )}
+                          </span>
+                        </div>
                         <LayoutGrid className="w-3.5 h-3.5 text-slate-600 rotate-45" />
                       </div>
                       <div className="relative group">
@@ -169,8 +234,21 @@ export default function UsersList() {
                   </th>
                   <th className="px-6 py-5 border-r border-slate-100 min-w-[250px]">
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Email</span>
+                      <div
+                        onClick={() => requestSort('email')}
+                        className="flex items-center justify-between cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
+                        title="Sort by Email"
+                      >
+                        <div className="inline-flex items-center gap-1.5">
+                          <span className="font-black text-slate-700 group-hover/th:text-indigo-600 uppercase tracking-wider text-[11px]">Email</span>
+                          <span className={`transition-all duration-200 ${sortConfig.key === 'email' ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+                            {sortConfig.key === 'email' ? (
+                              sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                            ) : (
+                              <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+                            )}
+                          </span>
+                        </div>
                         <LayoutGrid className="w-3.5 h-3.5 text-slate-600 rotate-45" />
                       </div>
                       <div className="relative group">
@@ -186,8 +264,21 @@ export default function UsersList() {
                   </th>
                   <th className="px-6 py-5 border-r border-slate-100 min-w-[160px]">
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Role</span>
+                      <div
+                        onClick={() => requestSort('role')}
+                        className="flex items-center justify-between cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
+                        title="Sort by Role"
+                      >
+                        <div className="inline-flex items-center gap-1.5">
+                          <span className="font-black text-slate-700 group-hover/th:text-indigo-600 uppercase tracking-wider text-[11px]">Role</span>
+                          <span className={`transition-all duration-200 ${sortConfig.key === 'role' ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+                            {sortConfig.key === 'role' ? (
+                              sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                            ) : (
+                              <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+                            )}
+                          </span>
+                        </div>
                         <LayoutGrid className="w-3.5 h-3.5 text-slate-600 rotate-45" />
                       </div>
                       <div className="relative">
@@ -209,8 +300,21 @@ export default function UsersList() {
                   </th>
                   <th className="px-6 py-5 border-r border-slate-100 min-w-[180px]">
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Mobile No</span>
+                      <div
+                        onClick={() => requestSort('mobile')}
+                        className="flex items-center justify-between cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
+                        title="Sort by Mobile No"
+                      >
+                        <div className="inline-flex items-center gap-1.5">
+                          <span className="font-black text-slate-700 group-hover/th:text-indigo-600 uppercase tracking-wider text-[11px]">Mobile No</span>
+                          <span className={`transition-all duration-200 ${sortConfig.key === 'mobile' ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+                            {sortConfig.key === 'mobile' ? (
+                              sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                            ) : (
+                              <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+                            )}
+                          </span>
+                        </div>
                         <LayoutGrid className="w-3.5 h-3.5 text-slate-600 rotate-45" />
                       </div>
                       <div className="relative group">
@@ -226,7 +330,20 @@ export default function UsersList() {
                   </th>
                   <th className="px-6 py-5 border-r border-slate-100 min-w-[130px]">
                     <div className="space-y-3">
-                      <span className="font-black text-slate-700 uppercase tracking-wider text-[11px] block text-left">Status</span>
+                      <div
+                        onClick={() => requestSort('status')}
+                        className="inline-flex items-center gap-1.5 cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
+                        title="Sort by Status"
+                      >
+                        <span className="font-black text-slate-700 group-hover/th:text-indigo-600 uppercase tracking-wider text-[11px] block text-left">Status</span>
+                        <span className={`transition-all duration-200 ${sortConfig.key === 'status' ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+                          {sortConfig.key === 'status' ? (
+                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                          ) : (
+                            <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+                          )}
+                        </span>
+                      </div>
                       <div className="relative">
                         <select
                           className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm cursor-pointer appearance-none"

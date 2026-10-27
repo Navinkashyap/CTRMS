@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, Wrench } from 'lucide-react';
+import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, Wrench, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { getTools, createTool, updateTool, deleteTool } from '../lib/toolApi';
 
 export default function Tools() {
@@ -28,12 +28,34 @@ export default function Tools() {
     }
   };
 
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const requestSort = (key) => {
+    setSortConfig((prev) => {
+      if (prev.key === key) {
+        if (prev.direction === 'asc') return { key, direction: 'desc' };
+        return { key: null, direction: 'asc' };
+      }
+      return { key, direction: 'asc' };
+    });
+  };
+
   const filteredTools = useMemo(() => {
-    return tools.filter(t =>
-      t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.parentTool.toLowerCase().includes(searchQuery.toLowerCase())
+    const query = searchQuery.trim().toLowerCase();
+    const result = tools.filter(t =>
+      (t.name || '').toLowerCase().includes(query) ||
+      (t.parentTool || '').toLowerCase().includes(query)
     );
-  }, [tools, searchQuery]);
+
+    if (!sortConfig.key) return result;
+
+    return [...result].sort((a, b) => {
+      const aVal = (a[sortConfig.key] ?? '').toString().trim();
+      const bVal = (b[sortConfig.key] ?? '').toString().trim();
+      const cmp = aVal.localeCompare(bVal, undefined, { numeric: true, sensitivity: 'base' });
+      return sortConfig.direction === 'asc' ? cmp : -cmp;
+    });
+  }, [tools, searchQuery, sortConfig]);
 
   const showNotification = (msg) => {
     setNotification(msg);
@@ -123,9 +145,46 @@ export default function Tools() {
               <thead>
                 <tr className="border-b border-slate-100">
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-16 text-center">#</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Tool Type</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Parent Tool</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-32">Status</th>
+                  {(() => {
+                    const renderSortableHeader = (key, label, className = '') => {
+                      const isSorted = sortConfig.key === key;
+                      return (
+                        <th
+                          key={key}
+                          onClick={() => requestSort(key)}
+                          className={`px-6 py-5 font-bold uppercase tracking-widest text-[11px] cursor-pointer select-none group/th transition-all ${
+                            isSorted ? 'text-blue-600 bg-blue-50/40' : 'text-slate-500 hover:text-blue-600'
+                          } ${className}`}
+                          title={`Sort by ${label} (${
+                            isSorted
+                              ? sortConfig.direction === 'asc'
+                                ? 'Ascending - click for Descending'
+                                : 'Descending - click to clear'
+                              : 'Click to sort'
+                          })`}
+                        >
+                          <div className="inline-flex items-center gap-1.5">
+                            <span>{label}</span>
+                            {isSorted ? (
+                              sortConfig.direction === 'asc' ? (
+                                <ArrowUp className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                              ) : (
+                                <ArrowDown className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                              )
+                            ) : (
+                              <ArrowUpDown className="w-3.5 h-3.5 text-slate-300 opacity-60 group-hover/th:opacity-100 group-hover/th:text-slate-400 transition-all shrink-0" />
+                            )}
+                          </div>
+                        </th>
+                      );
+                    };
+
+                    return [
+                      renderSortableHeader('name', 'Tool Type'),
+                      renderSortableHeader('parentTool', 'Parent Tool'),
+                      renderSortableHeader('status', 'Status', 'w-32'),
+                    ];
+                  })()}
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-24 text-center">
                     <MoreHorizontal className="w-4 h-4 mx-auto" />
                   </th>

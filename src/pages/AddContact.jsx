@@ -35,8 +35,8 @@ const inputClass =
   'w-full px-3.5 py-2.5 bg-white border border-slate-200/90 rounded-xl text-sm font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs';
 
 const FormField = ({ label, required, children, className = '' }) => (
-  <div className={`p-4 rounded-2xl bg-[#f8faff] hover:bg-white border border-slate-100/90 hover:border-slate-200/80 focus-within:border-indigo-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-indigo-500/10 transition-all ${className}`}>
-    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+  <div className={className}>
+    <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
       {label}
       {required && <span className="text-rose-500 ml-0.5">*</span>}
     </label>
@@ -246,81 +246,81 @@ export default function AddContact() {
   };
 
   return (
-    <div className="font-sans text-slate-900 pb-12 min-h-screen bg-[#fafbfc] px-4 sm:px-6 py-6 animate-in fade-in duration-500">
-      <div className="w-full space-y-6">
-        {/* Header with back button */}
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => navigate('/contacts')}
-            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white border border-slate-200/80 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/50 shadow-xs transition-all shrink-0"
-            title="Go back"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-              {isEditMode ? 'Edit Contact' : 'Add Client Contact'}
-            </h1>
-            <p className="text-slate-500 text-sm font-medium tracking-normal mt-0.5">
-              Client Contact Profile & Details
-            </p>
-          </div>
+    <div className="font-sans text-slate-900 pb-12 w-full space-y-6">
+      {/* Page Header */}
+      <div className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={() => navigate('/contacts')}
+          className="w-10 h-10 flex items-center justify-center rounded-2xl bg-white border border-slate-200/80 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50/50 shadow-xs transition-all shrink-0"
+          title="Go back"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+            {isEditMode ? 'Edit Contact' : 'Add Client Contact'}
+          </h1>
+          <p className="text-slate-500 text-sm font-medium tracking-normal mt-0.5">
+            Client Contact Profile & Details
+          </p>
         </div>
+      </div>
 
-        {/* Main Form Card */}
-        <div className="bg-white rounded-3xl shadow-[0_4px_25px_rgba(0,0,0,0.04)] border border-slate-100 overflow-hidden">
-          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-8">
-            {errorMessage && (
-              <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
-                <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{errorMessage}</span>
-              </div>
-            )}
+      {/* Main Form Card */}
+      <div className="bg-white rounded-3xl shadow-[0_4px_25px_rgba(0,0,0,0.04)] border border-slate-100 overflow-hidden">
+        <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-8">
+          {errorMessage && (
+            <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+              <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
 
-            {successMessage && (
-              <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
-                <CircleCheckBig className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{successMessage}</span>
-              </div>
-            )}
+          {successMessage && (
+            <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+              <CircleCheckBig className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{successMessage}</span>
+            </div>
+          )}
 
-            {/* Section 1: Primary Information */}
-            <div>
-              <h3 className="text-base font-bold text-slate-900 mb-4">
-                Primary Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* Client Selection */}
-                <FormField label="Client" required className="md:col-span-2 lg:col-span-2">
-                  <SelectField
-                    value={formData.company}
-                    onChange={handleClientChange}
-                    required
-                  >
-                    <option value="" disabled>Select Client</option>
-                    {sortedClients.map((client) => (
-                      <option key={client._id} value={client.name}>
-                        {client.name} {client.membershipCode ? `(${client.membershipCode})` : ''}
-                      </option>
-                    ))}
-                  </SelectField>
-                </FormField>
+          {/* Section 1: Primary Information */}
+          <div>
+            <h3 className="text-base font-bold text-slate-900 mb-4">
+              Primary Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Client Selection */}
+              <FormField label="Client" required>
+                <SelectField
+                  value={formData.company}
+                  onChange={handleClientChange}
+                  required
+                >
+                  <option value="" disabled>Select client</option>
+                  {sortedClients.map((client) => (
+                    <option key={client._id} value={client.name}>
+                      {client.name} {client.membershipCode ? `(${client.membershipCode})` : ''}
+                    </option>
+                  ))}
+                </SelectField>
+              </FormField>
 
-                {/* Status */}
-                <FormField label="Status" required>
-                  <SelectField
-                    value={formData.status}
-                    onChange={(e) => updateField('status', e.target.value)}
-                    required
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </SelectField>
-                </FormField>
+              {/* Status */}
+              <FormField label="Status" required>
+                <SelectField
+                  value={formData.status}
+                  onChange={(e) => updateField('status', e.target.value)}
+                  required
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </SelectField>
+              </FormField>
 
-                {/* Salutation */}
-                <FormField label="Salutation">
+              {/* Salutation + First Name */}
+              <div className="flex items-start gap-3 w-full">
+                <FormField label="Salutation" className="w-28 shrink-0">
                   <SelectField
                     value={formData.salutation}
                     onChange={(e) => updateField('salutation', e.target.value)}
@@ -332,8 +332,7 @@ export default function AddContact() {
                   </SelectField>
                 </FormField>
 
-                {/* First Name */}
-                <FormField label="First Name" required>
+                <FormField label="First Name" required className="flex-1 min-w-0">
                   <input
                     type="text"
                     required
@@ -343,168 +342,168 @@ export default function AddContact() {
                     onChange={(e) => updateField('firstName', e.target.value)}
                   />
                 </FormField>
-
-                {/* Last Name */}
-                <FormField label="Last Name" required>
-                  <input
-                    type="text"
-                    required
-                    className={inputClass}
-                    placeholder="Enter last name"
-                    value={formData.lastName}
-                    onChange={(e) => updateField('lastName', e.target.value)}
-                  />
-                </FormField>
               </div>
+
+              {/* Last Name */}
+              <FormField label="Last Name" required>
+                <input
+                  type="text"
+                  required
+                  className={inputClass}
+                  placeholder="Enter last name"
+                  value={formData.lastName}
+                  onChange={(e) => updateField('lastName', e.target.value)}
+                />
+              </FormField>
             </div>
+          </div>
 
-            <hr className="border-slate-100" />
+          <hr className="border-slate-100" />
 
-            {/* Section 2: Professional Information */}
-            <div>
-              <h3 className="text-base font-bold text-slate-900 mb-4">
-                Professional Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Designation */}
-                <FormField label="Designation">
-                  <input
-                    type="text"
-                    className={inputClass}
-                    placeholder="e.g. Procurement Lead"
-                    value={formData.designation}
-                    onChange={(e) => updateField('designation', e.target.value)}
-                  />
-                </FormField>
+          {/* Section 2: Contact Information */}
+          <div>
+            <h3 className="text-base font-bold text-slate-900 mb-4">
+              Contact Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Email Address */}
+              <FormField label="Email Address" required>
+                <input
+                  type="email"
+                  required
+                  className={inputClass}
+                  placeholder="contact@company.com"
+                  value={formData.email}
+                  onChange={(e) => updateField('email', e.target.value)}
+                />
+              </FormField>
 
-                {/* Department */}
-                <FormField label="Department">
-                  {departments.length > 0 ? (
-                    <SelectField
-                      value={formData.department}
-                      onChange={(e) => updateField('department', e.target.value)}
-                    >
-                      <option value="">Select Department</option>
-                      {departments.map((d) => (
-                        <option key={d._id || d.name} value={d.name}>
-                          {d.name}
-                        </option>
-                      ))}
-                    </SelectField>
-                  ) : (
-                    <input
-                      type="text"
-                      className={inputClass}
-                      placeholder="e.g. Localization"
-                      value={formData.department}
-                      onChange={(e) => updateField('department', e.target.value)}
+              {/* Phone Number with WhatsApp toggle */}
+              <FormField label="Phone Number">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2.5 w-full">
+                    <NumericCountryCodeSearch
+                      value={formData.countryCode}
+                      onChange={(val) => updateField('countryCode', val)}
                     />
-                  )}
-                </FormField>
-
-                {/* Date of Birth */}
-                <FormField label="Date of Birth">
-                  <input
-                    type="date"
-                    className={inputClass}
-                    value={formData.dob || ''}
-                    onChange={(e) => updateField('dob', e.target.value)}
-                  />
-                </FormField>
-              </div>
-            </div>
-
-            <hr className="border-slate-100" />
-
-            {/* Section 3: Contact Information */}
-            <div>
-              <h3 className="text-base font-bold text-slate-900 mb-4">
-                Contact Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Email Address */}
-                <FormField label="Email Address" required>
-                  <input
-                    type="email"
-                    required
-                    className={inputClass}
-                    placeholder="contact@company.com"
-                    value={formData.email}
-                    onChange={(e) => updateField('email', e.target.value)}
-                  />
-                </FormField>
-
-                {/* Phone Number with WhatsApp toggle */}
-                <FormField label="Phone Number">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2.5 w-full">
-                      <NumericCountryCodeSearch
-                        value={formData.countryCode}
-                        onChange={(val) => updateField('countryCode', val)}
-                      />
-                      <input
-                        type="tel"
-                        inputMode="numeric"
-                        maxLength={15}
-                        className="flex-1 min-w-0 px-3.5 py-2.5 bg-white border border-slate-200/90 rounded-xl text-sm font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
-                        placeholder="Phone Number"
-                        value={formData.phone}
-                        onChange={(e) => updateField('phone', e.target.value.replace(/\D/g, ''))}
-                      />
-                    </div>
-                    <label className="inline-flex items-center gap-2 cursor-pointer select-none pt-1">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20 cursor-pointer"
-                        checked={formData.isWhatsapp}
-                        onChange={(e) => updateField('isWhatsapp', e.target.checked)}
-                      />
-                      <span className="text-xs font-semibold text-slate-600">Available on WhatsApp</span>
-                    </label>
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      maxLength={15}
+                      className="flex-1 min-w-0 px-3.5 py-2.5 bg-white border border-slate-200/90 rounded-xl text-sm font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-xs"
+                      placeholder="Phone Number"
+                      value={formData.phone}
+                      onChange={(e) => updateField('phone', e.target.value.replace(/\D/g, ''))}
+                    />
                   </div>
-                </FormField>
-              </div>
+                  <label className="inline-flex items-center gap-2 cursor-pointer select-none pt-1">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20 cursor-pointer"
+                      checked={formData.isWhatsapp}
+                      onChange={(e) => updateField('isWhatsapp', e.target.checked)}
+                    />
+                    <span className="text-xs font-semibold text-slate-600">Available on WhatsApp</span>
+                  </label>
+                </div>
+              </FormField>
             </div>
+          </div>
 
-            <hr className="border-slate-100" />
+          <hr className="border-slate-100" />
 
-            {/* Section 4: Additional Information */}
-            <div>
-              <h3 className="text-base font-bold text-slate-900 mb-4">
-                Additional Information
-              </h3>
-              <div>
-                <FormField label="Remarks / Notes">
-                  <textarea
-                    rows={4}
-                    className={`${inputClass} min-h-[110px] resize-y`}
-                    placeholder="Enter any remarks or notes about this contact..."
-                    value={formData.remark}
-                    onChange={(e) => updateField('remark', e.target.value)}
+          {/* Section 3: Professional Information */}
+          <div>
+            <h3 className="text-base font-bold text-slate-900 mb-4">
+              Professional Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Designation */}
+              <FormField label="Designation">
+                <input
+                  type="text"
+                  className={inputClass}
+                  placeholder="e.g. Procurement Lead"
+                  value={formData.designation}
+                  onChange={(e) => updateField('designation', e.target.value)}
+                />
+              </FormField>
+
+              {/* Department */}
+              <FormField label="Department">
+                {departments.length > 0 ? (
+                  <SelectField
+                    value={formData.department}
+                    onChange={(e) => updateField('department', e.target.value)}
+                  >
+                    <option value="">Select department</option>
+                    {departments.map((d) => (
+                      <option key={d._id || d.name} value={d.name}>
+                        {d.name}
+                      </option>
+                    ))}
+                  </SelectField>
+                ) : (
+                  <input
+                    type="text"
+                    className={inputClass}
+                    placeholder="e.g. Localization"
+                    value={formData.department}
+                    onChange={(e) => updateField('department', e.target.value)}
                   />
-                </FormField>
-              </div>
-            </div>
+                )}
+              </FormField>
 
-            {/* Action Buttons */}
-            <div className="pt-4 border-t border-slate-100 flex flex-col-reverse sm:flex-row gap-3 justify-end">
-              <button
-                type="button"
-                onClick={() => navigate('/contacts')}
-                className="px-6 py-2.5 bg-white border border-slate-200/90 text-slate-700 hover:border-slate-300 hover:bg-slate-50 rounded-xl text-sm font-bold transition-all shadow-xs"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-60"
-              >
-                {isSaving ? 'Saving...' : isEditMode ? 'Save Changes' : 'Create Client Contact'}
-              </button>
+              {/* Date of Birth */}
+              <FormField label="Date of Birth">
+                <input
+                  type="date"
+                  className={inputClass}
+                  value={formData.dob || ''}
+                  onChange={(e) => updateField('dob', e.target.value)}
+                />
+              </FormField>
             </div>
-          </form>
-        </div>
+          </div>
+
+          <hr className="border-slate-100" />
+
+          {/* Section 4: Additional Information */}
+          <div>
+            <h3 className="text-base font-bold text-slate-900 mb-4">
+              Additional Information
+            </h3>
+            <div>
+              <FormField label="Remarks / Notes">
+                <textarea
+                  rows={4}
+                  className={`${inputClass} min-h-[110px] resize-y`}
+                  placeholder="Enter any remarks or notes about this contact..."
+                  value={formData.remark}
+                  onChange={(e) => updateField('remark', e.target.value)}
+                />
+              </FormField>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="pt-4 border-t border-slate-100 flex flex-col-reverse sm:flex-row gap-3 justify-end">
+            <button
+              type="button"
+              onClick={() => navigate('/contacts')}
+              className="px-6 py-2.5 bg-white border border-slate-200/90 text-slate-700 hover:border-slate-300 hover:bg-slate-50 rounded-xl text-sm font-bold transition-all shadow-xs"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/20 hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-60"
+            >
+              {isSaving ? 'Saving...' : isEditMode ? 'Save Changes' : 'Create Client Contact'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

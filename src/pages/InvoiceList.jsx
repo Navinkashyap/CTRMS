@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FileText,
@@ -8,6 +8,9 @@ import {
   Eye,
   Edit,
   Trash2,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { getInvoices, deleteInvoice } from '../lib/invoiceApi';
 
@@ -97,12 +100,44 @@ export default function InvoiceList() {
     }
   };
 
-  const filteredInvoices = invoices.filter((invoice) => {
-    const matchesInvoiceNo = (invoice.invoiceNumber || '').toLowerCase().includes(filters.invoiceNo.toLowerCase());
-    const matchesVendor = (invoice.billToCompany || '').toLowerCase().includes(filters.vendor.toLowerCase());
-    const matchesStatus = filters.status === 'Status' || invoice.status === filters.status;
-    return matchesInvoiceNo && matchesVendor && matchesStatus;
-  });
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === 'asc') direction = 'desc';
+      else if (sortConfig.direction === 'desc') direction = null;
+    }
+    setSortConfig({ key: direction ? key : null, direction: direction || 'asc' });
+  };
+
+  const filteredInvoices = useMemo(() => {
+    let result = invoices.filter((invoice) => {
+      const matchesInvoiceNo = (invoice.invoiceNumber || '').toLowerCase().includes(filters.invoiceNo.toLowerCase());
+      const matchesVendor = (invoice.billToCompany || '').toLowerCase().includes(filters.vendor.toLowerCase());
+      const matchesStatus = filters.status === 'Status' || invoice.status === filters.status;
+      return matchesInvoiceNo && matchesVendor && matchesStatus;
+    });
+
+    if (sortConfig.key) {
+      result = [...result].sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+
+        if (aVal === null || aVal === undefined) return 1;
+        if (bVal === null || bVal === undefined) return -1;
+
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+
+        const comp = String(aVal).localeCompare(String(bVal), undefined, { numeric: true, sensitivity: 'base' });
+        return sortConfig.direction === 'asc' ? comp : -comp;
+      });
+    }
+
+    return result;
+  }, [invoices, filters, sortConfig]);
 
   return (
     <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
@@ -148,7 +183,20 @@ export default function InvoiceList() {
                     <th style={colStyle('idx')} className="relative px-4 py-3 font-black text-slate-700 uppercase tracking-wider text-[11px] border-r border-slate-100 w-12 text-center">#<ResizeHandle colId="idx" /></th>
                     <th style={colStyle('invoiceNo')} className="relative px-4 py-3 border-r border-slate-100 min-w-[200px] text-left">
                       <div className="space-y-2">
-                        <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Invoice No.</span>
+                        <div
+                          onClick={() => requestSort('invoiceNumber')}
+                          className="inline-flex items-center gap-1.5 cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
+                          title="Sort by Invoice No."
+                        >
+                          <span className="font-black text-slate-700 group-hover/th:text-indigo-600 uppercase tracking-wider text-[11px]">Invoice No.</span>
+                          <span className={`transition-all duration-200 ${sortConfig.key === 'invoiceNumber' ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+                            {sortConfig.key === 'invoiceNumber' ? (
+                              sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                            ) : (
+                              <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+                            )}
+                          </span>
+                        </div>
                         <div className="relative group">
                           <input
                             type="text"
@@ -163,7 +211,20 @@ export default function InvoiceList() {
                     </th>
                     <th style={colStyle('client')} className="relative px-4 py-3 border-r border-slate-100 min-w-[250px] text-left">
                       <div className="space-y-2 text-left">
-                        <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Client</span>
+                        <div
+                          onClick={() => requestSort('billToCompany')}
+                          className="inline-flex items-center gap-1.5 cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
+                          title="Sort by Client"
+                        >
+                          <span className="font-black text-slate-700 group-hover/th:text-indigo-600 uppercase tracking-wider text-[11px]">Client</span>
+                          <span className={`transition-all duration-200 ${sortConfig.key === 'billToCompany' ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+                            {sortConfig.key === 'billToCompany' ? (
+                              sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                            ) : (
+                              <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+                            )}
+                          </span>
+                        </div>
                         <div className="relative group">
                           <input
                             type="text"
@@ -177,12 +238,38 @@ export default function InvoiceList() {
                       <ResizeHandle colId="client" />
                     </th>
                     <th style={colStyle('amount')} className="relative px-4 py-3 border-r border-slate-100 text-left">
-                      <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Total Amount</span>
+                      <div
+                        onClick={() => requestSort('totalAmount')}
+                        className="inline-flex items-center gap-1.5 cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
+                        title="Sort by Total Amount"
+                      >
+                        <span className="font-black text-slate-700 group-hover/th:text-indigo-600 uppercase tracking-wider text-[11px]">Total Amount</span>
+                        <span className={`transition-all duration-200 ${sortConfig.key === 'totalAmount' ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+                          {sortConfig.key === 'totalAmount' ? (
+                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                          ) : (
+                            <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+                          )}
+                        </span>
+                      </div>
                       <ResizeHandle colId="amount" />
                     </th>
                     <th style={colStyle('status')} className="relative px-4 py-3 border-r border-slate-100 min-w-[150px] text-left">
                       <div className="space-y-2">
-                        <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Status</span>
+                        <div
+                          onClick={() => requestSort('status')}
+                          className="inline-flex items-center gap-1.5 cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
+                          title="Sort by Status"
+                        >
+                          <span className="font-black text-slate-700 group-hover/th:text-indigo-600 uppercase tracking-wider text-[11px]">Status</span>
+                          <span className={`transition-all duration-200 ${sortConfig.key === 'status' ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+                            {sortConfig.key === 'status' ? (
+                              sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                            ) : (
+                              <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+                            )}
+                          </span>
+                        </div>
                         <select
                           className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-400 transition-all shadow-sm cursor-pointer appearance-none relative"
                           style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%2364748b\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '1rem' }}
@@ -199,7 +286,20 @@ export default function InvoiceList() {
                       <ResizeHandle colId="status" />
                     </th>
                     <th style={colStyle('date')} className="relative px-4 py-3 border-r border-slate-100 text-left">
-                      <span className="font-black text-slate-700 uppercase tracking-wider text-[11px]">Invoice Date</span>
+                      <div
+                        onClick={() => requestSort('invoiceDate')}
+                        className="inline-flex items-center gap-1.5 cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
+                        title="Sort by Invoice Date"
+                      >
+                        <span className="font-black text-slate-700 group-hover/th:text-indigo-600 uppercase tracking-wider text-[11px]">Invoice Date</span>
+                        <span className={`transition-all duration-200 ${sortConfig.key === 'invoiceDate' ? 'text-indigo-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+                          {sortConfig.key === 'invoiceDate' ? (
+                            sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                          ) : (
+                            <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+                          )}
+                        </span>
+                      </div>
                       <ResizeHandle colId="date" />
                     </th>
                     <th className="px-4 py-3 text-center">

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, UserCog } from 'lucide-react';
+import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, UserCog, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 const initialRoleData = [
   { id: 1, roleName: 'Super Admin', abbreviation: 'SA', level: 1, status: 'Active' },
@@ -19,14 +19,43 @@ export default function MangerRole() {
   const [formData, setFormData] = useState({ roleName: '', abbreviation: '', level: '', status: 'Active' });
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
-  // Filtering roles based on search query
+  const requestSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === 'asc') direction = 'desc';
+      else if (sortConfig.direction === 'desc') direction = null;
+    }
+    setSortConfig({ key: direction ? key : null, direction: direction || 'asc' });
+  };
+
+  // Filtering and sorting roles
   const filteredRoles = useMemo(() => {
-    return roles.filter(r =>
+    let result = roles.filter(r =>
       r.roleName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.abbreviation.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [roles, searchQuery]);
+
+    if (sortConfig.key) {
+      result = [...result].sort((a, b) => {
+        let aVal = a[sortConfig.key];
+        let bVal = b[sortConfig.key];
+
+        if (aVal === null || aVal === undefined) return 1;
+        if (bVal === null || bVal === undefined) return -1;
+
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+
+        const comp = String(aVal).localeCompare(String(bVal), undefined, { numeric: true, sensitivity: 'base' });
+        return sortConfig.direction === 'asc' ? comp : -comp;
+      });
+    }
+
+    return result;
+  }, [roles, searchQuery, sortConfig]);
 
   const showNotification = (msg) => {
     setNotification(msg);
@@ -61,6 +90,28 @@ export default function MangerRole() {
       showNotification(`Added ${formData.roleName} successfully!`);
     }
     setIsModalOpen(false);
+  };
+
+  const renderSortableHeader = (label, sortKey, extraClasses = '') => {
+    const isSorted = sortConfig.key === sortKey;
+    return (
+      <th
+        onClick={() => requestSort(sortKey)}
+        className={`px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] cursor-pointer select-none group/th hover:text-blue-600 transition-colors ${extraClasses}`}
+        title={`Sort by ${label}`}
+      >
+        <div className="inline-flex items-center gap-1.5">
+          <span>{label}</span>
+          <span className={`transition-all duration-200 ${isSorted ? 'text-blue-600' : 'text-slate-300 group-hover/th:text-slate-500'}`}>
+            {isSorted ? (
+              sortConfig.direction === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+            ) : (
+              <ArrowUpDown className="w-3.5 h-3.5 opacity-60 group-hover/th:opacity-100" />
+            )}
+          </span>
+        </div>
+      </th>
+    );
   };
 
   return (
@@ -115,10 +166,10 @@ export default function MangerRole() {
               <thead>
                 <tr className="border-b border-slate-100">
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-16 text-center">#</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Role Name</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Abbreviation</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px]">Level</th>
-                  <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-32">Status</th>
+                  {renderSortableHeader('Role Name', 'roleName')}
+                  {renderSortableHeader('Abbreviation', 'abbreviation')}
+                  {renderSortableHeader('Level', 'level')}
+                  {renderSortableHeader('Status', 'status', 'w-32')}
                   <th className="px-6 py-5 font-bold text-slate-500 uppercase tracking-widest text-[11px] w-24 text-center text-slate-500/60">
                     <MoreHorizontal className="w-4 h-4 mx-auto" />
                   </th>
