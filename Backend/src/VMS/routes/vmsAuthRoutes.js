@@ -2,6 +2,7 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import VMSUser from "../models/VMSUser.js";
 import Vendor from "../../models/Vendor.js";
+import vmsAuth from "../middleware/vmsAuth.js";
 
 const router = express.Router();
 
@@ -346,13 +347,19 @@ router.post("/forgot-password", async (req, res, next) => {
   }
 });
 
-// ─── POST /api/vms/auth/reset-password ─── Reset or update password ────────
-router.post("/reset-password", async (req, res, next) => {
+// ─── POST /api/vms/auth/reset-password ─── Change own password ─────────────
+// Signed-in users only, for their own account, and only with the current
+// password — without those checks anyone could reset anyone's password.
+router.post("/reset-password", vmsAuth, async (req, res, next) => {
   try {
     const { email, newPassword, currentPassword } = req.body;
 
-    if (!email || !newPassword) {
-      return res.status(400).json({ message: "Email and new password are required" });
+    if (!email || !newPassword || !currentPassword) {
+      return res.status(400).json({ message: "Email, current password and new password are required" });
+    }
+
+    if (String(req.vmsAuth.email || "").toLowerCase() !== String(email).toLowerCase()) {
+      return res.status(403).json({ message: "You can only change your own password" });
     }
 
     if (newPassword.length < 6) {

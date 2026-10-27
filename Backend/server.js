@@ -39,6 +39,7 @@ import vmsProjectRoutes from "./src/VMS/routes/vmsProjectRoutes.js";
 import vmsVendorRoutes from "./src/VMS/routes/vmsVendorRoutes.js";
 import vmsVMRoutes from "./src/VMS/routes/vmsVMRoutes.js";
 import vendorInvoiceRoutes from "./src/VMS/routes/vendorInvoiceRoutes.js";
+import vmsAccountsRoutes from "./src/VMS/routes/vmsAccountsRoutes.js";
 import jobRoutes from "./src/routes/jobRoutes.js";
 import fileRoutes from "./src/routes/fileRoutes.js";
 import salesRoutes from "./src/routes/salesRoutes.js";
@@ -109,6 +110,7 @@ app.use("/api/vms/projects", vmsProjectRoutes);
 app.use("/api/vms/vendor", vmsVendorRoutes);
 app.use("/api/vms/vm", vmsVMRoutes);
 app.use("/api/vms/vendor-invoices", vendorInvoiceRoutes);
+app.use("/api/vms/accounts", vmsAccountsRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

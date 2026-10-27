@@ -70,8 +70,16 @@ const vendorInvoiceSchema = new mongoose.Schema(
     payoutDueDate: { type: Date, default: null },
     paidAt: { type: Date, default: null },
     paidAmount: { type: Number, default: 0 },
+    // How Accounts actually paid — separate from paymentMethod, which is the
+    // vendor's own preference and must not be overwritten by the payout.
+    paidVia: { type: String, trim: true, default: "" },
+    rejectedAt: { type: Date, default: null },
     rejectionReason: { type: String, trim: true, default: "" },
     accountantNotes: { type: String, trim: true, default: "" },
+    // Name/email of the Accounts user behind each decision (routes/vmsAccountsRoutes.js).
+    approvedBy: { type: String, trim: true, default: "" },
+    rejectedBy: { type: String, trim: true, default: "" },
+    paidBy: { type: String, trim: true, default: "" },
   },
   { timestamps: true }
 );

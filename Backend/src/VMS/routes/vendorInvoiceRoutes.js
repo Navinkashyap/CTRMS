@@ -2,11 +2,29 @@ import express from "express";
 import VendorInvoice from "../models/VendorInvoice.js";
 import Job from "../../models/Job.js";
 import vmsAuth from "../middleware/vmsAuth.js";
+import { isAccountantRole } from "./vmsAccountsRoutes.js";
 
 const router = express.Router();
 router.use(vmsAuth);
 
-function computeTotals(body) {
+// Fields set only by the Accounts actions in vmsAccountsRoutes.js (approve /
+// reject / pay). They're dropped from every write on this generic route, so
+// nobody — a vendor re-saving an invoice, or Accounts itself — can approve or
+// pay an invoice here and skip the 45-day hold or the single-payment check.
+const ACCOUNTING_FIELDS = [
+  "approvedAt", "payoutDueDate", "approvedBy",
+  "paidAt", "paidAmount", "paidVia", "paidBy", "paymentReference",
+  "rejectedAt", "rejectedBy", "rejectionReason", "accountantNotes",
+];
+const EDITABLE_STATUSES = ["Pending", "Draft", "Unpaid", "Processing", "Overdue"];
+
+function stripAccountingFields(body) {
+  const clean = { ...body };
+  ACCOUNTING_FIELDS.forEach((field) => delete clean[field]);
+  return clean;
+}
+
+export function computeTotals(body) {
   const particulars = Array.isArray(body.particulars) ? body.particulars : [];
   const subtotal = particulars.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
   const gstAmount = body.applyGst !== false ? subtotal * 0.18 : 0;
@@ -63,7 +81,7 @@ router.get("/:id", async (req, res, next) => {
 router.post("/", async (req, res, next) => {
   try {
     const { job: jobId, jobs: jobIds, ...rest } = req.body;
-    const body = stripCvv(rest);
+    const body = stripAccountingFields(stripCvv(rest));
 
     // Extract all candidate job IDs and POs to be invoiced
     const candidateJobIds = [
@@ -116,10 +134,8 @@ router.post("/", async (req, res, next) => {
     }
 
     const totals = computeTotals(body);
-    const initialStatus =
-      body.status && ["Approved", "Paid", "Rejected"].includes(body.status)
-        ? body.status
-        : "Pending";
+    // A new invoice always starts in review; decisions come from Accounts.
+    const initialStatus = body.status === "Draft" ? "Draft" : "Pending";
     const invoice = await VendorInvoice.create({
       ...body,
       status: initialStatus,
@@ -145,17 +161,35 @@ router.post("/", async (req, res, next) => {
 router.put("/:id", async (req, res, next) => {
   try {
     const { job: jobId, ...rest } = req.body;
-    const body = stripCvv(rest);
-    if (body.status === "Approved") {
-      if (!body.approvedAt) body.approvedAt = new Date();
-      if (!body.payoutDueDate) {
-        const approvedTime = new Date(body.approvedAt).getTime();
-        body.payoutDueDate = new Date(approvedTime + 45 * 24 * 60 * 60 * 1000);
+    const isAccountant = isAccountantRole(req.vmsAuth?.role);
+    let body = stripAccountingFields(stripCvv(rest));
+
+    const current = await VendorInvoice.findById(req.params.id).select("status").lean();
+    if (!current) return res.status(404).json({ message: "Invoice not found" });
+
+    if (isAccountant) {
+      // Accounts may correct details and add notes here, but status changes
+      // go through the approve / reject / pay actions.
+      delete body.status;
+      if (rest.accountantNotes !== undefined) body.accountantNotes = rest.accountantNotes;
+    } else {
+      // Vendor edits: only while the invoice is still in review, or to fix
+      // and resubmit a rejected one (which sends it back for review).
+      if (!EDITABLE_STATUSES.includes(current.status) && current.status !== "Rejected") {
+        return res.status(409).json({
+          message: `This invoice is already ${current.status} and can no longer be edited. Contact Accounts.`,
+        });
       }
-    } else if (body.status === "Paid" && !body.paidAt) {
-      body.paidAt = new Date();
+      if (current.status === "Rejected") {
+        body = { ...body, status: "Pending", rejectionReason: "", rejectedAt: null, rejectedBy: "" };
+      } else if (!["Pending", "Draft"].includes(body.status)) {
+        delete body.status;
+      }
     }
-    const totals = computeTotals(body);
+
+    // Recompute only when line items are sent — a status-only update must not
+    // reset the stored totals to 0.
+    const totals = Array.isArray(body.particulars) ? computeTotals(body) : {};
     const invoice = await VendorInvoice.findByIdAndUpdate(
       req.params.id,
       { ...body, ...totals, ...(jobId !== undefined ? { job: jobId || null } : {}) },
@@ -172,6 +206,12 @@ router.put("/:id", async (req, res, next) => {
 // DELETE /api/vms/vendor-invoices/:id
 router.delete("/:id", async (req, res, next) => {
   try {
+    if (!isAccountantRole(req.vmsAuth?.role)) {
+      const current = await VendorInvoice.findById(req.params.id).select("status").lean();
+      if (current && ["Approved", "Paid"].includes(current.status)) {
+        return res.status(409).json({ message: `A ${current.status} invoice cannot be deleted.` });
+      }
+    }
     const invoice = await VendorInvoice.findByIdAndDelete(req.params.id);
     if (!invoice) return res.status(404).json({ message: "Invoice not found" });
     res.json({ message: "Invoice deleted successfully" });
