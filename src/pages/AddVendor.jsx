@@ -103,71 +103,72 @@ export default function AddVendor() {
   };
 
   return (
-    <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700 bg-[#fafbfc] min-h-screen">
-      <div className="max-w-[1000px] mx-auto space-y-8 p-4 sm:p-8">
+    <div className="font-sans text-slate-900 pb-6 animate-in fade-in duration-700 bg-[#fafbfc] min-h-screen">
+      <div className="max-w-[1200px] mx-auto space-y-4 p-4 sm:p-6">
 
         {/* Header */}
-        <div className="flex items-center justify-between bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/60 shadow-sm">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between bg-white/60 backdrop-blur-md py-3.5 px-5 sm:px-6 rounded-2xl border border-white/80 shadow-xs">
+          <div className="flex items-center gap-3.5">
             <button
               onClick={() => navigate('/vendors')}
-              className="p-3 bg-white text-slate-600 hover:text-indigo-600 rounded-2xl shadow-sm hover:shadow-md transition-all group"
+              className="p-2 bg-white text-slate-600 hover:text-indigo-600 rounded-xl shadow-xs hover:shadow-sm transition-all group"
             >
-              <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
+              <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
             </button>
             <div>
-              <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent italic">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent italic">
                 {isEditMode ? 'Modify Partner Details' : 'Onboard New Vendor'}
               </h1>
-              <p className="text-slate-500 font-medium tracking-wide">Manage resource profile information</p>
+              <p className="text-xs text-slate-500 font-medium">Manage resource profile information</p>
             </div>
           </div>
         </div>
 
         {/* Form Body */}
-        <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
-          <form onSubmit={handleSubmit} className="p-5 sm:p-8 lg:p-12 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 lg:p-7 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3.5">
 
               {/* Section: Basic Info */}
-              <div className="md:col-span-2">
-                <div className="flex items-center gap-4 mb-4">
-                  <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider bg-indigo-50 px-3 py-1 rounded-full">Identity Details</span>
+              <div className="col-span-1 md:col-span-2 lg:col-span-3">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-[11px] font-semibold text-indigo-600 uppercase tracking-wider bg-indigo-50 px-2.5 py-0.5 rounded-full">Identity Details</span>
                   <div className="h-px flex-1 bg-slate-100"></div>
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider ml-1">First Name <span className="text-rose-500">*</span></label>
+              {/* Row 1: Three fields in a row */}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 tracking-wider ml-0.5">First Name <span className="text-rose-500">*</span></label>
                 <input
                   type="text" name="firstName" required placeholder="John"
-                  className="w-full h-12 px-4 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
+                  className="w-full h-10 px-3.5 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-lg text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none"
                   value={formData.firstName} onChange={handleFormChange}
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider ml-1">Last Name <span className="text-rose-500">*</span></label>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 tracking-wider ml-0.5">Last Name <span className="text-rose-500">*</span></label>
                 <input
                   type="text" name="lastName" required placeholder="Doe"
-                  className="w-full h-12 px-4 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
+                  className="w-full h-10 px-3.5 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-lg text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none"
                   value={formData.lastName} onChange={handleFormChange}
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider ml-1">Email <span className="text-rose-500">*</span></label>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 tracking-wider ml-0.5">Email <span className="text-rose-500">*</span></label>
                 <input
                   type="email" name="email" required placeholder="john@example.com"
-                  className="w-full h-12 px-4 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
+                  className="w-full h-10 px-3.5 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-lg text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none"
                   value={formData.email} onChange={handleFormChange}
                 />
               </div>
 
               {/* Password field - only shown when creating a new vendor */}
               {!isEditMode && (
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider ml-1">Password <span className="text-rose-500">*</span></label>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-700 tracking-wider ml-0.5">Password <span className="text-rose-500">*</span></label>
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -175,7 +176,7 @@ export default function AddVendor() {
                       required={!isEditMode}
                       minLength={6}
                       placeholder="Min. 6 characters"
-                      className="w-full h-12 px-4 pr-12 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
+                      className="w-full h-10 px-3.5 pr-10 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-lg text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none"
                       value={formData.password}
                       onChange={handleFormChange}
                     />
@@ -190,44 +191,45 @@ export default function AddVendor() {
                 </div>
               )}
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider ml-1">Mobile <span className="text-rose-500">*</span></label>
-                <div className="flex h-12 bg-slate-50 border border-slate-200 hover:bg-slate-100/50 rounded-xl overflow-hidden focus-within:bg-white focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10 transition-all">
-                  <div className="flex items-center gap-2 px-4 border-r border-slate-200 text-sm font-semibold text-slate-600 bg-slate-100/50">
-                    <img src="https://flagcdn.com/in.svg" alt="India" className="w-5 h-3.5 object-cover rounded-sm shadow-sm" />
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 tracking-wider ml-0.5">Mobile <span className="text-rose-500">*</span></label>
+                <div className="flex h-10 bg-slate-50 border border-slate-200 hover:bg-slate-100/50 rounded-lg overflow-hidden focus-within:bg-white focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/10 transition-all">
+                  <div className="flex items-center gap-1.5 px-3 border-r border-slate-200 text-sm font-semibold text-slate-600 bg-slate-100/50">
+                    <img src="https://flagcdn.com/in.svg" alt="India" className="w-4 h-3 object-cover rounded-sm shadow-xs" />
                     <span>+91</span>
                   </div>
                   <input
                     type="tel" name="mobile" required placeholder="9876543210"
-                    className="flex-1 px-4 bg-transparent border-none text-sm font-medium outline-none"
+                    className="flex-1 px-3 bg-transparent border-none text-sm font-medium outline-none"
                     value={formData.mobile} onChange={handleFormChange}
                   />
                 </div>
               </div>
 
               {/* Section: Professional Info */}
-              <div className="md:col-span-2 pt-2">
-                <div className="flex items-center gap-4 mb-4">
-                  <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wider bg-indigo-50 px-3 py-1 rounded-full">Professional Profile</span>
+              <div className="col-span-1 md:col-span-2 lg:col-span-3 pt-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-[11px] font-semibold text-indigo-600 uppercase tracking-wider bg-indigo-50 px-2.5 py-0.5 rounded-full">Professional Profile</span>
                   <div className="h-px flex-1 bg-slate-100"></div>
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider ml-1">Birth Date <span className="text-rose-500">*</span></label>
+              {/* Row: Three fields in a row */}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 tracking-wider ml-0.5">Birth Date <span className="text-rose-500">*</span></label>
                 <input
                   type="date" name="dob" required
-                  className="w-full h-12 px-4 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
+                  className="w-full h-10 px-3.5 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-lg text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none"
                   value={formData.dob} onChange={handleFormChange}
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider ml-1">Gender <span className="text-rose-500">*</span></label>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 tracking-wider ml-0.5">Gender <span className="text-rose-500">*</span></label>
                 <div className="relative">
                   <select
                     name="gender" required
-                    className="w-full h-12 px-4 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none appearance-none cursor-pointer"
+                    className="w-full h-10 px-3.5 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-lg text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none appearance-none cursor-pointer"
                     value={formData.gender} onChange={handleFormChange}
                   >
                     <option value="">Select Gender</option>
@@ -235,16 +237,16 @@ export default function AddVendor() {
                     <option value="Female">Female</option>
                     <option value="Other">Other</option>
                   </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider ml-1">Primary Region <span className="text-rose-500">*</span></label>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 tracking-wider ml-0.5">Primary Region <span className="text-rose-500">*</span></label>
                 <div className="relative">
                   <select
                     name="country" required
-                    className="w-full h-12 px-4 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none appearance-none cursor-pointer"
+                    className="w-full h-10 px-3.5 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-lg text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none appearance-none cursor-pointer"
                     value={formData.country} onChange={handleFormChange}
                   >
                     <option value="">Select Country</option>
@@ -252,20 +254,21 @@ export default function AddVendor() {
                     <option value="USA">USA</option>
                     <option value="UK">UK</option>
                   </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider ml-1">Availability</label>
-                <div className="flex items-center gap-6 h-12 px-4">
+              {/* Row: Availability (1 col) + Address (2 cols) */}
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-700 tracking-wider ml-0.5">Availability</label>
+                <div className="flex items-center gap-4 h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-lg w-full">
                   <label className="flex items-center gap-2 cursor-pointer group">
                     <input
                       type="radio" name="availability" value="Full Time"
                       checked={formData.availability === 'Full Time'} onChange={handleFormChange}
                       className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-slate-300"
                     />
-                    <span className="text-sm font-medium text-slate-700 group-hover:text-indigo-600 transition-colors">Full Time</span>
+                    <span className="text-xs font-medium text-slate-700 group-hover:text-indigo-600 transition-colors">Full Time</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer group">
                     <input
@@ -273,24 +276,25 @@ export default function AddVendor() {
                       checked={formData.availability === 'Part Time'} onChange={handleFormChange}
                       className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-slate-300"
                     />
-                    <span className="text-sm font-medium text-slate-700 group-hover:text-indigo-600 transition-colors">Part Time</span>
+                    <span className="text-xs font-medium text-slate-700 group-hover:text-indigo-600 transition-colors">Part Time</span>
                   </label>
                 </div>
               </div>
 
-              <div className="md:col-span-2 space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider ml-1">Physical Address</label>
+              <div className="col-span-1 md:col-span-1 lg:col-span-2 space-y-1">
+                <label className="text-xs font-semibold text-slate-700 tracking-wider ml-0.5">Physical Address</label>
                 <textarea
-                  name="address" placeholder="Corporate or Residential address..." rows={3}
-                  className="w-full px-4 py-3 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none resize-none"
+                  name="address" placeholder="Corporate or Residential address..." rows={1}
+                  className="w-full h-10 px-3.5 py-2 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-lg text-sm font-medium focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all outline-none resize-none"
                   value={formData.address} onChange={handleFormChange}
                 />
               </div>
 
-              <div className="md:col-span-2 flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200 shadow-sm mt-2">
+              {/* System Visibility */}
+              <div className="col-span-1 md:col-span-2 lg:col-span-3 flex items-center justify-between py-2.5 px-4 bg-slate-50/80 rounded-xl border border-slate-200/80 mt-1">
                 <div className="space-y-0.5">
-                  <label className="text-sm font-bold text-slate-800">System Visibility</label>
-                  <p className="text-xs font-medium text-slate-500">Enable or disable this Vendor Manager's profile</p>
+                  <label className="text-xs font-bold text-slate-800">System Visibility</label>
+                  <p className="text-[11px] font-medium text-slate-500">Enable or disable this Vendor's profile</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className={`text-xs font-semibold uppercase tracking-wider ${formData.isActive ? 'text-emerald-600' : 'text-slate-500'}`}>
@@ -298,27 +302,27 @@ export default function AddVendor() {
                   </span>
                   <div
                     onClick={() => setFormData(prev => ({ ...prev, isActive: !prev.isActive }))}
-                    className={`w-12 h-6 rounded-full p-0.5 cursor-pointer transition-all duration-300 ${formData.isActive ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                    className={`w-11 h-6 rounded-full p-0.5 cursor-pointer transition-all duration-300 ${formData.isActive ? 'bg-emerald-500' : 'bg-slate-300'}`}
                   >
-                    <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-300 transform ${formData.isActive ? 'translate-x-6' : 'translate-x-0'}`} />
+                    <div className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-300 transform ${formData.isActive ? 'translate-x-5' : 'translate-x-0'}`} />
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Form Footer Actions */}
-            <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 mt-6">
+            <div className="flex items-center justify-end gap-3 pt-3.5 border-t border-slate-100 mt-2">
               <button
                 type="button"
                 onClick={() => navigate('/vendors')}
-                className="px-6 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-900 text-slate-600 rounded-xl text-sm font-semibold transition-all shadow-sm"
+                className="px-5 py-2 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-900 text-slate-600 rounded-lg text-sm font-semibold transition-all shadow-xs"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="px-8 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-all shadow-sm active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-all shadow-xs active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {saving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Create Vendor')}
               </button>

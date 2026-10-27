@@ -1,24 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
-  Building2,
   ChevronLeft,
-  Globe,
+  ChevronDown,
   Mail,
-  MapPin,
   Phone,
-  Calendar,
-  Award,
-  CircleDollarSign,
-  User,
-  Map,
-  Flag,
-  Briefcase,
   Paperclip,
   FileText,
   LoaderCircle,
-  AlertCircle,
-  MessageSquare
+  AlertCircle
 } from 'lucide-react';
 import { getClient as fetchClientById } from '../lib/clientApi';
 import { getContacts } from '../lib/contactApi';
@@ -31,6 +21,7 @@ export default function ViewClient() {
   const [loading, setLoading] = useState(!client);
   const [error, setError] = useState(null);
   const [contacts, setContacts] = useState([]);
+  const [isNoteOpen, setIsNoteOpen] = useState(true);
 
   useEffect(() => {
     if (id) {
@@ -118,35 +109,32 @@ export default function ViewClient() {
     );
   }
 
-  const DetailItem = ({ icon: Icon, label, value }) => (
-    <div className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50/50 hover:bg-white border border-transparent hover:border-slate-100 transition-colors">
-      <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
-        <Icon className="w-5 h-5 text-indigo-500" />
-      </div>
-      <div>
-        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</p>
-        <p className="font-semibold text-slate-800 text-sm">{value || '-'}</p>
+  const DetailItem = ({ label, value }) => (
+    <div className="py-2.5 px-3.5 rounded-xl bg-slate-50/70 transition-colors">
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{label}</p>
+        <p className="font-semibold text-slate-800 text-sm break-words">{value || '-'}</p>
       </div>
     </div>
   );
 
   return (
-    <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8 animate-in fade-in duration-700">
-      <div className="max-w-[1400px] mx-auto space-y-6">
+    <div className="font-sans text-slate-900 pb-6 min-h-screen bg-[#fafbfc] p-4 sm:p-6 animate-in fade-in duration-700">
+      <div className="max-w-[1400px] mx-auto space-y-4">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white p-6 sm:px-8 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/60 backdrop-blur-md py-3.5 px-5 sm:px-6 rounded-2xl border border-white/80 shadow-xs">
+          <div className="flex items-center gap-3.5">
             <button
               onClick={() => navigate('/clients')}
-              className="p-2.5 bg-slate-50 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors shrink-0"
+              className="p-2 bg-white text-slate-600 hover:text-indigo-600 rounded-xl shadow-xs hover:shadow-sm transition-all group shrink-0"
             >
-              <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+              <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
             </button>
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 flex items-center gap-3">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2.5">
                 {client.name}
                 <span
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${['Active', 'Client'].includes(client.status)
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${['Active', 'Client'].includes(client.status)
                     ? 'text-emerald-700 bg-emerald-50 border border-emerald-200'
                     : ['Onboarding', 'Prospect Warm'].includes(client.status)
                       ? 'text-amber-700 bg-amber-50 border border-amber-200'
@@ -158,193 +146,198 @@ export default function ViewClient() {
                   {client.status}
                 </span>
               </h1>
-              <p className="text-slate-500 text-sm font-medium tracking-wide">
+              <p className="text-slate-500 text-xs font-medium tracking-wide">
                 Client Profile & Details
               </p>
             </div>
           </div>
           <button
             onClick={() => navigate('/clients/add-client', { state: { client } })}
-            className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 hover:border-indigo-600 hover:text-indigo-600 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-2 justify-center"
+            className="px-5 py-2 bg-white border border-slate-200 text-slate-700 hover:border-indigo-600 hover:text-indigo-600 rounded-lg text-sm font-semibold transition-all shadow-xs flex items-center gap-2 justify-center"
           >
             Edit Profile
           </button>
         </div>
 
         {/* Details Grid */}
-        <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden">
-          <div className="p-6 sm:p-8 space-y-8">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="p-4 sm:p-6 lg:p-7">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4">
+              <div className="space-y-4 sm:space-y-5">
+                {/* Section 1: Primary Info */}
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2">
+                    Primary Information
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <DetailItem label="Company Name" value={client.name} />
+                    <DetailItem label="Client Code" value={client.membershipCode?.replace('CLI-', '')} />
+                    <DetailItem label="Domain" value={client.domain} />
+                    <DetailItem
+                      label="Membership"
+                      value={
+                        Array.isArray(client.membership) && client.membership.length > 0 ? (
+                          <div className="flex flex-wrap gap-1 mt-0.5">
+                            {client.membership.map((m, i) => (
+                              <span key={i} className="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded text-[10px] font-bold">
+                                {m}
+                              </span>
+                            ))}
+                          </div>
+                        ) : client.membership || '-'
+                      }
+                    />
+                    <DetailItem label="Registration Date" value={client.registrationDate} />
+                    <DetailItem label="Created By" value={client.createdBy} />
+                  </div>
+                </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="space-y-8">
-            {/* Section 1: Primary Info */}
-            <div>
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-indigo-500" />
-                Primary Information
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <DetailItem icon={Building2} label="Company Name" value={client.name} />
-                <DetailItem icon={Award} label="Client Code" value={client.membershipCode?.replace('CLI-', '')} />
-                <DetailItem icon={Globe} label="Domain" value={client.domain} />
-                <DetailItem
-                  icon={Award}
-                  label="Membership"
-                  value={
-                    Array.isArray(client.membership) && client.membership.length > 0 ? (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {client.membership.map((m, i) => (
-                          <span key={i} className="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded text-[10px] font-bold">
-                            {m}
-                          </span>
-                        ))}
-                      </div>
-                    ) : client.membership || '-'
-                  }
-                />
-                <DetailItem icon={Calendar} label="Registration Date" value={client.registrationDate} />
-                <DetailItem icon={User} label="Created By" value={client.createdBy} />
-              </div>
-            </div>
+                {/* Section 2: Contact Info */}
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2">
+                    Contact Information
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-1 gap-2.5">
+                    <DetailItem label="Email Address" value={client.email} />
+                    <DetailItem label="Phone Number" value={client.phone} />
+                    <DetailItem label="Website" value={
+                      client.website ? (
+                        <a href={client.website} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline">
+                          {client.website}
+                        </a>
+                      ) : '-'
+                    } />
+                  </div>
+                </div>
 
-            {/* Section 2: Contact Info */}
-            <div>
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Phone className="w-5 h-5 text-emerald-500" />
-                Contact Information
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
-                <DetailItem icon={Mail} label="Email Address" value={client.email} />
-                <DetailItem icon={Phone} label="Phone Number" value={client.phone} />
-                <DetailItem icon={Globe} label="Website" value={
-                  client.website ? (
-                    <a href={client.website} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline">
-                      {client.website}
-                    </a>
-                  ) : '-'
-                } />
-              </div>
-            </div>
+                {/* Section 3: Location Details */}
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2">
+                    Location Details
+                  </h3>
+                  <div className="mb-2.5">
+                    <DetailItem label="Full Address" value={client.address} />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <DetailItem label="City" value={client.city} />
+                    <DetailItem label="State" value={client.state} />
+                    <DetailItem label="Country" value={client.country} />
+                    <DetailItem label="ZIP Code" value={client.zip} />
+                  </div>
+                </div>
 
-            {/* Section 3: Location Details */}
-            <div>
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-rose-500" />
-                Location Details
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <DetailItem icon={MapPin} label="Full Address" value={client.address} />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <DetailItem icon={Map} label="City" value={client.city} />
-                <DetailItem icon={MapPin} label="State" value={client.state} />
-                <DetailItem icon={Flag} label="Country" value={client.country} />
-                <DetailItem icon={MapPin} label="ZIP Code" value={client.zip} />
-              </div>
-            </div>
-
-            {/* Section 4: Financial */}
-            <div>
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <CircleDollarSign className="w-5 h-5 text-amber-500" />
-                Financial Information
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <DetailItem icon={CircleDollarSign} label="Preferred Currency" value={client.currency} />
-                <DetailItem icon={Award} label="GSTIN" value={client.gstIn} />
-                <DetailItem icon={Award} label="VAT Number" value={client.vat} />
-              </div>
-            </div>
+                {/* Section 4: Financial */}
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2">
+                    Financial Information
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <DetailItem label="Preferred Currency" value={client.currency} />
+                    <DetailItem label="GSTIN" value={client.gstIn} />
+                    <DetailItem label="VAT Number" value={client.vat} />
+                  </div>
+                </div>
 
               </div>
-              <div className="space-y-8">
-            {/* Contacts */}
-            <div>
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <User className="w-5 h-5 text-indigo-500" />
-                Contacts
-                <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold">{contacts.length}</span>
-              </h3>
-              {contacts.length > 0 ? (
-                <div className="space-y-3">
-                  {contacts.map((c) => (
-                    <div
-                      key={c._id}
-                      onClick={() => navigate(`/contacts/view-contact/${c._id}`, { state: { contact: c } })}
-                      className="p-4 rounded-2xl bg-slate-50/50 hover:bg-white border border-transparent hover:border-indigo-100 hover:shadow-md transition-all cursor-pointer"
-                    >
-                      <p className="font-semibold text-slate-800 text-sm capitalize">{c.firstName} {c.lastName}</p>
-                      <p className="text-xs text-slate-500">
-                        {[c.designation, c.department].filter(Boolean).join(' · ') || '—'}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
-                        {c.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{c.email}</span>}
-                        {c.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{c.countryCode} {c.phone}</span>}
-                      </div>
+              <div className="space-y-4 sm:space-y-5">
+                {/* Section: Note */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setIsNoteOpen(prev => !prev)}
+                    className="w-full flex items-center justify-between mb-2 group cursor-pointer text-left focus:outline-none"
+                  >
+                    <h3 className="text-sm sm:text-base font-bold text-slate-800">
+                      Note
+                    </h3>
+                    <div className="p-1 rounded-lg bg-slate-50 group-hover:bg-indigo-50 text-slate-400 group-hover:text-indigo-600 transition-colors">
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          isNoteOpen ? 'rotate-180' : ''
+                        }`}
+                      />
                     </div>
-                  ))}
+                  </button>
+                  {isNoteOpen && (
+                    <div className="py-2.5 px-3.5 rounded-xl bg-slate-50/70 transition-colors">
+                      <p className="font-medium text-slate-700 text-sm whitespace-pre-wrap leading-relaxed">
+                        {client.notes || <span className="italic text-slate-400">No notes provided for this client.</span>}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="py-8 text-center bg-slate-50/30 rounded-3xl border border-dashed border-slate-200">
-                  <p className="text-sm font-medium text-slate-400 italic">No contacts for this client.</p>
-                </div>
-              )}
-            </div>
 
-            {/* Section 5: Notes */}
-            <div>
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-indigo-500" />
-                Additional Information
-              </h3>
-              <div className="p-4 rounded-2xl bg-slate-50/50 hover:bg-white border border-transparent hover:border-slate-100 transition-colors">
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Notes / Comments</p>
-                <p className="font-medium text-slate-700 text-sm whitespace-pre-wrap leading-relaxed">
-                  {client.notes || <span className="italic text-slate-400">No notes provided for this client.</span>}
-                </p>
-              </div>
-            </div>
+                {/* Contacts */}
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2 flex items-center gap-2">
+                    Contacts
+                    <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold">{contacts.length}</span>
+                  </h3>
+                  {contacts.length > 0 ? (
+                    <div className="space-y-2">
+                      {contacts.map((c) => (
+                        <div
+                          key={c._id}
+                          onClick={() => navigate(`/contacts/view-contact/${c._id}`, { state: { contact: c } })}
+                          className="p-3 rounded-xl bg-slate-50/70 hover:bg-white border border-transparent hover:border-indigo-100 hover:shadow-xs transition-all cursor-pointer"
+                        >
+                          <p className="font-semibold text-slate-800 text-sm capitalize">{c.firstName} {c.lastName}</p>
+                          <p className="text-xs text-slate-500">
+                            {[c.designation, c.department].filter(Boolean).join(' · ') || '—'}
+                          </p>
+                          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-600">
+                            {c.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{c.email}</span>}
+                            {c.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{c.countryCode} {c.phone}</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-4 text-center bg-slate-50/30 rounded-xl border border-dashed border-slate-200">
+                      <p className="text-xs font-medium text-slate-400 italic">No contacts for this client.</p>
+                    </div>
+                  )}
+                </div>
 
-            {/* Section 6: Documents */}
-            <div>
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Paperclip className="w-5 h-5 text-indigo-500" />
-                Uploaded Documents
-              </h3>
-              {client.documents && client.documents.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
-                  {client.documents.map((doc, i) => (
-                    <a
-                      key={i}
-                      href={getFileUrl(doc.url)}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={(e) => handleViewDocument(e, doc.url, doc.name)}
-                      className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 hover:bg-white border border-transparent hover:border-indigo-100 hover:shadow-md transition-all group"
-                    >
-                      <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-50 group-hover:bg-indigo-100 flex items-center justify-center shrink-0 transition-colors">
-                          <FileText className="w-5 h-5 text-indigo-500" />
-                        </div>
-                        <div className="overflow-hidden">
-                          <p className="font-semibold text-slate-800 text-sm truncate" title={doc.name}>
-                            {doc.name}
-                          </p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            Click to view
-                          </p>
-                        </div>
-                      </div>
-                    </a>
-                  ))}
+                {/* Section 6: Documents */}
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2">
+                    Uploaded Documents
+                  </h3>
+                  {client.documents && client.documents.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-1 gap-2.5">
+                      {client.documents.map((doc, i) => (
+                        <a
+                          key={i}
+                          href={getFileUrl(doc.url)}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => handleViewDocument(e, doc.url, doc.name)}
+                          className="flex items-center justify-between p-2.5 sm:p-3 rounded-xl bg-slate-50/70 hover:bg-white border border-transparent hover:border-indigo-100 hover:shadow-xs transition-all group"
+                        >
+                          <div className="flex items-center gap-2.5 overflow-hidden">
+                            <div className="w-8 h-8 rounded-lg bg-indigo-50 group-hover:bg-indigo-100 flex items-center justify-center shrink-0 transition-colors">
+                              <FileText className="w-4 h-4 text-indigo-500" />
+                            </div>
+                            <div className="overflow-hidden">
+                              <p className="font-semibold text-slate-800 text-xs sm:text-sm truncate" title={doc.name}>
+                                {doc.name}
+                              </p>
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                Click to view
+                              </p>
+                            </div>
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-4 bg-slate-50/30 rounded-xl border border-dashed border-slate-200">
+                      <Paperclip className="w-6 h-6 text-slate-200 mb-1" />
+                      <p className="text-xs font-medium text-slate-400 italic">No documents uploaded for this client.</p>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 bg-slate-50/30 rounded-3xl border border-dashed border-slate-200">
-                  <Paperclip className="w-8 h-8 text-slate-200 mb-2" />
-                  <p className="text-sm font-medium text-slate-400 italic">No documents uploaded for this client.</p>
-                </div>
-              )}
-            </div>
 
               </div>
             </div>

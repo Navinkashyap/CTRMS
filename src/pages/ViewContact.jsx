@@ -70,60 +70,62 @@ export default function ViewContact() {
   }
 
   const DetailItem = ({ icon: Icon, label, value }) => (
-    <div className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50/50 hover:bg-white border border-transparent hover:border-slate-100 transition-colors">
-      <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0">
-        <Icon className="w-5 h-5 text-indigo-500" />
-      </div>
-      <div>
-        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</p>
-        <p className="font-semibold text-slate-800 text-sm">{value || '-'}</p>
+    <div className="flex items-center gap-3 py-2.5 px-3.5 rounded-xl bg-slate-50/70 transition-colors">
+      {Icon && (
+        <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
+          <Icon className="w-4 h-4 text-indigo-500" />
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{label}</p>
+        <p className="font-semibold text-slate-800 text-sm break-words">{value || '-'}</p>
       </div>
     </div>
   );
 
   return (
-    <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8 animate-in fade-in duration-700">
-      <div className="max-w-[1000px] mx-auto space-y-6">
+    <div className="font-sans text-slate-900 pb-6 min-h-screen bg-[#fafbfc] p-4 sm:p-6 animate-in fade-in duration-700">
+      <div className="max-w-[1200px] mx-auto space-y-4">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white p-6 sm:px-8 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/60 backdrop-blur-md py-3.5 px-5 sm:px-6 rounded-2xl border border-white/80 shadow-xs">
+          <div className="flex items-center gap-3.5">
             <button
               onClick={() => navigate('/contacts')}
-              className="p-2.5 bg-slate-50 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors shrink-0"
+              className="p-2 bg-white text-slate-600 hover:text-indigo-600 rounded-xl shadow-xs hover:shadow-sm transition-all group shrink-0"
             >
-              <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+              <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
             </button>
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 flex items-center gap-3">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2.5">
                 {contact.firstName} {contact.lastName}
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200">
                   {contact.designation || 'Contact'}
                 </span>
               </h1>
-              <p className="text-slate-500 text-sm font-medium tracking-wide">
+              <p className="text-slate-500 text-xs font-medium tracking-wide">
                 Professional Contact Profile
               </p>
             </div>
           </div>
           <button
             onClick={() => navigate('/contacts/add-contact', { state: { contact } })}
-            className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 hover:border-indigo-600 hover:text-indigo-600 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-2 justify-center"
+            className="px-5 py-2 bg-white border border-slate-200 text-slate-700 hover:border-indigo-600 hover:text-indigo-600 rounded-lg text-sm font-semibold transition-all shadow-xs flex items-center gap-2 justify-center"
           >
             Edit Contact
           </button>
         </div>
 
         {/* Details Grid */}
-        <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden">
-          <div className="p-6 sm:p-8 space-y-8">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="p-4 sm:p-6 lg:p-7 space-y-4 sm:space-y-5">
 
             {/* Section 1: Primary Info */}
             <div>
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <UserCircle className="w-5 h-5 text-indigo-500" />
+              <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2 flex items-center gap-2">
+                <UserCircle className="w-4 h-4 text-indigo-500" />
                 Personal Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
                 <DetailItem icon={User} label="First Name" value={contact.firstName} />
                 <DetailItem icon={User} label="Last Name" value={contact.lastName} />
                 <DetailItem icon={Calendar} label="Date of Birth" value={contact.dob} />
@@ -132,15 +134,13 @@ export default function ViewContact() {
               </div>
             </div>
 
-            <hr className="border-slate-100" />
-
             {/* Section 2: Professional Info */}
             <div>
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-indigo-500" />
+              <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2 flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-indigo-500" />
                 Professional Details
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                 <DetailItem icon={Building2} label="Company" value={contact.company} />
                 <DetailItem icon={Briefcase} label="Designation" value={contact.designation} />
                 <DetailItem icon={Layers} label="Client Code" value={contact.clientCode} />
@@ -148,29 +148,25 @@ export default function ViewContact() {
               </div>
             </div>
 
-            <hr className="border-slate-100" />
-
             {/* Section 3: Contact Info */}
             <div>
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <Phone className="w-5 h-5 text-emerald-500" />
+              <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2 flex items-center gap-2">
+                <Phone className="w-4 h-4 text-emerald-500" />
                 Contact Information
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <DetailItem icon={Mail} label="Email Address" value={contact.email} />
                 <DetailItem icon={Phone} label="Phone Number" value={contact.phone} />
               </div>
             </div>
 
-            <hr className="border-slate-100" />
-
             {/* Section 4: Location Details */}
             <div>
-              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-rose-500" />
+              <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2 flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-rose-500" />
                 Location Details
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <DetailItem icon={MapPin} label="City" value={contact.city} />
                 <DetailItem icon={MapPin} label="Region" value={contact.region} />
                 <DetailItem icon={Globe} label="Country" value={contact.country} />
