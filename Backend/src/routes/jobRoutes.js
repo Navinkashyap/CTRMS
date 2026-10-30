@@ -24,6 +24,13 @@ const SUBMITTABLE = ["In Progress", "Rejected", "Changes Requested"];
 
 const hasSubmitted = (job) => Boolean(job.submittedAt) || job.vendorStatus === "Completed";
 
+// A Proofreading/Editing vendor may accept the offer early, but can't hand in
+// work until the previous task's deliverables have been transferred to them.
+const isWaitingOnPrevious = (job) =>
+  Boolean(job.isWaitingForPrevious) && !(job.workingFiles && job.workingFiles.length);
+const waitingMessage = (job) =>
+  `This task can't be submitted until ${job.previousTaskName || "the previous task"} is completed and its files are transferred.`;
+
 // PO numbers for a multi-vendor task are `<basePo>-<vendorCode>`.
 const deriveBasePo = (po, vendorCode) =>
   vendorCode && po.endsWith(`-${vendorCode}`) ? po.slice(0, -(vendorCode.length + 1)) : po;
@@ -99,7 +106,8 @@ async function syncProjectVendorStatus(job, action) {
 
             if (isVendorMatch) {
               if (action === "accept") {
-                v.status = "In Progress";
+                // "On Hold" when a dependent task is accepted before its input files exist.
+                v.status = job.vendorStatus;
               } else if (action === "reject") {
                 v.status = "Rejected";
               }
@@ -115,7 +123,7 @@ async function syncProjectVendorStatus(job, action) {
           task.vendor = job.vendorName || job.vendor || task.vendor;
           task.vendorCode = job.vendorCode || task.vendorCode;
           task.po = job.po;
-          task.status = "In Progress";
+          task.status = job.vendorStatus;
           modified = true;
         }
       }
@@ -255,7 +263,11 @@ router.post("/", async (req, res, next) => {
       if (!data.previousTaskName && seqContext.previousTaskName) data.previousTaskName = seqContext.previousTaskName;
 
       if (!seqContext.isFirstTask) {
-        // Subsequent task: must NOT have original files
+        // Subsequent task (Proofreading, Editing, ...): the server decides, not
+        // the caller — no original files, and locked until the previous task delivers.
+        data.isFirstTask = false;
+        data.taskIndex = seqContext.taskIndex;
+        data.isWaitingForPrevious = seqContext.isWaitingForPrevious;
         data.workingFiles = seqContext.workingFiles;
       }
     } catch (e) {
@@ -310,6 +322,9 @@ router.put("/:id", async (req, res, next) => {
 
     // Vendor submits their deliverables.
     if (updates.vendorStatus === "Completed" && job.vendorStatus !== "Completed") {
+      if (isWaitingOnPrevious(job)) {
+        return res.status(409).json({ message: waitingMessage(job) });
+      }
       if (!SUBMITTABLE.includes(job.vendorStatus)) {
         return res.status(409).json({ message: `A job that is "${job.vendorStatus || "not offered"}" can't be submitted` });
       }
@@ -418,6 +433,9 @@ router.post("/:id/deliverables", upload.array("files"), async (req, res, next) =
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
+    if (isWaitingOnPrevious(job)) {
+      return res.status(409).json({ message: waitingMessage(job) });
+    }
 
     if (req.files && req.files.length > 0) {
       const newFiles = req.files.map((file) => ({
@@ -474,6 +492,9 @@ router.put("/:id/complete", async (req, res, next) => {
     if (job.vendorStatus === "Completed") {
       await transferDeliverablesToNextTask(job);
       return res.json(job);
+    }
+    if (isWaitingOnPrevious(job)) {
+      return res.status(409).json({ message: waitingMessage(job) });
     }
     if (!SUBMITTABLE.includes(job.vendorStatus)) {
       return res.status(409).json({ message: "Only jobs in progress or sent back for changes can be submitted" });

@@ -97,6 +97,8 @@ const jobSchema = new mongoose.Schema(
     // Vendor-facing job/offer lifecycle. Empty until a vendor is assigned.
     // Pending: offer sent, awaiting vendor accept/reject.
     // Rejected: vendor declined.
+    // On Hold: vendor accepted a dependent task (Proofreading, Editing, ...)
+    //   before the previous task delivered; no working files yet.
     // In Progress: vendor accepted, work underway.
     // Completed: vendor submitted deliverables, awaiting PM review.
     // Accepted: PM approved the submission.
@@ -105,7 +107,7 @@ const jobSchema = new mongoose.Schema(
     // Cancelled: another vendor accepted the same task first.
     vendorStatus: {
       type: String,
-      enum: ["", "Pending", "Rejected", "In Progress", "Completed", "Accepted", "Changes Requested", "Cancelled"],
+      enum: ["", "Pending", "Rejected", "On Hold", "In Progress", "Completed", "Accepted", "Changes Requested", "Cancelled"],
       default: "",
     },
     // "Rejected" on its own can't tell a declined offer from rejected work, so
@@ -134,5 +136,17 @@ const jobSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// A dependent task can be accepted at any time, but it must never read
+// "In Progress" until the previous task's output files have reached it.
+// Enforced here so every path (vendor accept, file transfer, PM edits) agrees.
+jobSchema.pre("save", function (next) {
+  if (this.isFirstTask) return next();
+  const hasInputFiles = this.workingFiles.length > 0;
+  this.isWaitingForPrevious = !hasInputFiles;
+  if (this.vendorStatus === "In Progress" && !hasInputFiles) this.vendorStatus = "On Hold";
+  else if (this.vendorStatus === "On Hold" && hasInputFiles) this.vendorStatus = "In Progress";
+  next();
+});
 
 export default mongoose.model("Job", jobSchema);

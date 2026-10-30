@@ -141,6 +141,12 @@ export async function transferDeliverablesToNextTask(job, filesToTransfer = null
     nextTask.workingFile = formattedFiles[0] || null;
     nextTask.isWaitingForPrevious = false;
     nextTask.transferredFromTask = tasks[currentTaskIndex].taskName || tasks[currentTaskIndex].type || `Task ${currentTaskIndex + 1}`;
+    // Its input files are here now, so an early-accepted next task comes off hold
+    // (the Job itself flips in its pre-save hook below).
+    if (nextTask.status === "On Hold") nextTask.status = "In Progress";
+    (nextTask.assignedVendors || []).forEach(av => {
+      if (av.status === "On Hold") av.status = "In Progress";
+    });
 
     await VMSProject.updateOne({ _id: project._id }, { $set: { targets } });
 
@@ -244,10 +250,16 @@ export async function getSequentialTaskContext(projectId, targetId, taskId, task
 
     // If not found on project task, check previous task's Job
     if (prevDelivered.length === 0 && (prevTask?.id || prevTask?.po)) {
+      // Scoped to this project so another project's task can never unlock this one.
       const prevJob = await Job.findOne({
-        $or: [
-          ...(prevTask.id ? [{ taskId: String(prevTask.id) }] : []),
-          ...(prevTask.po ? [{ po: prevTask.po }, { basePo: prevTask.po }] : [])
+        $and: [
+          { $or: [{ project: project._id }, ...(project.projectId ? [{ projectId: project.projectId }] : [])] },
+          {
+            $or: [
+              ...(prevTask.id ? [{ taskId: String(prevTask.id) }] : []),
+              ...(prevTask.po ? [{ po: prevTask.po }, { basePo: prevTask.po }] : [])
+            ]
+          }
         ],
         vendorStatus: { $in: ["Completed", "Accepted", "Pending Review"] }
       });

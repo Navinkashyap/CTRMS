@@ -13,7 +13,7 @@ router.get("/dashboard/:code", async (req, res, next) => {
     
     // 1. Calculate Stats
     const jobOffers = await Job.countDocuments({ vendorCode: code, vendorStatus: "Pending" });
-    const inProgress = await Job.countDocuments({ vendorCode: code, vendorStatus: "In Progress" });
+    const inProgress = await Job.countDocuments({ vendorCode: code, vendorStatus: { $in: ["In Progress", "On Hold"] } });
     const completed = await Job.countDocuments({ vendorCode: code, vendorStatus: "Completed" });
     const pendingInvoices = await Invoice.countDocuments({ supplierNo: code, status: "Pending" });
     
@@ -37,6 +37,7 @@ router.get("/dashboard/:code", async (req, res, next) => {
     const activities = recentJobs.map(job => {
       let action = `Job ${job.po} updated`;
       if (job.vendorStatus === "Pending") action = `New job offer received: ${job.po}`;
+      else if (job.vendorStatus === "On Hold") action = `Job ${job.po} on hold, waiting for previous task files`;
       else if (job.vendorStatus === "In Progress") action = `Started working on job ${job.po}`;
       else if (job.vendorStatus === "Completed") action = `Completed job ${job.po}`;
       
