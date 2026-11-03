@@ -29,7 +29,16 @@ const getLangName = (langId, languageList) => {
 const calcTaskFees = (quantity, rate) =>
   (Number(quantity) || 0) * (Number(rate) || 0);
 
-const createDefaultTasks = (currency = 'INR', defaultUnit = 'Words') =>
+const getDefaultUnit = (list) => {
+  if (!list || list.length === 0) return 'word';
+  const match = list.find((u) => {
+    const n = (u?.name || u || '').trim().toLowerCase();
+    return n === 'word';
+  });
+  return match ? (match.name || match) : 'word';
+};
+
+const createDefaultTasks = (currency = 'INR', defaultUnit = 'word') =>
   DEFAULT_TRANSLATION_TASKS.map((t) => ({
     taskName: t.taskName,
     unit: defaultUnit,
@@ -169,12 +178,12 @@ export default function AddProject() {
                   ...task,
                   startDate: task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '',
                   endDate: task.endDate ? new Date(task.endDate).toISOString().split('T')[0] : '',
-                })) : createDefaultTasks('INR', unitsRes.length > 0 ? unitsRes[0].name : 'Words')
+                })) : createDefaultTasks('INR', getDefaultUnit(unitsRes))
               })) : [{
                 sourceLanguage: enUS ? enUS._id : '',
                 targetLanguage: hiIN ? hiIN._id : '',
                 service: '',
-                tasks: createDefaultTasks('INR', unitsRes.length > 0 ? unitsRes[0].name : 'Words')
+                tasks: createDefaultTasks('INR', getDefaultUnit(unitsRes))
               }],
               referenceFiles: editData.referenceFiles || [],
               workingFiles: editData.workingFiles || [],
@@ -188,7 +197,7 @@ export default function AddProject() {
                 sourceLanguage: enUS ? enUS._id : '',
                 targetLanguage: hiIN ? hiIN._id : '',
                 service: '',
-                tasks: createDefaultTasks('INR', unitsRes.length > 0 ? unitsRes[0].name : 'Words')
+                tasks: createDefaultTasks('INR', getDefaultUnit(unitsRes))
               }]
             };
           }
@@ -347,7 +356,7 @@ export default function AddProject() {
           service: '',
           tasks: createDefaultTasks(
             clients.find((c) => c._id === prev.client)?.currency || 'INR',
-            unitsList.length > 0 ? unitsList[0].name : 'Words'
+            getDefaultUnit(unitsList)
           ),
         },
       ],
@@ -365,7 +374,7 @@ export default function AddProject() {
     const newTargets = [...formData.targets];
     newTargets[index][field] = value;
     if (field === 'targetLanguage' && value && newTargets[index].tasks.length === 0) {
-      newTargets[index].tasks = createDefaultTasks(clientCurrency, unitsList.length > 0 ? unitsList[0].name : 'Words');
+      newTargets[index].tasks = createDefaultTasks(clientCurrency, getDefaultUnit(unitsList));
     }
     setFormData({ ...formData, targets: newTargets });
   };
@@ -374,7 +383,7 @@ export default function AddProject() {
     const newTargets = [...formData.targets];
     newTargets[targetIndex].tasks.push({
       taskName: '',
-      unit: unitsList.length > 0 ? unitsList[0].name : 'Words',
+      unit: getDefaultUnit(unitsList),
       quantity: 100,
       rate: 0,
       currency: clientCurrency,
@@ -646,20 +655,6 @@ export default function AddProject() {
                   <option value="__add_new__">+ Add new contact…</option>
                 </select>
               </div>
-              {/* Amount */}
-              <div className="ap-field">
-                <label className="ap-label">Amount ({clientCurrency})</label>
-                <div className="ap-input-icon-wrap">
-                  <input
-                    type="text"
-                    placeholder="e.g. 120"
-                    value={formData.amount}
-                    onChange={(e) => handleInputChange('amount', e.target.value)}
-                    className="ap-input"
-                  />
-                  <span className="ap-input-suffix">₹</span>
-                </div>
-              </div>
               {/* Start Date */}
               <div className="ap-field">
                 <label className="ap-label">Start Date</label>
@@ -925,14 +920,26 @@ export default function AddProject() {
                             </td>
                             <td>
                               <select
-                                value={task.unit}
+                                value={task.unit || 'word'}
                                 onChange={(e) => handleTaskChange(idx, tIdx, 'unit', e.target.value)}
                                 className="ap-cell-select"
                               >
                                 {unitsList.length > 0 ? (
-                                  unitsList.map(u => <option key={u._id} value={u.name}>{u.name}</option>)
+                                  <>
+                                    {!unitsList.some((u) => (u.name || '').toLowerCase() === 'word') && (
+                                      <option value="word">word</option>
+                                    )}
+                                    {unitsList.map((u) => (
+                                      <option key={u._id || u.name} value={u.name}>
+                                        {u.name}
+                                      </option>
+                                    ))}
+                                    {task.unit && !unitsList.some((u) => u.name === task.unit) && task.unit !== 'word' && (
+                                      <option value={task.unit}>{task.unit}</option>
+                                    )}
+                                  </>
                                 ) : (
-                                  <option value="Words">Words</option>
+                                  <option value="word">word</option>
                                 )}
                               </select>
                             </td>

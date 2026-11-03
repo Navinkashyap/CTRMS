@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -26,7 +27,7 @@ export const upload = multer({
   limits: { fileSize: 200 * 1024 * 1024 },
 });
 
-export const FILE_FIELDS = ["referenceFiles", "workingFiles"];
+export const FILE_FIELDS = ["referenceFiles", "workingFiles", "completedFiles", "deliveredFiles"];
 
 // Files are stored as { name, url }, but older rows hold a bare string (the
 // browser's fake path from the previous non-uploading file input). Accept both.
@@ -249,7 +250,12 @@ router.get("/", async (req, res) => {
 // Get single project
 router.get("/:id", async (req, res) => {
   try {
-    const project = await Project.findById(req.params.id)
+    const isObjId = mongoose.isValidObjectId(req.params.id);
+    const filter = isObjId
+      ? { _id: req.params.id }
+      : { $or: [{ projectId: req.params.id }, { projectCode: req.params.id }] };
+
+    const project = await Project.findOne(filter)
       .populate("client", "name currency")
       .populate("service", "name")
       .populate("clientContact", "firstName lastName email")
@@ -258,7 +264,97 @@ router.get("/:id", async (req, res) => {
       .populate("targets.targetLanguage", "name")
       .populate("targets.service", "name");
     if (!project) return res.status(404).json({ message: "Project not found" });
-    res.json(project);
+
+    const data = project.toObject();
+
+    // Look up delivered/completed files from VMSProject
+    const vmsConditions = [
+      ...(data.projectId ? [{ projectId: data.projectId }, { projectCode: data.projectId }] : []),
+      ...(data.projectCode ? [{ projectId: data.projectCode }, { projectCode: data.projectCode }, { name: data.projectCode }] : []),
+      ...(data.projectName ? [{ name: data.projectName }, { projectCode: data.projectName }] : []),
+    ];
+
+    if (vmsConditions.length > 0) {
+      const vmsProjs = await VMSProject.find({ $or: vmsConditions }).lean();
+      const vmsDeliveredFiles = [];
+      const seen = new Set();
+      let vmsPmNote = data.pmNotes || data.notesForSales || "";
+
+      for (const vmsProj of vmsProjs) {
+        if (vmsProj.notesForPm || vmsProj.notes) {
+          vmsPmNote = vmsProj.notesForPm || vmsProj.notes;
+        }
+        const rawFiles = [
+          ...(Array.isArray(vmsProj.deliveredFiles) ? vmsProj.deliveredFiles : []),
+          ...(Array.isArray(vmsProj.salesDeliveredFiles) ? vmsProj.salesDeliveredFiles : []),
+          ...(Array.isArray(vmsProj.completedFiles) ? vmsProj.completedFiles : []),
+          ...(vmsProj.deliveryFiles ? Object.values(typeof vmsProj.deliveryFiles === "object" ? vmsProj.deliveryFiles : {}).flat() : [])
+        ];
+        for (const f of rawFiles) {
+          if (!f) continue;
+          const name = f.name || (typeof f === "string" ? f.split("/").pop() : "");
+          const url = f.url || (typeof f === "string" ? f : "");
+          const key = `${name}_${url}`;
+          if (!seen.has(key) && (name || url)) {
+            seen.add(key);
+            vmsDeliveredFiles.push({
+              name: name || "Deliverable",
+              url: url,
+              size: f.size || "",
+              uploadedAt: f.uploadedAt || new Date().toISOString(),
+            });
+          }
+        }
+      }
+
+      const updateSet = {};
+
+      if (vmsDeliveredFiles.length > 0) {
+        const existingCompleted = Array.isArray(data.completedFiles) ? data.completedFiles : [];
+        const existingDelivered = Array.isArray(data.deliveredFiles) ? data.deliveredFiles : [];
+        const combined = [...existingCompleted, ...existingDelivered, ...vmsDeliveredFiles];
+        const uniqueMerged = [];
+        const seenKeys = new Set();
+        for (const file of combined) {
+          if (!file) continue;
+          const name = file.name || (typeof file === "string" ? file.split("/").pop() : "");
+          const url = file.url || (typeof file === "string" ? file : "");
+          const key = `${name}_${url}`;
+          if (!seenKeys.has(key) && (name || url)) {
+            seenKeys.add(key);
+            uniqueMerged.push({
+              name: name || "Deliverable",
+              url: url,
+              size: file.size || "",
+              uploadedAt: file.uploadedAt || new Date().toISOString(),
+            });
+          }
+        }
+        data.completedFiles = uniqueMerged;
+        data.deliveredFiles = uniqueMerged;
+
+        if (!project.completedFiles || project.completedFiles.length < uniqueMerged.length) {
+          updateSet.completedFiles = uniqueMerged;
+          updateSet.deliveredFiles = uniqueMerged;
+        }
+      }
+
+      if (vmsPmNote) {
+        data.pmNotes = vmsPmNote;
+        data.notesForSales = vmsPmNote;
+        if (!project.pmNotes || project.pmNotes !== vmsPmNote) {
+          updateSet.pmNotes = vmsPmNote;
+          updateSet.notesForSales = vmsPmNote;
+        }
+      }
+
+      if (Object.keys(updateSet).length > 0) {
+        Project.findByIdAndUpdate(project._id, { $set: updateSet })
+          .catch(err => console.error("Error backfilling deliverables/notes onto Project:", err.message));
+      }
+    }
+
+    res.json(data);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

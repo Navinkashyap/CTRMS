@@ -94,6 +94,7 @@ const VMSProjectSchema = new mongoose.Schema(
     // either name reads back.
     deliveredFiles: { type: [FileRefSchema], default: [] },
     salesDeliveredFiles: { type: [FileRefSchema], default: [] },
+    completedFiles: { type: [FileRefSchema], default: [] },
     deliveredLinks: { type: [DeliveredLinkSchema], default: [] },
     salesDeliveredLinks: { type: [DeliveredLinkSchema], default: [] },
     notesForPm: { type: String, trim: true, default: "" },

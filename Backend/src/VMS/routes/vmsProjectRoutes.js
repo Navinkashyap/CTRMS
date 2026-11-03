@@ -2,7 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import VMSProject from "../models/VMSProject.js";
 import vmsAuth from "../middleware/vmsAuth.js";
-import { flagAdminProjectPmStatus, syncAdminProjectStatus } from "../utils/adminProjectSync.js";
+import { flagAdminProjectPmStatus, syncAdminProjectStatus, syncAdminProjectDeliverables } from "../utils/adminProjectSync.js";
 import { createS3Uploader, uploadedFileUrl } from "../../utils/s3Upload.js";
 
 const router = express.Router();
@@ -204,6 +204,9 @@ router.put("/:id", async (req, res, next) => {
     if (req.body.status) {
       await syncAdminProjectStatus(project.projectId, project.status);
     }
+
+    // Mirror submitted/delivered deliverables to Admin's Project record
+    await syncAdminProjectDeliverables(project);
   } catch (error) {
     next(error);
   }
