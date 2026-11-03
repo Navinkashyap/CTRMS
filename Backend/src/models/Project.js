@@ -75,9 +75,15 @@ const ProjectSchema = new mongoose.Schema(
     // coerces both shapes to the object form.
     referenceFiles: { type: [mongoose.Schema.Types.Mixed], default: [] },
     workingFiles: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    completedFiles: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    deliveredFiles: { type: [mongoose.Schema.Types.Mixed], default: [] },
 
     // ViewProject - Remark Tab
     remark: { type: String, trim: true },
+
+    // Note from PM for Sales/Admin (from PMSales)
+    pmNotes: { type: String, trim: true, default: "" },
+    notesForSales: { type: String, trim: true, default: "" },
 
     // Set by the VMS backend when the assigned PM responds to this project in
     // their "My Projects" incoming queue (see VMS/routes/vmsProjectRoutes.js).

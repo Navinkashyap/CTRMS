@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { MinusCircle, Plus, FolderGit2 } from 'lucide-react';
+import { MinusCircle, Plus, FolderGit2, Eye } from 'lucide-react';
 import { getProject, getProjects, updateProject, uploadProjectFiles, deleteProjectFile, projectFileHref } from '../lib/projectApi';
 import { getClients } from '../lib/clientApi';
 import { getContacts } from '../lib/contactApi';
@@ -98,6 +98,7 @@ export default function ViewProject() {
     type: 'Non Extended',
     projectStatus: 'In Progress',
     receivingDate: '',
+    startDate: '',
     dueDate: '',
     dueTime: '',
     dateOfDelivery: '',
@@ -117,9 +118,27 @@ export default function ViewProject() {
     targets: [],
     referenceFiles: [],
     workingFiles: [],
-    remark: ''
+    completedFiles: [],
+    remark: '',
+    pmNotes: ''
   });
   const [uploadingFiles, setUploadingFiles] = useState({});
+  const descriptionRef = useRef(null);
+  const pmNotesRef = useRef(null);
+
+  useEffect(() => {
+    if (descriptionRef.current) {
+      descriptionRef.current.style.height = 'auto';
+      descriptionRef.current.style.height = `${Math.max(descriptionRef.current.scrollHeight, 100)}px`;
+    }
+  }, [formData.description]);
+
+  useEffect(() => {
+    if (pmNotesRef.current) {
+      pmNotesRef.current.style.height = 'auto';
+      pmNotesRef.current.style.height = `${Math.max(pmNotesRef.current.scrollHeight, 80)}px`;
+    }
+  }, [formData.pmNotes]);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -170,6 +189,7 @@ export default function ViewProject() {
           type: projRes.type || 'Non Extended',
           projectStatus: projRes.projectStatus || 'In Progress',
           receivingDate: toDatetimeLocal(projRes.receivingDate),
+          startDate: projRes.startDate ? new Date(projRes.startDate).toISOString().slice(0, 10) : '',
           dueDate: toDatetimeLocal(projRes.dueDate),
           dueTime: projRes.dueTime || '',
           dateOfDelivery: toDatetimeLocal(projRes.dateOfDelivery),
@@ -192,7 +212,15 @@ export default function ViewProject() {
           targets: normalizeTargets(projRes.targets),
           referenceFiles: projRes.referenceFiles || [],
           workingFiles: projRes.workingFiles || [],
-          remark: projRes.remark || ''
+          completedFiles: (Array.isArray(projRes.completedFiles) && projRes.completedFiles.length > 0)
+            ? projRes.completedFiles
+            : (Array.isArray(projRes.deliveredFiles) && projRes.deliveredFiles.length > 0)
+            ? projRes.deliveredFiles
+            : (Array.isArray(projRes.salesDeliveredFiles) && projRes.salesDeliveredFiles.length > 0)
+            ? projRes.salesDeliveredFiles
+            : [],
+          remark: projRes.remark || '',
+          pmNotes: projRes.pmNotes || projRes.notesForSales || projRes.notesForPm || projRes.notes || ''
         });
 
       } catch (err) {
@@ -277,6 +305,7 @@ export default function ViewProject() {
       ...prev,
       referenceFiles: updated.referenceFiles || [],
       workingFiles: updated.workingFiles || [],
+      completedFiles: (updated.completedFiles && updated.completedFiles.length > 0 ? updated.completedFiles : (updated.deliveredFiles && updated.deliveredFiles.length > 0 ? updated.deliveredFiles : prev.completedFiles)) || [],
     }));
 
   const handleFileUpload = async (field, fileList) => {
@@ -386,7 +415,12 @@ export default function ViewProject() {
           {files.map((file, idx) => (
             <div key={`${file.url || file.name}-${idx}`} className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded text-sm">
               {file.url ? (
-                <a href={projectFileHref(file.url)} target="_blank" rel="noreferrer" className="flex-1 truncate text-indigo-600 hover:underline">
+                <a
+                  href={projectFileHref(file.url)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 truncate text-indigo-600 hover:underline"
+                >
                   {file.name}
                 </a>
               ) : (
@@ -394,11 +428,23 @@ export default function ViewProject() {
                   {file.name} (no file attached)
                 </span>
               )}
+              {file.url && (
+                <a
+                  href={projectFileHref(file.url)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-8 h-8 rounded border border-slate-300 bg-white hover:bg-slate-100 text-slate-600 hover:text-indigo-600 flex items-center justify-center transition-colors shadow-2xs"
+                  title={`View ${file.name || 'file'}`}
+                >
+                  <Eye className="w-4 h-4" />
+                </a>
+              )}
               <button
                 type="button"
                 onClick={() => handleFileRemove(field, idx)}
                 disabled={busy}
-                className="w-8 h-8 rounded border border-slate-300 bg-white hover:bg-rose-50 text-rose-600 font-bold flex items-center justify-center disabled:opacity-30"
+                className="w-8 h-8 rounded border border-slate-300 bg-white hover:bg-rose-50 text-rose-600 font-bold flex items-center justify-center disabled:opacity-30 cursor-pointer"
+                title="Remove file"
               >
                 <MinusCircle className="w-4 h-4" />
               </button>
@@ -433,6 +479,7 @@ export default function ViewProject() {
     // save from overwriting an upload made since this form was loaded.
     referenceFiles: undefined,
     workingFiles: undefined,
+    completedFiles: undefined,
     projectName: formData.projectName || formData.projectCode || 'Untitled Project',
     targets: formData.targets.map((target) => ({
       ...target,
@@ -803,6 +850,33 @@ export default function ViewProject() {
           </div>
         </div>
 
+        {/* Completed files section */}
+        <div className="space-y-4 pt-6 border-t border-slate-200">
+          <div>
+            <h3 className="text-xl font-bold text-slate-800">Completed Files</h3>
+            <p className="text-sm font-medium text-slate-500">Delivered or completed files</p>
+          </div>
+
+          {/* Note (Non-editable, auto-height, matching completed files width) */}
+          <div className="flex flex-col md:flex-row md:items-start gap-4">
+            <span className="w-32 shrink-0 font-bold text-slate-700 pt-2">Note</span>
+            <div className="flex-1">
+              <textarea
+                ref={pmNotesRef}
+                readOnly
+                rows={3}
+                placeholder="Note..."
+                value={formData.pmNotes || ''}
+                className="w-full min-h-[80px] px-3.5 py-2.5 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg shadow-2xs resize-none leading-relaxed overflow-hidden focus:outline-none cursor-default"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {renderFileField('Completed files', 'completedFiles')}
+          </div>
+        </div>
+
       </div>
     );
   };
@@ -810,10 +884,8 @@ export default function ViewProject() {
   const renderCompanyContent = () => {
     return (
       <div className="space-y-5 animate-in fade-in duration-500">
-        <div className="border-b border-slate-100 pb-4">
-          <h2 className="text-xl font-bold text-slate-800">Project</h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 max-w-4xl mx-auto py-4">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 w-full py-4">
           <div className="space-y-2">
             <label className="block text-sm font-bold text-slate-700">Project Code</label>
             <input
@@ -860,12 +932,11 @@ export default function ViewProject() {
             </select>
           </div>
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-slate-700">Amount</label>
+            <label className="block text-sm font-bold text-slate-700">Start Date</label>
             <input
-              type="text"
-              placeholder="e.g. 10000"
-              value={formData.amount}
-              onChange={(e) => handleInputChange('amount', e.target.value)}
+              type="date"
+              value={formData.startDate ? formData.startDate.slice(0, 10) : ''}
+              onChange={(e) => handleInputChange('startDate', e.target.value)}
               className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
             />
           </div>
@@ -907,14 +978,19 @@ export default function ViewProject() {
               className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
             />
           </div>
-          <div className="space-y-2 md:col-span-2">
+          <div className="space-y-2 md:col-span-2 w-full">
             <label className="block text-sm font-bold text-slate-700">Description</label>
             <textarea
-              rows={3}
+              ref={descriptionRef}
+              rows={4}
               placeholder="Enter project description..."
               value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20 resize-y"
+              onChange={(e) => {
+                handleInputChange('description', e.target.value);
+                e.target.style.height = 'auto';
+                e.target.style.height = `${Math.max(e.target.scrollHeight, 100)}px`;
+              }}
+              className="w-full min-h-[100px] px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20 resize-y overflow-hidden"
             />
           </div>
           <div className="space-y-3 md:col-span-2">
