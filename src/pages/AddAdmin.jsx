@@ -1,58 +1,90 @@
-import React, { useState } from 'react'
-import { User, Phone, Mail, Plus, ShieldCheck, SquarePen, Trash2, MoreHorizontal, Globe } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { User, Phone, Mail, Lock, Plus, ShieldCheck, SquarePen, Trash2, MoreHorizontal, Globe } from 'lucide-react'
+import { getAdmins, createAdmin, updateAdmin, deleteAdmin } from '../lib/adminApi'
+import { getCurrentUser } from '../lib/authApi'
 
-const initialAdmins = [
-    { id: 1, name: 'John Doe', email: 'john@example.com', phone: '+91 98765 43210', status: 'Active' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', phone: '+91 87654 32109', status: 'Active' },
-];
+const emptyForm = { name: '', phone: '', email: '', password: '' };
 
 export default function AddAdmin() {
-    const [admins, setAdmins] = useState(initialAdmins);
-    const [formData, setFormData] = useState({
-        name: '',
-        phone: '',
-        email: ''
-    });
+    const [admins, setAdmins] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const [formData, setFormData] = useState(emptyForm);
 
     const [notification, setNotification] = useState(null);
     const [editingAdmin, setEditingAdmin] = useState(null);
+    const currentUserId = getCurrentUser()?.id;
 
     const showNotification = (msg) => {
         setNotification(msg);
         setTimeout(() => setNotification(null), 3000);
     };
 
+    useEffect(() => {
+        const load = async () => {
+            try {
+                setIsLoading(true);
+                setAdmins(await getAdmins());
+            } catch (error) {
+                console.error('Error fetching admins:', error);
+                showNotification(error.response?.data?.message || 'Failed to fetch admins.');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        load();
+    }, []);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (editingAdmin) {
-            setAdmins(admins.map(a => a.id === editingAdmin.id ? { ...formData, id: a.id, status: a.status } : a));
-            showNotification(`Admin ${formData.name} updated successfully!`);
-            setEditingAdmin(null);
-        } else {
-            const newAdmin = {
-                id: admins.length + 1,
-                ...formData,
-                status: 'Active'
-            };
-            setAdmins([newAdmin, ...admins]);
-            showNotification(`Admin ${formData.name} added successfully!`);
+        const payload = { name: formData.name, email: formData.email, phone: formData.phone };
+        // Password is required for a new admin; on edit it is only changed when filled in.
+        if (formData.password) payload.password = formData.password;
+        try {
+            setIsSaving(true);
+            if (editingAdmin) {
+                const updated = await updateAdmin(editingAdmin._id, payload);
+                setAdmins(prev => prev.map(a => a._id === updated._id ? updated : a));
+                showNotification(`Admin ${updated.name} updated successfully!`);
+                setEditingAdmin(null);
+            } else {
+                const created = await createAdmin(payload);
+                setAdmins(prev => [created, ...prev]);
+                showNotification(`Admin ${created.name} added successfully!`);
+            }
+            setFormData(emptyForm);
+        } catch (error) {
+            console.error('Error saving admin:', error);
+            showNotification(error.response?.data?.message || 'Failed to save admin.');
+        } finally {
+            setIsSaving(false);
         }
-        setFormData({ name: '', phone: '', email: '' });
     };
 
     const handleEdit = (admin) => {
         setEditingAdmin(admin);
-        setFormData({ name: admin.name, phone: admin.phone, email: admin.email });
+        setFormData({ name: admin.name || '', phone: admin.phone || '', email: admin.email || '', password: '' });
     };
 
-    const handleDelete = (id) => {
-        setAdmins(admins.filter(admin => admin.id !== id));
-        showNotification('Admin removed successfully!');
+    const handleDelete = async (admin) => {
+        if (!window.confirm(`Delete admin ${admin.name}? They will no longer be able to log in.`)) return;
+        try {
+            await deleteAdmin(admin._id);
+            setAdmins(prev => prev.filter(a => a._id !== admin._id));
+            if (editingAdmin?._id === admin._id) {
+                setEditingAdmin(null);
+                setFormData(emptyForm);
+            }
+            showNotification('Admin removed successfully!');
+        } catch (error) {
+            console.error('Error deleting admin:', error);
+            showNotification(error.response?.data?.message || 'Failed to delete admin.');
+        }
     };
 
     return (
@@ -126,16 +158,32 @@ export default function AddAdmin() {
                                             />
                                         </div>
                                     </div>
+
+                                    <div className="space-y-2 group">
+                                        <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">
+                                            {editingAdmin ? 'New Password (optional)' : 'Password'}
+                                        </label>
+                                        <div className="relative">
+                                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600 group-focus-within:text-blue-500 transition-colors" />
+                                            <input
+                                                required={!editingAdmin} minLength={6} type="password" name="password"
+                                                value={formData.password} onChange={handleChange}
+                                                autoComplete="new-password"
+                                                placeholder={editingAdmin ? 'Leave blank to keep current' : 'Min 6 characters'}
+                                                className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <button type="submit" className="w-full bg-gradient-to-r from-slate-900 to-indigo-900 hover:from-slate-800 hover:to-indigo-800 text-white py-4 rounded-2xl text-[15px] font-black transition-all shadow-xl active:scale-[0.98] flex items-center justify-center gap-2 group">
+                                <button type="submit" disabled={isSaving} className="disabled:opacity-60 w-full bg-gradient-to-r from-slate-900 to-indigo-900 hover:from-slate-800 hover:to-indigo-800 text-white py-4 rounded-2xl text-[15px] font-black transition-all shadow-xl active:scale-[0.98] flex items-center justify-center gap-2 group">
                                     <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
-                                    {editingAdmin ? 'Update Settings' : 'Create Account'}
+                                    {isSaving ? 'Saving...' : editingAdmin ? 'Update Settings' : 'Create Account'}
                                 </button>
                                 {editingAdmin && (
                                     <button
                                         type="button"
-                                        onClick={() => { setEditingAdmin(null); setFormData({ name: '', phone: '', email: '' }); }}
+                                        onClick={() => { setEditingAdmin(null); setFormData(emptyForm); }}
                                         className="w-full py-2 text-xs font-bold text-slate-600 hover:text-slate-600 transition-colors"
                                     >
                                         Cancel Edit
@@ -162,8 +210,18 @@ export default function AddAdmin() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50">
-                                        {admins.map((admin, index) => (
-                                            <tr key={admin.id} className="group hover:bg-indigo-50/40 transition-all duration-300 ease-out cursor-default">
+                                        {isLoading && (
+                                            <tr>
+                                                <td colSpan="5" className="px-6 py-10 text-center text-slate-400 font-medium italic">Loading admins...</td>
+                                            </tr>
+                                        )}
+                                        {!isLoading && admins.length === 0 && (
+                                            <tr>
+                                                <td colSpan="5" className="px-6 py-10 text-center text-slate-400 font-medium italic">No admins found.</td>
+                                            </tr>
+                                        )}
+                                        {!isLoading && admins.map((admin, index) => (
+                                            <tr key={admin._id} className="group hover:bg-indigo-50/40 transition-all duration-300 ease-out cursor-default">
                                                 <td className="px-6 py-5 text-center">
                                                     <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-500 font-mono text-xs font-bold group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
                                                         {index + 1}
@@ -204,12 +262,14 @@ export default function AddAdmin() {
                                                         >
                                                             <SquarePen className="w-4 h-4" />
                                                         </button>
+                                                        {String(admin._id) !== String(currentUserId) && (
                                                         <button
-                                                            onClick={() => handleDelete(admin.id)}
+                                                            onClick={() => handleDelete(admin)}
                                                             className="w-9 h-9 inline-flex items-center justify-center rounded-xl text-slate-600 hover:text-red-500 hover:bg-white hover:shadow-sm active:scale-90 transition-all outline-none border border-transparent hover:border-red-100"
                                                         >
                                                             <Trash2 className="w-4 h-4" />
                                                         </button>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>

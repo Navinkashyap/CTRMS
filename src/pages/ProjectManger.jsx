@@ -91,7 +91,7 @@ export default function ProjectManagerList() {
   };
 
   const handleEdit = (projectManager) => {
-    navigate('/project-managers/add', { state: { projectManager } });
+    navigate(`/project-managers/add?id=${projectManager._id}`, { state: { projectManager } });
   };
 
   const filteredProjectManagers = useMemo(() => {

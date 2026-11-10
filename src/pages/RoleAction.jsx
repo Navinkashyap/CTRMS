@@ -1,34 +1,73 @@
-import React, { useState, useMemo } from 'react';
-import { Save, ShieldCheck, CheckSquare, Square, Search, Filter, Info, FileDown, Star, UserSearch, Layers, CheckCircle, Trash2, PlusCircle, ClipboardCheck, Send, UserCog, Store, Eye, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Save, ShieldCheck, CheckSquare, Square, Search, Filter, Info, FileDown, Star, UserSearch, Layers, CheckCircle, Trash2, PlusCircle, ClipboardCheck, Send, UserCog, Store, Eye, Zap, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { getRoles } from '../lib/roleApi';
+import { getActions } from '../lib/actionApi';
+import { getRolePermissions, saveRoleActionPermissions } from '../lib/rolePermissionApi';
 
-const roles = [
-    'Super Admin', 'Admin', 'Project Head', 'Accountant', 'Project Manager',
-    'Project Executive', 'Sales Head', 'Sales Manager', 'Sales Executive',
-    'Vendor Manager', 'Vendor'
-];
+// Icons for the known actions; any action added later from the Action page
+// falls back to a generic icon.
+const ACTION_ICONS = {
+    'Download Document': <FileDown className="w-4 h-4" />,
+    'Preferred': <Star className="w-4 h-4" />,
+    'View Profile From Search': <UserSearch className="w-4 h-4" />,
+    'View Service From Search': <Layers className="w-4 h-4" />,
+    'Translation Language Approve': <CheckCircle className="w-4 h-4" />,
+    'Translation Language Delete': <Trash2 className="w-4 h-4" />,
+    'Translation Language Add More': <PlusCircle className="w-4 h-4" />,
+    'Translation References Check': <ClipboardCheck className="w-4 h-4" />,
+    'Translation References Delete': <Trash2 className="w-4 h-4" />,
+    'Translation References Add More': <PlusCircle className="w-4 h-4" />,
+    'Translation Submit': <Send className="w-4 h-4" />,
+    'Profile Edit': <UserCog className="w-4 h-4" />,
+    'Vendor Profile Edit': <Store className="w-4 h-4" />,
+    'View Vendor Profile From User List': <Eye className="w-4 h-4" />,
+};
 
-const actions = [
-    { name: 'Download Document', icon: <FileDown className="w-4 h-4" /> },
-    { name: 'Preferred', icon: <Star className="w-4 h-4" /> },
-    { name: 'View Profile From Search', icon: <UserSearch className="w-4 h-4" /> },
-    { name: 'View Service From Search', icon: <Layers className="w-4 h-4" /> },
-    { name: 'Translation Language Approve', icon: <CheckCircle className="w-4 h-4" /> },
-    { name: 'Translation Language Delete', icon: <Trash2 className="w-4 h-4" /> },
-    { name: 'Translation Language Add More', icon: <PlusCircle className="w-4 h-4" /> },
-    { name: 'Translation References Check', icon: <ClipboardCheck className="w-4 h-4" /> },
-    { name: 'Translation references Delete', icon: <Trash2 className="w-4 h-4" /> },
-    { name: 'Translation References Add More', icon: <PlusCircle className="w-4 h-4" /> },
-    { name: 'Translation Submit', icon: <Send className="w-4 h-4" /> },
-    { name: 'Profile Edit', icon: <UserCog className="w-4 h-4" /> },
-    { name: 'Vendor Profile Edit', icon: <Store className="w-4 h-4" /> },
-    { name: 'View Vendor Profile From User List', icon: <Eye className="w-4 h-4" /> }
-];
+const permKey = (role, action) => `${role}::${action}`;
 
 export default function RoleAction() {
+    const [roles, setRoles] = useState([]);
+    const [actions, setActions] = useState([]);
     const [permissions, setPermissions] = useState({});
+    const [isLoading, setIsLoading] = useState(true);
+    const [notification, setNotification] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+    const showNotification = (msg) => {
+        setNotification(msg);
+        setTimeout(() => setNotification(null), 3000);
+    };
+
+    useEffect(() => {
+        const load = async () => {
+            try {
+                setIsLoading(true);
+                const [rolesRes, actionsRes, permsRes] = await Promise.all([
+                    getRoles(),
+                    getActions(),
+                    getRolePermissions(),
+                ]);
+                setRoles(rolesRes.filter(r => r.status !== 'Inactive').map(r => r.roleName));
+                setActions(actionsRes.filter(a => a.status !== 'Inactive').map(a => ({
+                    name: a.action,
+                    icon: ACTION_ICONS[a.action] || <Zap className="w-4 h-4" />,
+                })));
+                const map = {};
+                permsRes.forEach(row => (row.actions || []).forEach(action => {
+                    map[permKey(row.role, action)] = true;
+                }));
+                setPermissions(map);
+            } catch (error) {
+                console.error('Error loading role action permissions:', error);
+                showNotification('Failed to load permissions.');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        load();
+    }, []);
 
     const requestSort = (key) => {
         let direction = 'asc';
@@ -40,19 +79,28 @@ export default function RoleAction() {
     };
 
     const togglePermission = (role, action) => {
-        const key = `${role}-${action}`;
+        const key = permKey(role, action);
         setPermissions(prev => ({
             ...prev,
             [key]: !prev[key]
         }));
     };
 
-    const handleUpdate = () => {
-        setIsSaving(true);
-        setTimeout(() => {
+    const handleUpdate = async () => {
+        const payload = {};
+        roles.forEach(role => {
+            payload[role] = actions.filter(a => permissions[permKey(role, a.name)]).map(a => a.name);
+        });
+        try {
+            setIsSaving(true);
+            await saveRoleActionPermissions(payload);
+            showNotification('Permissions updated successfully!');
+        } catch (error) {
+            console.error('Error saving role action permissions:', error);
+            showNotification(error.response?.data?.message || 'Failed to update permissions.');
+        } finally {
             setIsSaving(false);
-            // Logic for saving would go here
-        }, 1500);
+        }
     };
 
     const filteredActions = useMemo(() => {
@@ -74,7 +122,7 @@ export default function RoleAction() {
         }
 
         return result;
-    }, [searchQuery, sortConfig]);
+    }, [actions, searchQuery, sortConfig]);
 
     return (
         <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
@@ -142,7 +190,17 @@ export default function RoleAction() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
-                                {filteredActions.map((action, idx) => (
+                                {isLoading && (
+                                    <tr>
+                                        <td colSpan={roles.length + 1} className="px-8 py-10 text-center text-slate-400 font-medium italic">Loading permissions...</td>
+                                    </tr>
+                                )}
+                                {!isLoading && filteredActions.length === 0 && (
+                                    <tr>
+                                        <td colSpan={roles.length + 1} className="px-8 py-10 text-center text-slate-400 font-medium italic">No actions found.</td>
+                                    </tr>
+                                )}
+                                {!isLoading && filteredActions.map((action, idx) => (
                                     <tr key={action.name} className="group hover:bg-blue-50/30 transition-all duration-200">
                                         <td className="px-8 py-5 sticky left-0 z-10 bg-white/90 backdrop-blur-sm group-hover:bg-blue-50/50 transition-colors border-r border-slate-50 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.02)]">
                                             <div className="flex items-center gap-3">
@@ -153,7 +211,7 @@ export default function RoleAction() {
                                             </div>
                                         </td>
                                         {roles.map(role => {
-                                            const isChecked = permissions[`${role}-${action.name}`];
+                                            const isChecked = permissions[permKey(role, action.name)];
                                             return (
                                                 <td key={role} className="px-4 py-5 text-center">
                                                     <button
@@ -197,7 +255,7 @@ export default function RoleAction() {
                 <div className="fixed bottom-10 right-10 z-[50] group">
                     <button
                         onClick={handleUpdate}
-                        disabled={isSaving}
+                        disabled={isSaving || isLoading}
                         className={`flex items-center gap-3 px-8 py-5 rounded-[2.5rem] font-black text-[15px] shadow-2xl transition-all active:scale-95 ${isSaving
                             ? 'bg-slate-700 text-slate-300 cursor-not-allowed'
                             : 'bg-blue-600 text-white hover:bg-blue-700 hover:translate-y-[-4px] hover:shadow-blue-200/50'
@@ -217,6 +275,12 @@ export default function RoleAction() {
                     </button>
                 </div>
             </div>
+
+            {notification && (
+                <div className="fixed bottom-32 right-10 z-[60] bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl text-sm font-bold">
+                    {notification}
+                </div>
+            )}
 
             <style>{`
         .custom-scrollbar::-webkit-scrollbar {

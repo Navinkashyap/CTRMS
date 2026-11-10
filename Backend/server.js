@@ -43,6 +43,11 @@ import vmsAccountsRoutes from "./src/VMS/routes/vmsAccountsRoutes.js";
 import jobRoutes from "./src/routes/jobRoutes.js";
 import fileRoutes from "./src/routes/fileRoutes.js";
 import salesRoutes from "./src/routes/salesRoutes.js";
+import roleRoutes from "./src/routes/roleRoutes.js";
+import actionRoutes from "./src/routes/actionRoutes.js";
+import rolePermissionRoutes from "./src/routes/rolePermissionRoutes.js";
+import systemUserRoutes from "./src/routes/systemUserRoutes.js";
+import adminRoutes from "./src/routes/adminRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -100,6 +105,11 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/evaluations", evaluationRoutes);
 app.use("/api/jobs", jobRoutes);
 app.use("/api/sales", salesRoutes);
+app.use("/api/roles", roleRoutes);
+app.use("/api/actions", actionRoutes);
+app.use("/api/role-permissions", rolePermissionRoutes);
+app.use("/api/users", systemUserRoutes);
+app.use("/api/admins", adminRoutes);
 
 // ─── VMS Routes ─────────────────────────────────────────────────────────────
 app.use("/api/vms/auth", vmsAuthRoutes);

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
@@ -112,6 +113,39 @@ export default function ClientList() {
     window.addEventListener('click', handleClickOutside);
     return () => window.removeEventListener('click', handleClickOutside);
   }, []);
+
+  // The action menu is rendered in a portal with fixed positioning so the
+  // table's overflow container can't clip it (e.g. when a filter leaves only
+  // one or two rows). Close it on scroll/resize since its position is static.
+  const [menuPos, setMenuPos] = useState(null);
+  const ACTION_MENU_HEIGHT = 240;
+
+  const toggleActionMenu = (e, clientId) => {
+    if (openActionId === clientId) {
+      setOpenActionId(null);
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUp = spaceBelow < ACTION_MENU_HEIGHT + 16 && rect.top > spaceBelow;
+    setMenuPos({
+      right: window.innerWidth - rect.right,
+      ...(openUp ? { bottom: window.innerHeight - rect.top + 8 } : { top: rect.bottom + 8 }),
+      openUp,
+    });
+    setOpenActionId(clientId);
+  };
+
+  useEffect(() => {
+    if (!openActionId) return undefined;
+    const close = () => setOpenActionId(null);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [openActionId]);
 
 
   useEffect(() => {
@@ -453,7 +487,7 @@ export default function ClientList() {
                     <td className={`px-4 py-3 text-center sticky right-0 bg-white group-hover:bg-slate-50 transition-colors border-l border-slate-100 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] ${openActionId === client._id ? 'z-40' : 'z-20'}`}>
                       <div className="relative flex justify-center" onClick={(e) => e.stopPropagation()}>
                         <button
-                          onClick={() => setOpenActionId(openActionId === client._id ? null : client._id)}
+                          onClick={(e) => toggleActionMenu(e, client._id)}
                           className={`p-2 rounded-xl transition-all ${openActionId === client._id
                             ? 'bg-indigo-50 text-indigo-600 shadow-inner'
                             : 'hover:bg-slate-100 text-slate-400 hover:text-slate-600'
@@ -462,8 +496,12 @@ export default function ClientList() {
                           <MoreVertical className="w-5 h-5" />
                         </button>
 
-                        {openActionId === client._id && (
-                          <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100 py-2 z-30 animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200">
+                        {openActionId === client._id && menuPos && createPortal(
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ position: 'fixed', right: menuPos.right, top: menuPos.top, bottom: menuPos.bottom }}
+                            className={`w-48 bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-slate-100 py-2 z-[1000] animate-in fade-in zoom-in-95 duration-200 ${menuPos.openUp ? 'slide-in-from-bottom-2' : 'slide-in-from-top-2'}`}
+                          >
                             <div className="px-4 py-1.5 mb-1 border-b border-slate-50">
                               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Actions</p>
                             </div>
@@ -516,7 +554,8 @@ export default function ClientList() {
                               </div>
                               Delete Client
                             </button>
-                          </div>
+                          </div>,
+                          document.body
                         )}
                       </div>
                     </td>

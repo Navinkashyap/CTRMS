@@ -1,25 +1,33 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, Zap, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-
-const initialActionData = [
-  { id: 1, action: 'Download Document', description: 'Allow to download documents only to mapped Role.', status: 'Active' },
-  { id: 2, action: 'Preferred', description: 'Allow to update Preferred / Non Preffered', status: 'Active' },
-  { id: 3, action: 'View Profile From Search', description: 'Allow to view profile from search', status: 'Active' },
-  { id: 4, action: 'View Service From Search', description: 'Allow to view service from search', status: 'Active' },
-  { id: 5, action: 'Translation Language Approve', description: 'Allow to approve translation language pair and rate detail in translation service', status: 'Active' },
-  { id: 6, action: 'Translation Language Delete', description: 'Allow to delete translation language pair and rate detail in translation service', status: 'Active' },
-  { id: 7, action: 'Translation Language Add More', description: 'Allow to Add More translation language pair and rate detail in translation service', status: 'Active' },
-  { id: 8, action: 'Translation References Check', description: 'Allow to Check/Approve references detail in translation service', status: 'Active' },
-];
+import { getActions, createAction, updateAction } from '../lib/actionApi';
 
 export default function Action() {
-  const [actions, setActions] = useState(initialActionData);
+  const [actions, setActions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAction, setEditingAction] = useState(null);
   const [formData, setFormData] = useState({ action: '', description: '', status: 'Active' });
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  useEffect(() => {
+    fetchActions();
+  }, []);
+
+  const fetchActions = async () => {
+    try {
+      setIsLoading(true);
+      setActions(await getActions());
+    } catch (error) {
+      console.error('Error fetching actions:', error);
+      showNotification('Failed to fetch actions.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const requestSort = (key) => {
     let direction = 'asc';
@@ -33,8 +41,8 @@ export default function Action() {
   // Filtering and sorting actions
   const filteredActions = useMemo(() => {
     let result = actions.filter(a =>
-      a.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      a.description.toLowerCase().includes(searchQuery.toLowerCase())
+      (a.action || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (a.description || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     if (sortConfig.key) {
@@ -74,17 +82,26 @@ export default function Action() {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (editingAction) {
-      setActions(actions.map(a => a.id === editingAction.id ? { ...a, ...formData } : a));
-      showNotification(`Updated ${formData.action} successfully!`);
-    } else {
-      const newId = actions.length > 0 ? Math.max(...actions.map(a => a.id)) + 1 : 1;
-      setActions([...actions, { id: newId, ...formData }]);
-      showNotification(`Added ${formData.action} successfully!`);
+    try {
+      setIsSaving(true);
+      if (editingAction) {
+        const updated = await updateAction(editingAction._id, formData);
+        setActions(prev => prev.map(a => a._id === updated._id ? updated : a));
+        showNotification(`Updated ${updated.action} successfully!`);
+      } else {
+        const created = await createAction(formData);
+        setActions(prev => [...prev, created]);
+        showNotification(`Added ${created.action} successfully!`);
+      }
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error saving action:', error);
+      showNotification(error.response?.data?.message || 'Failed to save action.');
+    } finally {
+      setIsSaving(false);
     }
-    setIsModalOpen(false);
   };
 
   const renderSortableHeader = (label, sortKey, extraClasses = '') => {
@@ -170,8 +187,18 @@ export default function Action() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {filteredActions.map((item, index) => (
-                  <tr key={item.id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
+                {isLoading && (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-10 text-center text-slate-400 font-medium italic">Loading actions...</td>
+                  </tr>
+                )}
+                {!isLoading && filteredActions.length === 0 && (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-10 text-center text-slate-400 font-medium italic">No actions found.</td>
+                  </tr>
+                )}
+                {!isLoading && filteredActions.map((item, index) => (
+                  <tr key={item._id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
                     <td className="px-6 py-5 text-center">
                       <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-500 font-mono text-xs font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                         {index + 1}
@@ -294,9 +321,10 @@ export default function Action() {
                 <div className="flex gap-4 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 rounded-2xl text-[15px] font-black transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98]"
+                    disabled={isSaving}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 rounded-2xl text-[15px] font-black transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98] disabled:opacity-60"
                   >
-                    {editingAction ? 'Save Changes' : 'Create Record'}
+                    {isSaving ? 'Saving...' : editingAction ? 'Save Changes' : 'Create Record'}
                   </button>
                 </div>
               </form>

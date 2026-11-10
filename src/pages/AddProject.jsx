@@ -712,7 +712,7 @@ export default function AddProject() {
               <div className="ap-field ap-full-width">
                 <label className="ap-label">Instruction</label>
                 <textarea
-                  rows={4}
+                  rows={7}
                   placeholder="Enter project instruction..."
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
@@ -1359,7 +1359,7 @@ export default function AddProject() {
           box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.08);
         }
         .ap-input::placeholder { color: #94a3b8; }
-        .ap-textarea { resize: vertical; min-height: 90px; }
+        .ap-textarea { resize: vertical; min-height: 160px; }
         .ap-input-icon-wrap { position: relative; }
         .ap-input-icon-wrap .ap-input { padding-right: 36px; }
         .ap-input-suffix {

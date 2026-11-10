@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Users,
   Search,
@@ -12,16 +12,8 @@ import {
   ArrowUp,
   ArrowDown
 } from 'lucide-react';
-
-const initialUsers = [
-  { id: 1, name: 'Bhavna Singh', email: 'accounts@perfectrans.com', role: 'Accountant', mobile: '+91 85068 66497', status: 'Active' },
-  { id: 2, name: 'Meeta Saxena', email: 'pm9@perfectrans.net', role: 'Project Manager', mobile: '958 208 2036', status: 'Active' },
-  { id: 3, name: 'Invoice Centre', email: 'invoice.centre@perfectrans.net', role: 'Accountant', mobile: '850 686 6497', status: 'Active' },
-  { id: 4, name: 'Mugdha G', email: 'mugdha@perfectrans.com', role: 'Admin', mobile: '123456789', status: 'Active' },
-  { id: 5, name: 'Jason Matthews', email: 'jason@perfectrans.net', role: 'Vendor Manager', mobile: '123 456 7890', status: 'Active' },
-  { id: 6, name: 'Kavish Saxena', email: 'pm7@perfectrans.net', role: 'Project Manager', mobile: '123 456 7890', status: 'Active' },
-  { id: 7, name: 'Piyush Kumar', email: 'piyush@perfectrans.com', role: 'Super Admin', mobile: '', status: 'Active' },
-];
+import { getUsers, createUser, updateUser } from '../lib/userApi';
+import { getRoles } from '../lib/roleApi';
 
 const allColumns = [
   { id: 'id', label: 'User id' },
@@ -42,7 +34,11 @@ const allColumns = [
 ];
 
 export default function UsersList() {
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
+  const [roleOptions, setRoleOptions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [notification, setNotification] = useState(null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -67,6 +63,33 @@ export default function UsersList() {
 
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
+  const showNotification = (msg) => {
+    setNotification(msg);
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setIsLoading(true);
+        const [usersRes, rolesRes] = await Promise.all([
+          getUsers(),
+          getRoles().catch(() => []),
+        ]);
+        setUsers(usersRes);
+        setRoleOptions(rolesRes.filter(r => r.status !== 'Inactive').map(r => r.roleName));
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        showNotification('Failed to fetch users.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const defaultRole = roleOptions.includes('Admin') ? 'Admin' : (roleOptions[0] || '');
+
   const requestSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key) {
@@ -78,10 +101,10 @@ export default function UsersList() {
 
   const filteredUsers = useMemo(() => {
     let result = users.filter(user => {
-      const matchesName = user.name.toLowerCase().includes(filters.name.toLowerCase());
-      const matchesEmail = user.email.toLowerCase().includes(filters.email.toLowerCase());
+      const matchesName = (user.name || '').toLowerCase().includes(filters.name.toLowerCase());
+      const matchesEmail = (user.email || '').toLowerCase().includes(filters.email.toLowerCase());
       const matchesRole = filters.role === 'All' || user.role === filters.role;
-      const matchesMobile = user.mobile.toLowerCase().includes(filters.mobile.toLowerCase());
+      const matchesMobile = (user.mobile || '').toLowerCase().includes(filters.mobile.toLowerCase());
       const matchesStatus = filters.status === 'All' || user.status === filters.status;
       return matchesName && matchesEmail && matchesRole && matchesMobile && matchesStatus;
     });
@@ -108,24 +131,42 @@ export default function UsersList() {
 
   const handleAdd = () => {
     setEditingUser(null);
-    setFormData({ name: '', email: '', role: 'Admin', mobile: '', status: 'Active' });
+    setFormData({ name: '', email: '', role: defaultRole, mobile: '', status: 'Active' });
     setIsModalOpen(true);
   };
 
   const handleEdit = (user) => {
     setEditingUser(user);
-    setFormData({ ...user });
+    setFormData({
+      name: user.name || '',
+      email: user.email || '',
+      role: user.role || defaultRole,
+      mobile: user.mobile || '',
+      status: user.status || 'Active',
+    });
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (editingUser) {
-      setUsers(users.map(u => u.id === editingUser.id ? { ...formData, id: u.id } : u));
-    } else {
-      setUsers([...users, { ...formData, id: Date.now() }]);
+    try {
+      setIsSaving(true);
+      if (editingUser) {
+        const updated = await updateUser(editingUser._id, formData);
+        setUsers(prev => prev.map(u => u._id === updated._id ? updated : u));
+        showNotification(`Updated ${updated.name} successfully!`);
+      } else {
+        const created = await createUser(formData);
+        setUsers(prev => [created, ...prev]);
+        showNotification(`Added ${created.name} successfully!`);
+      }
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error saving user:', error);
+      showNotification(error.response?.data?.message || 'Failed to save user.');
+    } finally {
+      setIsSaving(false);
     }
-    setIsModalOpen(false);
   };
 
   const toggleColumnSelection = (colId) => {
@@ -288,11 +329,7 @@ export default function UsersList() {
                           onChange={(e) => setFilters({ ...filters, role: e.target.value })}
                         >
                           <option>All</option>
-                          <option>Admin</option>
-                          <option>Project Manager</option>
-                          <option>Accountant</option>
-                          <option>Vendor Manager</option>
-                          <option>Super Admin</option>
+                          {roleOptions.map(role => <option key={role}>{role}</option>)}
                         </select>
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
                       </div>
@@ -362,15 +399,25 @@ export default function UsersList() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {filteredUsers.map((user, idx) => (
-                  <tr key={user.id} className="group hover:bg-indigo-50/20 transition-all duration-200">
+                {isLoading && (
+                  <tr>
+                    <td colSpan={visibleColumns.includes('id') ? 8 : 7} className="px-6 py-10 text-center text-slate-400 font-medium italic">Loading users...</td>
+                  </tr>
+                )}
+                {!isLoading && filteredUsers.length === 0 && (
+                  <tr>
+                    <td colSpan={visibleColumns.includes('id') ? 8 : 7} className="px-6 py-10 text-center text-slate-400 font-medium italic">No users found.</td>
+                  </tr>
+                )}
+                {!isLoading && filteredUsers.map((user, idx) => (
+                  <tr key={user._id} className="group hover:bg-indigo-50/20 transition-all duration-200">
                     <td className="px-6 py-5 text-center border-r border-slate-50">
                       <span className="font-bold text-slate-600 group-hover:text-slate-900 transition-colors">
                         {idx + 1}
                       </span>
                     </td>
 
-                    {visibleColumns.includes('id') && <td className="px-6 py-5 border-r border-slate-50 font-bold">{user.id}</td>}
+                    {visibleColumns.includes('id') && <td className="px-6 py-5 border-r border-slate-50 font-bold">{String(user._id).slice(-6).toUpperCase()}</td>}
 
                     <td className="px-6 py-5 border-r border-slate-50">
                       <span className="font-extrabold text-slate-900 group-hover:text-indigo-700 transition-colors">
@@ -512,11 +559,9 @@ export default function UsersList() {
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   >
-                    <option>Admin</option>
-                    <option>Project Manager</option>
-                    <option>Accountant</option>
-                    <option>Vendor Manager</option>
-                    <option>Super Admin</option>
+                    {/* Keep a user's current role selectable even if it was since deactivated. */}
+                    {formData.role && !roleOptions.includes(formData.role) && <option>{formData.role}</option>}
+                    {roleOptions.map(role => <option key={role}>{role}</option>)}
                   </select>
                 </div>
                 <div className="space-y-1 text-left">
@@ -552,13 +597,20 @@ export default function UsersList() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:shadow-indigo-200 hover:translate-y-[-2px] transition-all active:scale-95"
+                  disabled={isSaving}
+                  className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:shadow-indigo-200 hover:translate-y-[-2px] transition-all active:scale-95 disabled:opacity-60"
                 >
-                  Confirm
+                  {isSaving ? 'Saving...' : 'Confirm'}
                 </button>
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {notification && (
+        <div className="fixed bottom-10 right-10 z-[200] bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl text-sm font-bold">
+          {notification}
         </div>
       )}
 

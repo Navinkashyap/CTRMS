@@ -91,7 +91,7 @@ export default function VendorList() {
   };
 
   const handleEdit = (vendor) => {
-    navigate('/vendors/add-vendor', { state: { vendor } });
+    navigate(`/vendors/add-vendor?id=${vendor._id}`, { state: { vendor } });
   };
 
   const filteredVendors = useMemo(() => {

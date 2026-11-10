@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronDown, Eye, EyeOff } from 'lucide-react';
-import { createProjectManager, updateProjectManager } from '../lib/projectManagerApi';
+import { createProjectManager, updateProjectManager, getProjectManagerById } from '../lib/projectManagerApi';
+import { getCountries } from '../lib/countryApi';
 
 export default function AddProjectManager() {
   const navigate = useNavigate();
   const location = useLocation();
-  const editingProjectManager = location.state?.projectManager;
-  const isEditMode = Boolean(editingProjectManager?._id);
+  const [searchParams] = useSearchParams();
+  // The id in the URL lets the edit page survive a refresh; location.state is
+  // only used as a fast first paint while the record is fetched.
+  const editId = searchParams.get('id') || location.state?.projectManager?._id || '';
+  const [editingProjectManager, setEditingProjectManager] = useState(location.state?.projectManager || null);
+  const isEditMode = Boolean(editId);
+  const [countries, setCountries] = useState([]);
+  const [loadError, setLoadError] = useState('');
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -31,8 +38,26 @@ export default function AddProjectManager() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (isEditMode) {
-      const nameParts = editingProjectManager.name.split(' ');
+    getCountries()
+      .then((data) => setCountries((Array.isArray(data) ? data : []).filter((c) => c.status !== 'Inactive')))
+      .catch((error) => console.error('Failed to load countries:', error));
+  }, []);
+
+  useEffect(() => {
+    if (!editId) return;
+    let cancelled = false;
+    getProjectManagerById(editId)
+      .then((data) => { if (!cancelled) setEditingProjectManager(data); })
+      .catch((error) => {
+        console.error('Failed to load record:', error);
+        if (!cancelled) setLoadError('Could not load this record. It may have been deleted.');
+      });
+    return () => { cancelled = true; };
+  }, [editId]);
+
+  useEffect(() => {
+    if (editingProjectManager) {
+      const nameParts = (editingProjectManager.name || '').split(' ');
       const first = nameParts[0] || '';
       const last = nameParts.slice(1).join(' ') || '';
 
@@ -50,7 +75,7 @@ export default function AddProjectManager() {
         state: '', city: '', zipCode: ''
       });
     }
-  }, [editingProjectManager, isEditMode]);
+  }, [editingProjectManager]);
 
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -84,7 +109,7 @@ export default function AddProjectManager() {
       }
 
       if (isEditMode) {
-        await updateProjectManager(editingProjectManager._id, payload);
+        await updateProjectManager(editId, payload);
       } else {
         const newPayload = {
           ...payload,
@@ -123,6 +148,10 @@ export default function AddProjectManager() {
             </div>
           </div>
         </div>
+
+        {loadError && (
+          <div className="px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-sm font-medium text-rose-700">{loadError}</div>
+        )}
 
         {/* Form Body */}
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
@@ -250,9 +279,12 @@ export default function AddProjectManager() {
                     value={formData.country} onChange={handleFormChange}
                   >
                     <option value="">Select Country</option>
-                    <option value="India">India</option>
-                    <option value="USA">USA</option>
-                    <option value="UK">UK</option>
+                    {formData.country && !countries.some((c) => c.name === formData.country) && (
+                      <option value={formData.country}>{formData.country}</option>
+                    )}
+                    {countries.map((c) => (
+                      <option key={c._id} value={c.name}>{c.name}</option>
+                    ))}
                   </select>
                   <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                 </div>

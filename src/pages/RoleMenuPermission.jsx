@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Save,
   Lock,
@@ -40,13 +40,10 @@ import {
   TrendingUp,
   LineChart
 } from 'lucide-react';
+import { getRoles } from '../lib/roleApi';
+import { getRolePermissions, saveRoleMenuPermissions } from '../lib/rolePermissionApi';
 
-const roles = [
-  'Super Admin', 'Admin', 'Project Head', 'Accountant', 'Project Manager',
-  'Project Executive', 'Sales Head', 'Sales Manager', 'Sales Executive',
-  'Vendor Manager', 'Vendor'
-];
-
+// Sidebar menu structure (lives in code, like the sidebar itself).
 const menus = [
   { name: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
   { name: 'Master', icon: <Database className="w-4 h-4" /> },
@@ -87,25 +84,65 @@ const menus = [
   { name: 'Report', icon: <TrendingUp className="w-4 h-4" /> },
 ];
 
+const permKey = (role, menuName) => `${role}::${menuName}`;
+
 export default function RoleMenuPermission() {
+  const [roles, setRoles] = useState([]);
   const [permissions, setPermissions] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  const togglePermission = (role, menuName, roleIndex) => {
-    const key = `${role}-${menuName}-${roleIndex}`;
+  const showNotification = (msg) => {
+    setNotification(msg);
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setIsLoading(true);
+        const [rolesRes, permsRes] = await Promise.all([getRoles(), getRolePermissions()]);
+        setRoles(rolesRes.filter(r => r.status !== 'Inactive').map(r => r.roleName));
+        const map = {};
+        permsRes.forEach(row => (row.menus || []).forEach(menu => {
+          map[permKey(row.role, menu)] = true;
+        }));
+        setPermissions(map);
+      } catch (error) {
+        console.error('Error loading role menu permissions:', error);
+        showNotification('Failed to load permissions.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const togglePermission = (role, menuName) => {
+    const key = permKey(role, menuName);
     setPermissions(prev => ({
       ...prev,
       [key]: !prev[key]
     }));
   };
 
-  const handleUpdate = () => {
-    setIsSaving(true);
-    setTimeout(() => {
+  const handleUpdate = async () => {
+    const payload = {};
+    roles.forEach(role => {
+      payload[role] = menus.filter(m => permissions[permKey(role, m.name)]).map(m => m.name);
+    });
+    try {
+      setIsSaving(true);
+      await saveRoleMenuPermissions(payload);
+      showNotification('Permissions updated successfully!');
+    } catch (error) {
+      console.error('Error saving role menu permissions:', error);
+      showNotification(error.response?.data?.message || 'Failed to update permissions.');
+    } finally {
       setIsSaving(false);
-      // Logic for saving would go here
-    }, 1500);
+    }
   };
 
   const filteredMenus = menus.filter(menu =>
@@ -163,7 +200,12 @@ export default function RoleMenuPermission() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {filteredMenus.map((menu, mIdx) => (
+                {isLoading && (
+                  <tr>
+                    <td colSpan={roles.length + 1} className="px-8 py-10 text-center text-slate-400 font-medium italic">Loading permissions...</td>
+                  </tr>
+                )}
+                {!isLoading && filteredMenus.map((menu, mIdx) => (
                   <tr key={menu.name} className="group hover:bg-indigo-50/20 transition-all duration-200">
                     <td className={`px-8 py-5 sticky left-0 z-10 bg-white/95 backdrop-blur-sm group-hover:bg-indigo-50/40 transition-colors border-r border-slate-50 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.02)] ${menu.indent ? 'pl-14' : ''}`}>
                       <div className="flex items-center gap-3">
@@ -174,12 +216,12 @@ export default function RoleMenuPermission() {
                       </div>
                     </td>
                     {roles.map((role, rIdx) => {
-                      const isChecked = permissions[`${role}-${menu.name}-${rIdx}`];
+                      const isChecked = permissions[permKey(role, menu.name)];
                       return (
                         <td key={`${role}-${rIdx}`} className={`px-4 py-5 text-center ${!menu.indent ? 'bg-amber-50/30 group-hover:bg-amber-100/40 transition-colors' : ''}`}>
                           <button
                             type="button"
-                            onClick={() => togglePermission(role, menu.name, rIdx)}
+                            onClick={() => togglePermission(role, menu.name)}
                             className={`inline-flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300 ${isChecked
                                 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-110'
                                 : 'bg-slate-50 text-slate-300 hover:bg-slate-100 hover:text-slate-600'
@@ -223,7 +265,7 @@ export default function RoleMenuPermission() {
           <button
             type="button"
             onClick={handleUpdate}
-            disabled={isSaving}
+            disabled={isSaving || isLoading}
             className={`flex items-center gap-3 px-10 py-4 rounded-3xl font-black text-[15px] shadow-2xl transition-all active:scale-95 ${isSaving
                 ? 'bg-slate-700 text-slate-300 cursor-not-allowed'
                 : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:translate-y-[-2px] hover:shadow-indigo-200/50'
@@ -243,6 +285,12 @@ export default function RoleMenuPermission() {
           </button>
         </div>
       </div>
+
+      {notification && (
+        <div className="fixed bottom-10 right-10 z-[60] bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl text-sm font-bold">
+          {notification}
+        </div>
+      )}
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {

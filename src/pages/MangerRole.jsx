@@ -1,25 +1,33 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, UserCog, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-
-const initialRoleData = [
-  { id: 1, roleName: 'Super Admin', abbreviation: 'SA', level: 1, status: 'Active' },
-  { id: 2, roleName: 'Admin', abbreviation: 'AD', level: 2, status: 'Active' },
-  { id: 3, roleName: 'Accountant', abbreviation: 'AC', level: 3, status: 'Active' },
-  { id: 4, roleName: 'Project Head', abbreviation: 'PH', level: 3, status: 'Active' },
-  { id: 5, roleName: 'Project Manager', abbreviation: 'PM', level: 4, status: 'Active' },
-  { id: 6, roleName: 'Project Executive', abbreviation: 'PE', level: 5, status: 'Active' },
-  { id: 7, roleName: 'Sales Head', abbreviation: 'SH', level: 6, status: 'Active' },
-  { id: 8, roleName: 'Sales Manager', abbreviation: 'SM', level: 7, status: 'Active' },
-];
+import { getRoles, createRole, updateRole } from '../lib/roleApi';
 
 export default function MangerRole() {
-  const [roles, setRoles] = useState(initialRoleData);
+  const [roles, setRoles] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
   const [formData, setFormData] = useState({ roleName: '', abbreviation: '', level: '', status: 'Active' });
   const [notification, setNotification] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+  useEffect(() => {
+    fetchRoles();
+  }, []);
+
+  const fetchRoles = async () => {
+    try {
+      setIsLoading(true);
+      setRoles(await getRoles());
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+      showNotification('Failed to fetch roles.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const requestSort = (key) => {
     let direction = 'asc';
@@ -33,8 +41,8 @@ export default function MangerRole() {
   // Filtering and sorting roles
   const filteredRoles = useMemo(() => {
     let result = roles.filter(r =>
-      r.roleName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.abbreviation.toLowerCase().includes(searchQuery.toLowerCase())
+      (r.roleName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (r.abbreviation || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     if (sortConfig.key) {
@@ -79,17 +87,27 @@ export default function MangerRole() {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (editingRole) {
-      setRoles(roles.map(r => r.id === editingRole.id ? { ...r, ...formData, level: Number(formData.level) } : r));
-      showNotification(`Updated ${formData.roleName} successfully!`);
-    } else {
-      const newId = roles.length > 0 ? Math.max(...roles.map(r => r.id)) + 1 : 1;
-      setRoles([...roles, { id: newId, ...formData, level: Number(formData.level) }]);
-      showNotification(`Added ${formData.roleName} successfully!`);
+    const payload = { ...formData, level: Number(formData.level) };
+    try {
+      setIsSaving(true);
+      if (editingRole) {
+        const updated = await updateRole(editingRole._id, payload);
+        setRoles(prev => prev.map(r => r._id === updated._id ? updated : r));
+        showNotification(`Updated ${updated.roleName} successfully!`);
+      } else {
+        const created = await createRole(payload);
+        setRoles(prev => [...prev, created]);
+        showNotification(`Added ${created.roleName} successfully!`);
+      }
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error saving role:', error);
+      showNotification(error.response?.data?.message || 'Failed to save role.');
+    } finally {
+      setIsSaving(false);
     }
-    setIsModalOpen(false);
   };
 
   const renderSortableHeader = (label, sortKey, extraClasses = '') => {
@@ -176,8 +194,18 @@ export default function MangerRole() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {filteredRoles.map((role, index) => (
-                  <tr key={role.id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
+                {isLoading && (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-10 text-center text-slate-400 font-medium italic">Loading roles...</td>
+                  </tr>
+                )}
+                {!isLoading && filteredRoles.length === 0 && (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-10 text-center text-slate-400 font-medium italic">No roles found.</td>
+                  </tr>
+                )}
+                {!isLoading && filteredRoles.map((role, index) => (
+                  <tr key={role._id} className="group hover:bg-blue-50/40 transition-all duration-300 ease-out cursor-default">
                     <td className="px-6 py-5 text-center">
                       <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-slate-100 text-slate-500 font-mono text-xs font-bold group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
                         {index + 1}
@@ -190,7 +218,7 @@ export default function MangerRole() {
                         </div>
                         <div className="flex flex-col">
                           <span className="font-bold text-slate-800 group-hover:text-blue-700 transition-colors tracking-tight">{role.roleName}</span>
-                          <span className="text-[11px] text-slate-600 font-semibold group-hover:text-blue-400 uppercase tracking-tighter">System ID: {8000 + role.id}</span>
+                          <span className="text-[11px] text-slate-600 font-semibold group-hover:text-blue-400 uppercase tracking-tighter">System ID: {String(role._id).slice(-6).toUpperCase()}</span>
                         </div>
                       </div>
                     </td>
@@ -324,9 +352,10 @@ export default function MangerRole() {
                 <div className="flex gap-4 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 rounded-2xl text-[15px] font-black transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98]"
+                    disabled={isSaving}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 rounded-2xl text-[15px] font-black transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98] disabled:opacity-60"
                   >
-                    {editingRole ? 'Save Changes' : 'Create Record'}
+                    {isSaving ? 'Saving...' : editingRole ? 'Save Changes' : 'Create Record'}
                   </button>
                 </div>
               </form>
