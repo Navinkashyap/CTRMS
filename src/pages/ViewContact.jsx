@@ -13,15 +13,18 @@ import {
   Layers,
   LoaderCircle,
   AlertCircle,
-  Globe
+  Globe,
+  FileText
 } from 'lucide-react';
 import { getContact } from '../lib/contactApi';
+import { getClients } from '../lib/clientApi';
 
 export default function ViewContact() {
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
   const [contact, setContact] = useState(location.state?.contact || null);
+  const [clientData, setClientData] = useState(null);
   const [loading, setLoading] = useState(!contact);
   const [error, setError] = useState(null);
 
@@ -41,6 +44,29 @@ export default function ViewContact() {
       loadContact();
     }
   }, [id, contact]);
+
+  // If the contact's direct location fields are not populated, fallback to parent client location
+  useEffect(() => {
+    if (contact && (contact.clientId || contact.company)) {
+      const hasDirectLocation = Boolean(
+        contact.address || contact.fullAddress || contact.country || contact.city || contact.state || contact.zip
+      );
+      if (!hasDirectLocation) {
+        getClients()
+          .then((clients) => {
+            const match = (clients || []).find(
+              (c) =>
+                (contact.clientId && String(c._id) === String(contact.clientId)) ||
+                (contact.company && c.name?.trim().toLowerCase() === contact.company?.trim().toLowerCase())
+            );
+            if (match) {
+              setClientData(match);
+            }
+          })
+          .catch(() => {});
+      }
+    }
+  }, [contact]);
 
   if (loading) {
     return (
@@ -82,6 +108,31 @@ export default function ViewContact() {
       </div>
     </div>
   );
+
+  const fullAddress =
+    contact.address ||
+    contact.fullAddress ||
+    clientData?.address ||
+    '';
+  const country =
+    contact.country ||
+    clientData?.country ||
+    '';
+  const state =
+    contact.state ||
+    contact.region ||
+    clientData?.state ||
+    '';
+  const city =
+    contact.city ||
+    clientData?.city ||
+    '';
+  const zip =
+    contact.zip ||
+    contact.zipCode ||
+    contact.postalCode ||
+    clientData?.zip ||
+    '';
 
   return (
     <div className="font-sans text-slate-900 pb-6 min-h-screen bg-[#fafbfc] p-4 sm:p-6 animate-in fade-in duration-700">
@@ -125,11 +176,10 @@ export default function ViewContact() {
                 <UserCircle className="w-4 h-4 text-indigo-500" />
                 Personal Information
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                 <DetailItem icon={User} label="First Name" value={contact.firstName} />
                 <DetailItem icon={User} label="Last Name" value={contact.lastName} />
                 <DetailItem icon={Calendar} label="Date of Birth" value={contact.dob} />
-                <DetailItem icon={UserCircle} label="Gender" value={contact.gender} />
                 <DetailItem icon={Globe} label="Country Code" value={contact.countryCode} />
               </div>
             </div>
@@ -166,10 +216,27 @@ export default function ViewContact() {
                 <MapPin className="w-4 h-4 text-rose-500" />
                 Location Details
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <DetailItem icon={MapPin} label="City" value={contact.city} />
-                <DetailItem icon={MapPin} label="Region" value={contact.region} />
-                <DetailItem icon={Globe} label="Country" value={contact.country} />
+              <div className="space-y-2.5">
+                <DetailItem icon={MapPin} label="Full Address" value={fullAddress} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                  <DetailItem icon={Globe} label="Country" value={country} />
+                  <DetailItem icon={MapPin} label="State" value={state} />
+                  <DetailItem icon={MapPin} label="City" value={city} />
+                  <DetailItem icon={MapPin} label="ZIP Code" value={zip} />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 5: Remarks / Notes */}
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-amber-500" />
+                Remarks / Notes
+              </h3>
+              <div className="py-3 px-4 rounded-xl bg-slate-50/70 border border-slate-100/80">
+                <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                  {contact.remark || contact.remarks || contact.notes || contact.note || '-'}
+                </p>
               </div>
             </div>
 

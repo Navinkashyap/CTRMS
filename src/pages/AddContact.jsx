@@ -29,6 +29,11 @@ const emptyContact = {
   countryCode: '+91',
   isWhatsapp: false,
   remark: '',
+  address: '',
+  country: '',
+  state: '',
+  city: '',
+  zip: '',
 };
 
 const inputClass =
@@ -152,6 +157,268 @@ const NumericCountryCodeSearch = ({ value, onChange }) => {
   );
 };
 
+// Searchable / type-selection dropdown component for Country, State, City, ZIP Code
+const TypeSelectionDropdown = ({
+  value,
+  onChange,
+  options = [],
+  placeholder = '',
+  className = '',
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [typed, setTyped] = useState(value || '');
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    setTyped(value || '');
+  }, [value]);
+
+  useEffect(() => {
+    const handleOutside = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = (typed || '').trim().toLowerCase();
+    if (!q) return options;
+    return options.filter((opt) =>
+      String(opt).toLowerCase().includes(q)
+    );
+  }, [options, typed]);
+
+  const handleSelect = (val) => {
+    onChange(val);
+    setTyped(val);
+    setIsOpen(false);
+  };
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setTyped(val);
+    onChange(val);
+    setIsOpen(true);
+  };
+
+  return (
+    <div className={`relative ${className}`} ref={wrapperRef}>
+      <div className="relative flex items-center">
+        <input
+          type="text"
+          value={typed}
+          onChange={handleInputChange}
+          onFocus={() => setIsOpen(true)}
+          placeholder={placeholder}
+          className={`${inputClass} pr-9`}
+        />
+        <div
+          onClick={() => setIsOpen((prev) => !prev)}
+          className="absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer text-slate-400 hover:text-slate-600 transition-colors p-0.5"
+        >
+          <ChevronDown
+            className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          />
+        </div>
+      </div>
+
+      {isOpen && filtered.length > 0 && (
+        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl shadow-2xl border border-slate-100 z-50 overflow-hidden max-h-56 overflow-y-auto p-1 text-xs animate-in fade-in zoom-in-95 duration-100">
+          {filtered.map((opt, idx) => (
+            <button
+              key={`${opt}-${idx}`}
+              type="button"
+              onClick={() => handleSelect(opt)}
+              className={`w-full px-3 py-2 rounded-lg text-left flex items-center justify-between transition-colors ${
+                String(opt).toLowerCase() === (value || '').toLowerCase()
+                  ? 'bg-indigo-50 text-indigo-700 font-bold'
+                  : 'hover:bg-slate-50 text-slate-700 font-medium'
+              }`}
+            >
+              <span>{opt}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const COUNTRY_DATA = [
+  {
+    name: 'India',
+    states: [
+      { name: 'Andhra Pradesh', cities: ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Nellore', 'Kurnool', 'Tirupati'] },
+      { name: 'Assam', cities: ['Guwahati', 'Silchar', 'Dibrugarh', 'Jorhat', 'Nagaon'] },
+      { name: 'Bihar', cities: ['Patna', 'Gaya', 'Bhagalpur', 'Muzaffarpur', 'Darbhanga'] },
+      { name: 'Chandigarh', cities: ['Chandigarh'] },
+      { name: 'Delhi', cities: ['New Delhi', 'North Delhi', 'South Delhi', 'East Delhi', 'West Delhi', 'Central Delhi'] },
+      { name: 'Gujarat', cities: ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Bhavnagar', 'Gandhinagar'] },
+      { name: 'Haryana', cities: ['Gurugram', 'Faridabad', 'Panipat', 'Ambala', 'Karnal', 'Hisar', 'Rohtak'] },
+      { name: 'Himachal Pradesh', cities: ['Shimla', 'Dharamshala', 'Mandi', 'Solan'] },
+      { name: 'Jharkhand', cities: ['Ranchi', 'Jamshedpur', 'Dhanbad', 'Bokaro'] },
+      { name: 'Karnataka', cities: ['Bengaluru', 'Mysuru', 'Hubballi', 'Mangaluru', 'Belagavi'] },
+      { name: 'Kerala', cities: ['Thiruvananthapuram', 'Kochi', 'Kozhikode', 'Thrissur', 'Kannur'] },
+      { name: 'Madhya Pradesh', cities: ['Bhopal', 'Indore', 'Jabalpur', 'Gwalior', 'Ujjain'] },
+      { name: 'Maharashtra', cities: ['Mumbai', 'Pune', 'Nagpur', 'Thane', 'Nashik', 'Navi Mumbai', 'Aurangabad'] },
+      { name: 'Odisha', cities: ['Bhubaneswar', 'Cuttack', 'Rourkela', 'Berhampur', 'Puri'] },
+      { name: 'Punjab', cities: ['Ludhiana', 'Amritsar', 'Jalandhar', 'Patiala', 'Bathinda', 'Mohali'] },
+      { name: 'Rajasthan', cities: ['Jaipur', 'Jodhpur', 'Kota', 'Bikaner', 'Ajmer', 'Udaipur'] },
+      { name: 'Tamil Nadu', cities: ['Chennai', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem'] },
+      { name: 'Telangana', cities: ['Hyderabad', 'Warangal', 'Nizamabad', 'Karimnagar'] },
+      { name: 'Uttar Pradesh', cities: ['Noida', 'Greater Noida', 'Ghaziabad', 'Lucknow', 'Kanpur', 'Agra', 'Varanasi', 'Prayagraj', 'Meerut'] },
+      { name: 'Uttarakhand', cities: ['Dehradun', 'Haridwar', 'Roorkee', 'Rishikesh', 'Haldwani'] },
+      { name: 'West Bengal', cities: ['Kolkata', 'Howrah', 'Durgapur', 'Asansol', 'Siliguri'] },
+    ],
+  },
+  {
+    name: 'United States',
+    states: [
+      { name: 'California', cities: ['Los Angeles', 'San Francisco', 'San Diego', 'San Jose', 'Sacramento', 'Fresno', 'Oakland'] },
+      { name: 'New York', cities: ['New York City', 'Buffalo', 'Rochester', 'Yonkers', 'Syracuse', 'Albany'] },
+      { name: 'Texas', cities: ['Houston', 'San Antonio', 'Dallas', 'Austin', 'Fort Worth', 'El Paso'] },
+      { name: 'Florida', cities: ['Miami', 'Orlando', 'Tampa', 'Jacksonville', 'St. Petersburg'] },
+      { name: 'Illinois', cities: ['Chicago', 'Aurora', 'Naperville', 'Joliet', 'Springfield'] },
+      { name: 'Washington', cities: ['Seattle', 'Spokane', 'Tacoma', 'Vancouver', 'Bellevue'] },
+      { name: 'Massachusetts', cities: ['Boston', 'Worcester', 'Springfield', 'Cambridge'] },
+      { name: 'Georgia', cities: ['Atlanta', 'Augusta', 'Columbus', 'Savannah'] },
+      { name: 'Pennsylvania', cities: ['Philadelphia', 'Pittsburgh', 'Allentown'] },
+      { name: 'Ohio', cities: ['Columbus', 'Cleveland', 'Cincinnati', 'Toledo'] },
+      { name: 'North Carolina', cities: ['Charlotte', 'Raleigh', 'Greensboro', 'Durham'] },
+      { name: 'Michigan', cities: ['Detroit', 'Grand Rapids', 'Warren'] },
+      { name: 'New Jersey', cities: ['Newark', 'Jersey City', 'Paterson'] },
+      { name: 'Virginia', cities: ['Virginia Beach', 'Norfolk', 'Richmond'] },
+    ],
+  },
+  {
+    name: 'United Kingdom',
+    states: [
+      { name: 'England', cities: ['London', 'Manchester', 'Birmingham', 'Leeds', 'Liverpool', 'Bristol', 'Sheffield'] },
+      { name: 'Scotland', cities: ['Edinburgh', 'Glasgow', 'Aberdeen', 'Dundee'] },
+      { name: 'Wales', cities: ['Cardiff', 'Swansea', 'Newport'] },
+      { name: 'Northern Ireland', cities: ['Belfast', 'Derry', 'Lisburn'] },
+    ],
+  },
+  {
+    name: 'Canada',
+    states: [
+      { name: 'Ontario', cities: ['Toronto', 'Ottawa', 'Mississauga', 'Brampton', 'Hamilton'] },
+      { name: 'Quebec', cities: ['Montreal', 'Quebec City', 'Laval', 'Gatineau'] },
+      { name: 'British Columbia', cities: ['Vancouver', 'Victoria', 'Surrey', 'Burnaby'] },
+      { name: 'Alberta', cities: ['Calgary', 'Edmonton', 'Red Deer'] },
+    ],
+  },
+  {
+    name: 'Australia',
+    states: [
+      { name: 'New South Wales', cities: ['Sydney', 'Newcastle', 'Central Coast', 'Wollongong'] },
+      { name: 'Victoria', cities: ['Melbourne', 'Geelong', 'Ballarat', 'Bendigo'] },
+      { name: 'Queensland', cities: ['Brisbane', 'Gold Coast', 'Sunshine Coast', 'Cairns'] },
+      { name: 'Western Australia', cities: ['Perth', 'Bunbury', 'Geraldton'] },
+    ],
+  },
+  {
+    name: 'United Arab Emirates',
+    states: [
+      { name: 'Dubai', cities: ['Dubai City', 'Deira', 'Jumeirah', 'Downtown Dubai', 'Bur Dubai'] },
+      { name: 'Abu Dhabi', cities: ['Abu Dhabi City', 'Al Ain', 'Al Dhafra'] },
+      { name: 'Sharjah', cities: ['Sharjah City', 'Khor Fakkan', 'Kalba'] },
+      { name: 'Ajman', cities: ['Ajman City'] },
+    ],
+  },
+  {
+    name: 'Germany',
+    states: [
+      { name: 'Bavaria', cities: ['Munich', 'Nuremberg', 'Augsburg', 'Regensburg'] },
+      { name: 'Berlin', cities: ['Berlin', 'Spandau', 'Pankow', 'Mitte'] },
+      { name: 'North Rhine-Westphalia', cities: ['Cologne', 'Dusseldorf', 'Dortmund', 'Bonn'] },
+      { name: 'Hesse', cities: ['Frankfurt', 'Wiesbaden', 'Kassel'] },
+      { name: 'Hamburg', cities: ['Hamburg'] },
+    ],
+  },
+  {
+    name: 'France',
+    states: [
+      { name: 'Ile-de-France', cities: ['Paris', 'Boulogne-Billancourt', 'Saint-Denis'] },
+      { name: 'Auvergne-Rhone-Alpes', cities: ['Lyon', 'Saint-Etienne', 'Grenoble'] },
+      { name: 'Provence-Alpes-Cote d\'Azur', cities: ['Marseille', 'Nice', 'Toulon'] },
+    ],
+  },
+  {
+    name: 'Singapore',
+    states: [
+      { name: 'Central Region', cities: ['Downtown Core', 'Marina Bay', 'Orchard', 'Bukit Merah'] },
+      { name: 'East Region', cities: ['Tampines', 'Bedok', 'Pasir Ris'] },
+      { name: 'West Region', cities: ['Jurong East', 'Clementi', 'Bukit Batok'] },
+    ],
+  },
+  {
+    name: 'Japan',
+    states: [
+      { name: 'Kanto', cities: ['Tokyo', 'Yokohama', 'Kawasaki', 'Chiba', 'Saitama'] },
+      { name: 'Kansai', cities: ['Osaka', 'Kyoto', 'Kobe', 'Nara'] },
+      { name: 'Chubu', cities: ['Nagoya', 'Shizuoka', 'Niigata'] },
+    ],
+  },
+  {
+    name: 'China',
+    states: [
+      { name: 'Beijing', cities: ['Beijing'] },
+      { name: 'Shanghai', cities: ['Shanghai'] },
+      { name: 'Guangdong', cities: ['Guangzhou', 'Shenzhen', 'Dongguan'] },
+      { name: 'Zhejiang', cities: ['Hangzhou', 'Ningbo'] },
+    ],
+  },
+];
+
+const CITY_ZIP_MAP = {
+  // India
+  Noida: ['201301', '201303', '201304', '201305', '201307', '201309'],
+  'Greater Noida': ['201306', '201308', '201310', '201318'],
+  Ghaziabad: ['201001', '201002', '201005', '201009', '201010', '201012'],
+  Delhi: ['110001', '110002', '110003', '110005', '110006', '110020', '110092'],
+  'New Delhi': ['110001', '110002', '110003', '110011', '110021'],
+  Gurugram: ['122001', '122002', '122003', '122018', '122051'],
+  Faridabad: ['121001', '121002', '121003', '121004'],
+  Lucknow: ['226001', '226010', '226016', '226024'],
+  Kanpur: ['208001', '208002', '208005'],
+  Mumbai: ['400001', '400002', '400004', '400050', '400076', '400099'],
+  'Navi Mumbai': ['400703', '400705', '400706'],
+  Pune: ['411001', '411002', '411004', '411014', '411038', '411057'],
+  Bengaluru: ['560001', '560002', '560025', '560034', '560066', '560100'],
+  Hyderabad: ['500001', '500003', '500034', '500081', '500084'],
+  Chennai: ['600001', '600002', '600028', '600034', '600096'],
+  Kolkata: ['700001', '700019', '700029', '700091'],
+  Ahmedabad: ['380001', '380006', '380015', '380054'],
+  Jaipur: ['302001', '302004', '302015', '302020'],
+  Chandigarh: ['160001', '160002', '160017', '160022'],
+  Dehradun: ['248001', '248002', '248007'],
+  // USA
+  'New York City': ['10001', '10002', '10003', '10011', '10016', '10021'],
+  'Los Angeles': ['90001', '90012', '90024', '90028', '90210'],
+  Chicago: ['60601', '60602', '60606', '60611', '60614'],
+  Houston: ['77001', '77002', '77008', '77019', '77056'],
+  'San Francisco': ['94102', '94103', '94107', '94110', '94114'],
+  Seattle: ['98101', '98104', '98109', '98115', '98121'],
+  Miami: ['33101', '33125', '33130', '33139'],
+  Dallas: ['75201', '75202', '75204', '75219'],
+  Austin: ['78701', '78702', '78704', '78745'],
+  Boston: ['02108', '02110', '02115', '02116', '02215'],
+  // UK
+  London: ['EC1A 1BB', 'W1A 1AA', 'SW1A 1AA', 'E1 6AN', 'WC2N 5DU'],
+  Manchester: ['M1 1AE', 'M2 1HN', 'M3 1ER', 'M4 1LE'],
+  Birmingham: ['B1 1AA', 'B2 4ND', 'B3 3AG', 'B5 4BU'],
+  // Canada
+  Toronto: ['M5H 2N2', 'M5V 2T6', 'M4W 1A1', 'M5R 1X9'],
+  Vancouver: ['V6B 1A1', 'V6Z 2W1', 'V6E 1E5'],
+  // UAE
+  'Dubai City': ['00000', '337-1500', 'P.O. Box 1111'],
+  'Abu Dhabi City': ['00000', 'P.O. Box 2222'],
+};
+
 export default function AddContact() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -192,6 +459,11 @@ export default function AddContact() {
       setFormData({
         ...emptyContact,
         ...editingContact,
+        address: editingContact.address || editingContact.fullAddress || '',
+        country: editingContact.country || '',
+        state: editingContact.state || editingContact.region || '',
+        city: editingContact.city || '',
+        zip: editingContact.zip || editingContact.zipCode || '',
         countryCode,
         phone: phone.replace(/\D/g, ''),
       });
@@ -212,7 +484,76 @@ export default function AddContact() {
       company: selectedName,
       clientId: client?._id || '',
       clientCode: client?.membershipCode || '',
+      address: prev.address || client?.address || '',
+      country: prev.country || client?.country || '',
+      state: prev.state || client?.state || '',
+      city: prev.city || client?.city || '',
+      zip: prev.zip || client?.zip || client?.zipCode || '',
     }));
+  };
+
+  // Cascading Location options
+  const countryOptions = useMemo(() => COUNTRY_DATA.map((c) => c.name), []);
+
+  const availableStates = useMemo(() => {
+    if (!formData.country) return [];
+    const countryObj = COUNTRY_DATA.find(
+      (c) => c.name.toLowerCase() === (formData.country || '').trim().toLowerCase()
+    );
+    return countryObj ? countryObj.states : [];
+  }, [formData.country]);
+
+  const stateOptions = useMemo(
+    () => availableStates.map((s) => s.name),
+    [availableStates]
+  );
+
+  const availableCities = useMemo(() => {
+    if (!formData.state) {
+      if (availableStates.length > 0) {
+        return availableStates.flatMap((s) => s.cities);
+      }
+      return [];
+    }
+    const stateObj = availableStates.find(
+      (s) => s.name.toLowerCase() === (formData.state || '').trim().toLowerCase()
+    );
+    return stateObj ? stateObj.cities : [];
+  }, [availableStates, formData.state]);
+
+  const cityOptions = useMemo(() => availableCities, [availableCities]);
+
+  const zipOptions = useMemo(() => {
+    if (!formData.city) return [];
+    const matchedCityKey = Object.keys(CITY_ZIP_MAP).find(
+      (k) => k.toLowerCase() === (formData.city || '').trim().toLowerCase()
+    );
+    if (matchedCityKey) {
+      return CITY_ZIP_MAP[matchedCityKey];
+    }
+    return [];
+  }, [formData.city]);
+
+  const handleCountryChange = (val) => {
+    updateField('country', val);
+  };
+
+  const handleStateChange = (val) => {
+    updateField('state', val);
+  };
+
+  const handleCityChange = (val) => {
+    updateField('city', val);
+    const matchedCityKey = Object.keys(CITY_ZIP_MAP).find(
+      (k) => k.toLowerCase() === (val || '').trim().toLowerCase()
+    );
+    if (matchedCityKey && (!formData.zip || formData.zip.trim() === '')) {
+      updateField('zip', CITY_ZIP_MAP[matchedCityKey][0] || '');
+    }
+  };
+
+  const handleZipChange = (val) => {
+    updateField('zip', val);
   };
 
   const handleSubmit = async (e) => {
@@ -225,6 +566,9 @@ export default function AddContact() {
       const payload = {
         ...formData,
         phone: formData.phone ? `${formData.countryCode} ${formData.phone}`.trim() : '',
+        fullAddress: formData.address,
+        zipCode: formData.zip,
+        region: formData.state,
       };
 
       if (isEditMode) {
@@ -468,7 +812,70 @@ export default function AddContact() {
 
           <hr className="border-slate-100" />
 
-          {/* Section 4: Additional Information */}
+          {/* Section 4: Location Details */}
+          <div>
+            <h3 className="text-base font-bold text-slate-900 mb-4">
+              Location Details
+            </h3>
+            <div className="space-y-4">
+              {/* Full Address */}
+              <FormField label="Full Address">
+                <textarea
+                  rows={2}
+                  className={`${inputClass} min-h-[70px] resize-y`}
+                  placeholder="Enter full address"
+                  value={formData.address}
+                  onChange={(e) => updateField('address', e.target.value)}
+                />
+              </FormField>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Country */}
+                <FormField label="Country">
+                  <TypeSelectionDropdown
+                    value={formData.country}
+                    onChange={handleCountryChange}
+                    options={countryOptions}
+                    placeholder="Type or select country"
+                  />
+                </FormField>
+
+                {/* State */}
+                <FormField label="State">
+                  <TypeSelectionDropdown
+                    value={formData.state}
+                    onChange={handleStateChange}
+                    options={stateOptions}
+                    placeholder="Type or select state"
+                  />
+                </FormField>
+
+                {/* City */}
+                <FormField label="City">
+                  <TypeSelectionDropdown
+                    value={formData.city}
+                    onChange={handleCityChange}
+                    options={cityOptions}
+                    placeholder="Type or select city"
+                  />
+                </FormField>
+
+                {/* ZIP Code */}
+                <FormField label="ZIP Code">
+                  <TypeSelectionDropdown
+                    value={formData.zip}
+                    onChange={handleZipChange}
+                    options={zipOptions}
+                    placeholder="Type or select ZIP code"
+                  />
+                </FormField>
+              </div>
+            </div>
+          </div>
+
+          <hr className="border-slate-100" />
+
+          {/* Section 5: Additional Information */}
           <div>
             <h3 className="text-base font-bold text-slate-900 mb-4">
               Additional Information

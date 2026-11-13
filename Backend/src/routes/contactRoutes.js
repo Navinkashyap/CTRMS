@@ -13,6 +13,17 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+// GET contact by ID
+router.get("/:id", async (req, res, next) => {
+  try {
+    const contact = await Contact.findById(req.params.id);
+    if (!contact) return res.status(404).json({ message: "Contact not found" });
+    res.json(contact);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST new contact
 router.post("/", async (req, res, next) => {
   try {
