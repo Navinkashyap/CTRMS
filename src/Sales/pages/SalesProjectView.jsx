@@ -9,6 +9,7 @@ import { getTools } from '../../lib/toolApi';
 import { getSpecializations } from '../../lib/specializationApi';
 import { getUnits } from '../../lib/unitApi';
 import { getServices } from '../../lib/serviceApi';
+import { calcGst, isClientSameState } from '../../lib/gst';
 
 const DEFAULT_TRANSLATION_TASKS = [
   { taskName: 'Translation', rate: 1 },
@@ -269,8 +270,8 @@ export default function SalesProjectView() {
 
   const selectedClient = clients.find((c) => c._id === formData.client);
   const clientCurrency = selectedClient?.currency || 'INR';
-  const clientState = selectedClient?.state?.trim().toLowerCase() || '';
-  const isUP = clientState === 'up' || clientState === 'uttar pradesh';
+  // Same state as our GSTIN -> CGST + SGST, otherwise IGST (see lib/gst.js).
+  const sameState = isClientSameState(selectedClient);
 
   const targetSummary = formData.targets
     .map((t) => getLangName(t.targetLanguage, languages))
@@ -286,14 +287,7 @@ export default function SalesProjectView() {
     0
   );
   const subTotal = allTaskFees;
-  let taxAmount = 0;
-  if (formData.gstEnabled) {
-    if (isUP) {
-      taxAmount = subTotal * ((Number(formData.cgstPercent) + Number(formData.sgstPercent)) / 100);
-    } else {
-      taxAmount = subTotal * (Number(formData.igstPercent) / 100);
-    }
-  }
+  const { taxAmount } = calcGst(subTotal, formData, sameState);
   const grandTotal = subTotal + taxAmount + (Number(formData.otherCharges) || 0);
 
   // Files upload straight away against their own endpoint — the project payload
@@ -749,7 +743,7 @@ export default function SalesProjectView() {
             </div>
             {formData.gstEnabled && (
               <div className="flex items-center gap-4 mt-2">
-                {isUP ? (
+                {sameState ? (
                   <>
                     <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
                       CGST (%):
@@ -797,7 +791,7 @@ export default function SalesProjectView() {
                 </tr>
                 <tr>
                   <td className="border border-slate-300 bg-slate-50 px-4 py-2 font-bold text-slate-700">
-                    Tax {formData.gstEnabled ? (isUP ? `(CGST - ${formData.cgstPercent}% & SGST - ${formData.sgstPercent}%)` : `(IGST - ${formData.igstPercent}%)`) : ''}
+                    Tax {formData.gstEnabled ? (sameState ? `(CGST - ${formData.cgstPercent}% & SGST - ${formData.sgstPercent}%)` : `(IGST - ${formData.igstPercent}%)`) : ''}
                   </td>
                   <td className="border border-slate-300 px-4 py-2 text-right font-semibold">
                     {formData.gstEnabled ? taxAmount.toFixed(2) : '0.00'}

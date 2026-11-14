@@ -15,6 +15,7 @@ import {
   getServices,
   uploadProjectFiles,
 } from '../lib/salesApi';
+import { calcGst, isClientSameState } from '../../lib/gst';
 
 const DEFAULT_TRANSLATION_TASKS = [
   { taskName: 'Translation', rate: 1 },
@@ -182,8 +183,8 @@ export default function CreateSalesProject() {
 
   const selectedClient = clients.find((c) => c._id === formData.client);
   const clientCurrency = selectedClient?.currency || 'INR';
-  const clientState = selectedClient?.state?.trim().toLowerCase() || '';
-  const isUP = ['up', 'uttar pradesh', 'uttarpradesh', 'uttar pardesh', 'u.p', 'u.p.', 'uttarpardesh'].includes(clientState);
+  // Same state as our GSTIN -> CGST + SGST, otherwise IGST (see lib/gst.js).
+  const sameState = isClientSameState(selectedClient);
 
   const targetSummary = formData.targets
     .map((t) => getLangName(t.targetLanguage, languages))
@@ -199,14 +200,7 @@ export default function CreateSalesProject() {
     0
   );
   const subTotal = allTaskFees;
-  let taxAmount = 0;
-  if (formData.gstEnabled) {
-    if (isUP) {
-      taxAmount = subTotal * ((Number(formData.cgstPercent) + Number(formData.sgstPercent)) / 100);
-    } else {
-      taxAmount = subTotal * (Number(formData.igstPercent) / 100);
-    }
-  }
+  const { taxAmount } = calcGst(subTotal, formData, sameState);
   const grandTotal = subTotal + taxAmount + (Number(formData.otherCharges) || 0);
 
   // File field helpers. A new project has no id yet, so picked files are queued
@@ -865,7 +859,7 @@ export default function CreateSalesProject() {
                   </div>
                   {formData.gstEnabled && (
                     <div className="ap-gst-inputs">
-                      {isUP ? (
+                      {sameState ? (
                         <>
                           <label className="ap-gst-field">
                             CGST (%):
@@ -914,7 +908,7 @@ export default function CreateSalesProject() {
                       </tr>
                       <tr>
                         <td className="ap-summary-label">
-                          Tax{formData.gstEnabled ? (isUP ? ` (CGST ${formData.cgstPercent}% & SGST ${formData.sgstPercent}%)` : ` (IGST ${formData.igstPercent}%)`) : ''}
+                          Tax{formData.gstEnabled ? (sameState ? ` (CGST ${formData.cgstPercent}% & SGST ${formData.sgstPercent}%)` : ` (IGST ${formData.igstPercent}%)`) : ''}
                         </td>
                         <td className="ap-summary-value">
                           {formData.gstEnabled ? taxAmount.toFixed(2) : '0.00'}

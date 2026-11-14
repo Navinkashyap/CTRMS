@@ -26,6 +26,7 @@ import { getProjects, deleteProject, updateProject, getProject } from '../lib/pr
 import { getContacts } from '../lib/contactApi';
 import { getClients } from '../lib/clientApi';
 import { getServices } from '../lib/serviceApi';
+import { isClientSameState } from '../lib/gst';
 
 const sortDesc = (list, getKey) =>
   [...list].sort((a, b) => (getKey(b) || '').localeCompare(getKey(a) || ''));
@@ -47,9 +48,10 @@ const formatProject = (project, managerMap = {}) => ({
   deadline: project.deadline
     ? new Date(project.deadline).toISOString().split('T')[0]
     : '—',
-  cgst: project.gstEnabled && project.cgstPercent ? `${project.cgstPercent}%` : '—',
-  sgst: project.gstEnabled && project.sgstPercent ? `${project.sgstPercent}%` : '—',
-  igst: project.gstEnabled && project.igstPercent ? `${project.igstPercent}%` : '—',
+  // Only the heads that actually apply: same-state client -> CGST + SGST, else IGST.
+  cgst: project.gstEnabled && isClientSameState(project.client) && project.cgstPercent ? `${project.cgstPercent}%` : '—',
+  sgst: project.gstEnabled && isClientSameState(project.client) && project.sgstPercent ? `${project.sgstPercent}%` : '—',
+  igst: project.gstEnabled && !isClientSameState(project.client) && project.igstPercent ? `${project.igstPercent}%` : '—',
 });
 
 const allColumns = [

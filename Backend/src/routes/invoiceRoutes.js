@@ -1,5 +1,7 @@
 import express from "express";
 import Invoice from "../models/Invoice.js";
+import Client from "../models/Client.js";
+import { isSameState, calcGst } from "../utils/gst.js";
 
 const router = express.Router();
 
@@ -13,6 +15,39 @@ function sanitizeInvoiceBody(body) {
     }
   }
   return data;
+}
+
+// Totals are always recomputed here from the line items, so a stale or tampered
+// client can't save the wrong tax head: same-state client -> CGST + SGST,
+// anyone else -> IGST (see utils/gst.js). `existing` fills in fields a partial
+// update leaves out. Status-only updates (no items) keep the stored totals.
+async function applyGstSplit(data, existing = {}) {
+  if (!Array.isArray(data.items)) return data;
+  const merged = { ...existing, ...data };
+
+  let client = null;
+  if (merged.client) {
+    client = await Client.findById(merged.client).select("state gstIn country").lean();
+  }
+
+  const sameState = isSameState({
+    supplierGstin: merged.fromGSTIN,
+    gstin: merged.billToGSTIN || client?.gstIn,
+    state: client?.state,
+    country: client?.country,
+  });
+
+  const subtotal = data.items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+  const gst = calcGst(subtotal, merged, sameState);
+
+  return {
+    ...data,
+    subtotal,
+    cgstAmount: gst.cgstAmount,
+    sgstAmount: gst.sgstAmount,
+    igstAmount: gst.igstAmount,
+    totalAmount: subtotal + gst.taxAmount,
+  };
 }
 
 // Get next invoice number (for frontend preview)
@@ -58,8 +93,8 @@ router.get("/:id", async (req, res) => {
 
 // Create invoice
 router.post("/", async (req, res) => {
-  const invoice = new Invoice(sanitizeInvoiceBody(req.body));
   try {
+    const invoice = new Invoice(await applyGstSplit(sanitizeInvoiceBody(req.body)));
     const newInvoice = await invoice.save();
     res.status(201).json(newInvoice);
   } catch (error) {
@@ -70,9 +105,13 @@ router.post("/", async (req, res) => {
 // Update invoice
 router.put("/:id", async (req, res) => {
   try {
+    const body = sanitizeInvoiceBody(req.body);
+    const existing = Array.isArray(body.items)
+      ? await Invoice.findById(req.params.id).lean()
+      : null;
     const invoice = await Invoice.findByIdAndUpdate(
       req.params.id,
-      sanitizeInvoiceBody(req.body),
+      await applyGstSplit(body, existing || {}),
       { new: true, runValidators: true }
     );
     if (!invoice)

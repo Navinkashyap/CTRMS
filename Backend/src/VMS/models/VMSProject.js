@@ -68,6 +68,13 @@ const VMSProjectSchema = new mongoose.Schema(
     deliverable: { type: String, trim: true, default: "" },
     gstEnabled: { type: Boolean, default: false },
     gstPercentage: { type: Number, default: 18 },
+    // Set by the admin mirror (projectRoutes.buildVmsPayload): true when the
+    // client is in the company's own state, so tax shows as CGST + SGST
+    // instead of IGST. gstPercentage stays the combined effective rate.
+    gstSameState: { type: Boolean, default: false },
+    cgstPercent: { type: Number, default: 9 },
+    sgstPercent: { type: Number, default: 9 },
+    igstPercent: { type: Number, default: 18 },
     otherCharges: { type: Number, default: 0 },
     otherChargesLabel: { type: String, trim: true, default: "None" },
     targets: { type: [TargetSchema], default: [] },

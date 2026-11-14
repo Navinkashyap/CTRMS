@@ -6,6 +6,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import Project from "../models/Project.js";
 import VMSProject from "../VMS/models/VMSProject.js";
+import { calcGst, isClientSameState } from "../utils/gst.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -110,35 +111,28 @@ const toFileRefs = (files) =>
     url: f.url || "",
   }));
 
-const UP_STATE_ALIASES = [
-  "up",
-  "uttar pradesh",
-  "uttarpradesh",
-  "uttar pardesh",
-  "u.p",
-  "u.p.",
-  "uttarpardesh",
-];
-
 const calcTaskFees = (quantity, rate) =>
   (Number(quantity) || 0) * (Number(rate) || 0);
 
-// GST split follows the same rule as the admin's own project form: an intra-state
-// (Uttar Pradesh) client is billed CGST + SGST, everyone else IGST. Resolved here
-// so the PM portal gets a single effective percentage and doesn't have to know
-// the client's address.
-function effectiveGstPercent(project) {
-  if (!project.gstEnabled) return 0;
-  const state = (project.client?.state || "").trim().toLowerCase();
-  if (UP_STATE_ALIASES.includes(state)) {
-    return (Number(project.cgstPercent) || 0) + (Number(project.sgstPercent) || 0);
-  }
-  return Number(project.igstPercent) || 0;
+// GST split follows the same rule as the admin's own project form: a client in
+// the company's own state is billed CGST + SGST, everyone else IGST (see
+// utils/gst.js). Resolved here so the PM portal gets the effective percentage
+// and the split without having to know the client's address.
+function gstSplitFor(project) {
+  const sameState = isClientSameState(project.client);
+  const { taxPercent } = calcGst(0, project, sameState);
+  return {
+    gstSameState: !!project.gstEnabled && sameState,
+    gstPercentage: taxPercent,
+    cgstPercent: Number(project.cgstPercent) || 0,
+    sgstPercent: Number(project.sgstPercent) || 0,
+    igstPercent: Number(project.igstPercent) || 0,
+  };
 }
 
 export async function buildVmsPayload(projectId) {
   const project = await Project.findById(projectId)
-    .populate("client", "name state currency")
+    .populate("client", "name state country gstIn currency")
     .populate("clientContact", "firstName lastName")
     .populate("service", "name")
     .populate("sourceLanguage", "name")
@@ -201,7 +195,7 @@ export async function buildVmsPayload(projectId) {
     subjectMatter: project.subjectMatter || "",
     deliverable: project.deliverable || "",
     gstEnabled: !!project.gstEnabled,
-    gstPercentage: effectiveGstPercent(project),
+    ...gstSplitFor(project),
     otherCharges: Number(project.otherCharges) || 0,
     otherChargesLabel: project.otherChargesLabel || "None",
     sourceLang,
@@ -233,7 +227,7 @@ export async function syncVmsIncoming(projectId) {
 router.get("/", async (req, res) => {
   try {
     const projects = await Project.find()
-      .populate("client", "name currency")
+      .populate("client", "name currency state country gstIn")
       .populate("service", "name")
       .populate("clientContact", "firstName lastName email")
       .populate("projectManager", "firstName lastName email")
@@ -256,7 +250,7 @@ router.get("/:id", async (req, res) => {
       : { $or: [{ projectId: req.params.id }, { projectCode: req.params.id }] };
 
     const project = await Project.findOne(filter)
-      .populate("client", "name currency")
+      .populate("client", "name currency state country gstIn")
       .populate("service", "name")
       .populate("clientContact", "firstName lastName email")
       .populate("projectManager", "firstName lastName email")

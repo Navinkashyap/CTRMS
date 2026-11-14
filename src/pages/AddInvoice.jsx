@@ -4,6 +4,7 @@ import { ArrowLeft, Plus, MinusCircle, Save } from 'lucide-react';
 import { getClients } from '../lib/clientApi';
 import { getProjects } from '../lib/projectApi';
 import { createInvoice, updateInvoice, getInvoice, getNextInvoiceNumber } from '../lib/invoiceApi';
+import { isSameState, calcGst } from '../lib/gst';
 
 const EMPTY_ITEMS = Array.from({ length: 10 }, (_, i) => ({
   sNo: i + 1,
@@ -229,25 +230,20 @@ export default function AddInvoice() {
     }
   };
 
-  // Determine if client is from UP (same state logic as AddProject.jsx)
+  // Same state as our GSTIN -> CGST + SGST, otherwise IGST (see lib/gst.js).
+  // The Bill-To GSTIN wins over the client's state field when both are present.
   const selectedClient = clients.find((c) => c._id === formData.client);
-  const clientState = selectedClient?.state?.trim().toLowerCase() || '';
-  const isUP = ['up', 'uttar pradesh', 'uttarpradesh', 'uttar pardesh', 'u.p', 'u.p.', 'uttarpardesh'].includes(clientState);
+  const sameState = isSameState({
+    supplierGstin: formData.fromGSTIN,
+    gstin: formData.billToGSTIN || selectedClient?.gstIn,
+    state: selectedClient?.state,
+    country: selectedClient?.country,
+  });
 
   // Calculate totals
   const subtotal = formData.items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-  let cgstAmount = 0;
-  let sgstAmount = 0;
-  let igstAmount = 0;
-  if (formData.gstEnabled) {
-    if (isUP) {
-      cgstAmount = subtotal * (Number(formData.cgstPercent) / 100);
-      sgstAmount = subtotal * (Number(formData.sgstPercent) / 100);
-    } else {
-      igstAmount = subtotal * (Number(formData.igstPercent) / 100);
-    }
-  }
-  const totalAmount = subtotal + cgstAmount + sgstAmount + igstAmount;
+  const { cgstAmount, sgstAmount, igstAmount, taxAmount } = calcGst(subtotal, formData, sameState);
+  const totalAmount = subtotal + taxAmount;
 
   // Item handlers
   const handleItemChange = (index, field, value) => {
@@ -645,7 +641,7 @@ export default function AddInvoice() {
               </div>
               {formData.gstEnabled && (
                 <div className="flex items-center gap-4 mt-2">
-                  {isUP ? (
+                  {sameState ? (
                     <>
                       <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
                         CGST (%):
@@ -709,7 +705,7 @@ export default function AddInvoice() {
                       {formData.currency} {subtotal.toFixed(2)}
                     </td>
                   </tr>
-                  {isUP ? (
+                  {sameState ? (
                     <>
                       <tr>
                         <td className="border border-slate-300 bg-slate-50 px-4 py-2.5 font-bold text-slate-700">
