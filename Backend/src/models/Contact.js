@@ -17,8 +17,17 @@ const ContactSchema = new mongoose.Schema(
     remark: { type: String, trim: true },
     clientId: { type: String },
     clientCode: { type: String },
+    // Location details
+    address: { type: String, trim: true, default: "" },
+    fullAddress: { type: String, trim: true, default: "" },
+    country: { type: String, trim: true, default: "" },
+    state: { type: String, trim: true, default: "" },
+    region: { type: String, trim: true, default: "" },
+    city: { type: String, trim: true, default: "" },
+    zip: { type: String, trim: true, default: "" },
+    zipCode: { type: String, trim: true, default: "" },
   },
-  { timestamps: true }
+  { timestamps: true, strict: false }
 );
 
 export default mongoose.model("Contact", ContactSchema);
