@@ -10,17 +10,24 @@ import {
   X,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Eye,
+  EyeOff,
+  KeyRound,
+  Shield,
+  User,
+  Mail,
+  Phone
 } from 'lucide-react';
 
 const initialUsers = [
-  { id: 1, name: 'Bhavna Singh', email: 'accounts@perfectrans.com', role: 'Accountant', mobile: '+91 85068 66497', status: 'Active' },
-  { id: 2, name: 'Meeta Saxena', email: 'pm9@perfectrans.net', role: 'Project Manager', mobile: '958 208 2036', status: 'Active' },
-  { id: 3, name: 'Invoice Centre', email: 'invoice.centre@perfectrans.net', role: 'Accountant', mobile: '850 686 6497', status: 'Active' },
-  { id: 4, name: 'Mugdha G', email: 'mugdha@perfectrans.com', role: 'Admin', mobile: '123456789', status: 'Active' },
-  { id: 5, name: 'Jason Matthews', email: 'jason@perfectrans.net', role: 'Vendor Manager', mobile: '123 456 7890', status: 'Active' },
-  { id: 6, name: 'Kavish Saxena', email: 'pm7@perfectrans.net', role: 'Project Manager', mobile: '123 456 7890', status: 'Active' },
-  { id: 7, name: 'Piyush Kumar', email: 'piyush@perfectrans.com', role: 'Super Admin', mobile: '', status: 'Active' },
+  { id: 1, name: 'Bhavna Singh', email: 'accounts@perfectrans.com', password: 'Password@123', role: 'Accountant', mobile: '+91 85068 66497', status: 'Active' },
+  { id: 2, name: 'Meeta Saxena', email: 'pm9@perfectrans.net', password: 'Password@123', role: 'Project Manager', mobile: '958 208 2036', status: 'Active' },
+  { id: 3, name: 'Invoice Centre', email: 'invoice.centre@perfectrans.net', password: 'Password@123', role: 'Accountant', mobile: '850 686 6497', status: 'Active' },
+  { id: 4, name: 'Mugdha G', email: 'mugdha@perfectrans.com', password: 'Password@123', role: 'Admin', mobile: '123456789', status: 'Active' },
+  { id: 5, name: 'Jason Matthews', email: 'jason@perfectrans.net', password: 'Password@123', role: 'Vendor Manager', mobile: '123 456 7890', status: 'Active' },
+  { id: 6, name: 'Kavish Saxena', email: 'pm7@perfectrans.net', password: 'Password@123', role: 'Project Manager', mobile: '123 456 7890', status: 'Active' },
+  { id: 7, name: 'Piyush Kumar', email: 'piyush@perfectrans.com', password: 'Password@123', role: 'Super Admin', mobile: '', status: 'Active' },
 ];
 
 const allColumns = [
@@ -46,12 +53,16 @@ export default function UsersList() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [previewUser, setPreviewUser] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPreviewPassword, setShowPreviewPassword] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState(['name', 'email', 'role', 'mobile', 'status']);
   const [tempVisibleColumns, setTempVisibleColumns] = useState(visibleColumns);
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    password: '',
     role: 'Admin',
     mobile: '',
     status: 'Active'
@@ -108,20 +119,27 @@ export default function UsersList() {
 
   const handleAdd = () => {
     setEditingUser(null);
-    setFormData({ name: '', email: '', role: 'Admin', mobile: '', status: 'Active' });
+    setShowPassword(false);
+    setFormData({ name: '', email: '', password: '', role: 'Admin', mobile: '', status: 'Active' });
     setIsModalOpen(true);
   };
 
   const handleEdit = (user) => {
     setEditingUser(user);
-    setFormData({ ...user });
+    setShowPassword(false);
+    setFormData({ ...user, password: user.password || '' });
     setIsModalOpen(true);
+  };
+
+  const handleViewPreview = (user) => {
+    setPreviewUser(user);
+    setShowPreviewPassword(false);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (editingUser) {
-      setUsers(users.map(u => u.id === editingUser.id ? { ...formData, id: u.id } : u));
+      setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...formData, id: u.id } : u));
     } else {
       setUsers([...users, { ...formData, id: Date.now() }]);
     }
@@ -140,47 +158,51 @@ export default function UsersList() {
   };
 
   return (
-    <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
-      <div className="max-w-[1400px] mx-auto space-y-8">
+    <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8 animate-in fade-in duration-700">
+      <div className="max-w-[1400px] mx-auto space-y-4">
 
-        {/* Premium Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/60 shadow-sm">
-          <div className="space-y-1">
-            <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent italic">
-              Users List
-            </h1>
-            <p className="text-slate-500 font-medium tracking-wide flex items-center gap-2">
-              <Users className="w-4 h-4 text-indigo-600" />
-              Manage and monitor your team member access and permissions.
-            </p>
-          </div>
+        {/* Modern Header Section (Sticky / Non-scrollable) */}
+        <div className="sticky top-0 z-30 bg-[#fafbfc]/95 backdrop-blur-md py-2.5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:px-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+            <div className="space-y-1.5">
+              <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent">
+                Users List
+              </h1>
+              <p className="text-slate-500 text-sm font-medium tracking-wide flex items-center gap-3">
+                Manage and monitor your team member access and permissions
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 font-semibold text-[10px] uppercase tracking-wider">
+                  {filteredUsers.length} USERS
+                </span>
+              </p>
+            </div>
 
-          <div className="flex flex-wrap items-center gap-4 ml-auto md:ml-0">
-            <button
-              onClick={() => {
-                setTempVisibleColumns(visibleColumns);
-                setIsSettingsModalOpen(true);
-              }}
-              className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:text-indigo-600 transition-all shadow-sm"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
-            <button
-              onClick={handleAdd}
-              className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:translate-y-[-2px] transition-all active:scale-95"
-            >
-              <UserPlus className="w-4 h-4" />
-              Add User
-            </button>
+            <div className="flex flex-wrap items-center gap-3 ml-auto md:ml-0">
+              <button
+                onClick={() => {
+                  setTempVisibleColumns(visibleColumns);
+                  setIsSettingsModalOpen(true);
+                }}
+                className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 transition-all flex items-center justify-center shadow-xs"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+              <button
+                onClick={handleAdd}
+                className="group relative flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-semibold shadow-[0_4px_12px_-2px_rgba(79,70,229,0.3)] hover:bg-indigo-700 transition-all active:scale-95"
+              >
+                <UserPlus className="relative w-4 h-4" />
+                <span className="relative">Add User</span>
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Users Table Card */}
-        <div className="bg-white/80 backdrop-blur-xl border border-white rounded-[2.5rem] shadow-2xl shadow-slate-200/60 overflow-hidden relative border-t-4 border-t-indigo-600 text-left">
-          <div className="overflow-x-auto custom-scrollbarThin">
+        <div className="bg-white border border-slate-100 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative text-left">
+          <div className="overflow-auto max-h-[calc(100vh-260px)] custom-scrollbarThin">
             <table className="w-full text-left text-[13px] border-collapse min-w-[1000px]">
-              <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
+              <thead className="sticky top-0 z-20 bg-slate-50 border-b border-slate-100 shadow-xs">
+                <tr className="bg-slate-50 border-b border-slate-100">
                   <th className="px-6 py-5 font-black text-slate-700 uppercase tracking-wider text-[11px] border-r border-slate-100 w-16 text-center">#</th>
 
                   {visibleColumns.includes('id') && (
@@ -373,9 +395,14 @@ export default function UsersList() {
                     {visibleColumns.includes('id') && <td className="px-6 py-5 border-r border-slate-50 font-bold">{user.id}</td>}
 
                     <td className="px-6 py-5 border-r border-slate-50">
-                      <span className="font-extrabold text-slate-900 group-hover:text-indigo-700 transition-colors">
+                      <button
+                        type="button"
+                        onClick={() => handleViewPreview(user)}
+                        className="text-left font-extrabold text-slate-900 group-hover:text-indigo-700 hover:underline cursor-pointer transition-colors"
+                        title="Click to view user details"
+                      >
                         {user.name}
-                      </span>
+                      </button>
                     </td>
                     <td className="px-6 py-5 border-r border-slate-50 text-slate-500 font-medium">
                       {user.email}
@@ -463,12 +490,186 @@ export default function UsersList() {
         </div>
       )}
 
-      {/* Add/Edit Modal */}
+      {/* User Details Preview Modal */}
+      {previewUser && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => setPreviewUser(null)}
+          />
+
+          <div className="relative bg-white rounded-[2.5rem] w-full max-w-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white">
+            {/* Header Banner */}
+            <div className="relative bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 p-8 text-white">
+              <button
+                onClick={() => setPreviewUser(null)}
+                className="absolute right-6 top-6 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
+                title="Close preview"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-500 to-blue-400 flex items-center justify-center text-white text-xl font-black shadow-lg shadow-indigo-500/30">
+                  {previewUser.name
+                    ? previewUser.name
+                        .split(' ')
+                        .map((n) => n[0])
+                        .slice(0, 2)
+                        .join('')
+                        .toUpperCase()
+                    : 'U'}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h2 className="text-2xl font-black tracking-tight text-white">
+                      {previewUser.name}
+                    </h2>
+                    <span
+                      className={`px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                        previewUser.status === 'Active'
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          : 'bg-slate-500/20 text-slate-300 border border-slate-500/30'
+                      }`}
+                    >
+                      {previewUser.status}
+                    </span>
+                  </div>
+                  <p className="text-indigo-200 text-xs font-semibold mt-1 flex items-center gap-1.5">
+                    <Shield className="w-3.5 h-3.5 text-indigo-300" />
+                    {previewUser.role}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Content Details */}
+            <div className="p-8 space-y-6 max-h-[65vh] overflow-y-auto custom-scrollbar">
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">
+                  Account Information
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {/* Full Name */}
+                  <div className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                      <User className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name</p>
+                      <p className="text-sm font-bold text-slate-800 truncate">{previewUser.name || '—'}</p>
+                    </div>
+                  </div>
+
+                  {/* Email */}
+                  <div className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</p>
+                      <p className="text-sm font-bold text-slate-800 truncate" title={previewUser.email}>{previewUser.email || '—'}</p>
+                    </div>
+                  </div>
+
+                  {/* Role */}
+                  <div className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                      <Shield className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Role</p>
+                      <p className="text-sm font-bold text-slate-800">{previewUser.role || '—'}</p>
+                    </div>
+                  </div>
+
+                  {/* Mobile No */}
+                  <div className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                      <Phone className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mobile Number</p>
+                      <p className="text-sm font-bold text-slate-800">{previewUser.mobile || '—'}</p>
+                    </div>
+                  </div>
+
+                  {/* User ID */}
+                  <div className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0 font-mono font-bold text-xs">
+                      ID
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">User ID</p>
+                      <p className="text-sm font-bold text-slate-800 font-mono">#{previewUser.id}</p>
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-100 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Account Status</p>
+                      <p className="text-sm font-bold text-slate-800">{previewUser.status || 'Active'}</p>
+                    </div>
+                  </div>
+
+                  {/* Login Password */}
+                  <div className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-100 flex items-center gap-3 sm:col-span-2">
+                    <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                      <KeyRound className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Login Password</p>
+                      <p className="text-sm font-bold text-slate-800 font-mono tracking-wider">
+                        {showPreviewPassword ? (previewUser.password || '••••••••') : '••••••••'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowPreviewPassword((prev) => !prev)}
+                      className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded-xl transition-colors"
+                      title={showPreviewPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPreviewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className="p-6 bg-slate-50/50 border-t border-slate-100 flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setPreviewUser(null)}
+                className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-bold transition-all shadow-xs"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const userToEdit = previewUser;
+                  setPreviewUser(null);
+                  handleEdit(userToEdit);
+                }}
+                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                Edit User
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsModalOpen(false)} />
 
-          <div className="relative bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white">
+          <div className="relative bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white">
             <div className="p-8 border-b border-slate-50 bg-slate-50/30">
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-2xl font-black text-slate-900 tracking-tight italic uppercase">
@@ -482,64 +683,101 @@ export default function UsersList() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-8 space-y-5">
-              <div className="space-y-1 text-left">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+                {/* Full Name */}
+                <div className="space-y-1 text-left">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
+                </div>
 
-              <div className="space-y-1 text-left">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Email</label>
-                <input
-                  type="email"
-                  required
-                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-              </div>
+                {/* Email */}
+                <div className="space-y-1 text-left">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Email</label>
+                  <input
+                    type="email"
+                    required
+                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
+                </div>
 
-              <div className="grid grid-cols-2 gap-4 text-left">
+                {/* Login Password */}
+                <div className="space-y-1 text-left">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1 truncate block">
+                    Login Password {editingUser && <span className="text-slate-400 font-normal lowercase">(leave blank to keep)</span>}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required={!editingUser}
+                      placeholder={editingUser ? "••••••••" : "Enter login password"}
+                      className="w-full px-4 py-3.5 pr-11 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(prev => !prev)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1"
+                      title={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mobile No */}
+                <div className="space-y-1 text-left">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Mobile No</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
+                    value={formData.mobile}
+                    onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                  />
+                </div>
+
+                {/* Role */}
                 <div className="space-y-1 text-left">
                   <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Role</label>
-                  <select
-                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  >
-                    <option>Admin</option>
-                    <option>Project Manager</option>
-                    <option>Accountant</option>
-                    <option>Vendor Manager</option>
-                    <option>Super Admin</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      className="w-full px-4 py-3.5 pr-10 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
+                      value={formData.role}
+                      onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                    >
+                      <option>Admin</option>
+                      <option>Project Manager</option>
+                      <option>Accountant</option>
+                      <option>Vendor Manager</option>
+                      <option>Super Admin</option>
+                    </select>
+                    <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  </div>
                 </div>
+
+                {/* Status */}
                 <div className="space-y-1 text-left">
                   <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Status</label>
-                  <select
-                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  >
-                    <option>Active</option>
-                    <option>Inactive</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      className="w-full px-4 py-3.5 pr-10 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    >
+                      <option>Active</option>
+                      <option>Inactive</option>
+                    </select>
+                    <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  </div>
                 </div>
-              </div>
-
-              <div className="space-y-1 text-left">
-                <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Mobile No</label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 focus:bg-white transition-all outline-none"
-                  value={formData.mobile}
-                  onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                />
               </div>
 
               <div className="pt-6 flex gap-4">

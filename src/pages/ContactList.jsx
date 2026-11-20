@@ -183,67 +183,72 @@ export default function ContactList() {
   };
 
   return (
-    <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8">
-      <div className="max-w-[1400px] mx-auto space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 sm:px-8 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
-          <div className="space-y-1.5">
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-              Contact List
-            </h1>
-            <p className="text-slate-500 text-sm font-medium flex items-center gap-2">
-              <Users className="w-4 h-4 text-indigo-500" />
-              Manage and organize your professional communication directory.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative group w-full md:w-64">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-              <input
-                type="text"
-                placeholder="Search contacts..."
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all focus:bg-white"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+    <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8 animate-in fade-in duration-700">
+      <div className="max-w-[1400px] mx-auto space-y-4">
+        {/* Modern Header Section (Sticky / Non-scrollable) */}
+        <div className="sticky top-0 z-30 bg-[#fafbfc]/95 backdrop-blur-md py-2.5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:px-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+            <div className="space-y-1.5">
+              <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent">
+                Contact List
+              </h1>
+              <p className="text-slate-500 text-sm font-medium tracking-wide flex items-center gap-3">
+                Manage and organize your professional communication directory
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 font-semibold text-[10px] uppercase tracking-wider">
+                  {filteredContacts.length} CONTACTS
+                </span>
+              </p>
             </div>
 
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <button
-                onClick={() => {
-                  setTempVisibleColumns(visibleColumns);
-                  setIsSettingsModalOpen(true);
-                }}
-                className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-all flex items-center justify-center"
-              >
-                <Settings className="w-5 h-5" />
-              </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative group w-full md:w-64">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Search contacts..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all focus:bg-white"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
 
-              <div className="w-px h-6 bg-slate-200 hidden md:block" />
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                <button
+                  onClick={() => {
+                    setTempVisibleColumns(visibleColumns);
+                    setIsSettingsModalOpen(true);
+                  }}
+                  className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 transition-all flex items-center justify-center shadow-xs"
+                >
+                  <Settings className="w-5 h-5" />
+                </button>
 
-              <button
-                onClick={handleAdd}
-                className="flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold shadow-[0_4px_12px_-2px_rgba(79,70,229,0.3)] hover:bg-indigo-700 transition-all active:scale-95"
-              >
-                <UserPlus className="w-4 h-4" />
-                Add Contact
-              </button>
+                <div className="w-px h-6 bg-slate-200 hidden md:block" />
+
+                <button
+                  onClick={handleAdd}
+                  className="flex flex-1 md:flex-none items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-semibold shadow-[0_4px_12px_-2px_rgba(79,70,229,0.3)] hover:bg-indigo-700 transition-all active:scale-95"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Add Contact
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-100 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
-          <div className="overflow-x-auto custom-scrollbarThin">
+        <div className="bg-white border border-slate-100 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+          <div className="overflow-auto max-h-[calc(100vh-260px)] custom-scrollbarThin">
             <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
-              <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-100">
+              <thead className="sticky top-0 z-20 bg-slate-50 border-b border-slate-100 shadow-xs">
+                <tr className="bg-slate-50 border-b border-slate-100">
                   {visibleColumns.includes('fullName') && renderSortableHeader('fullName', 'Full Name')}
                   {visibleColumns.includes('countryCode') && renderSortableHeader('countryCode', 'Country Code')}
                   {visibleColumns.includes('phone') && renderSortableHeader('phone', 'Phone')}
                   {visibleColumns.includes('email') && renderSortableHeader('email', 'Email')}
                   {visibleColumns.includes('designation') && renderSortableHeader('designation', 'Designation')}
                   {visibleColumns.includes('department') && renderSortableHeader('department', 'Department')}
-                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider text-center sticky right-0 bg-slate-50 z-30 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] border-l border-slate-100">Action</th>
+                  <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider text-center border-l border-slate-100">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100/80">
@@ -312,7 +317,7 @@ export default function ContactList() {
                         </td>
                       )}
 
-                      <td className={`px-6 py-4 text-center sticky right-0 bg-white group-hover:bg-slate-50 transition-colors border-l border-slate-100 shadow-[-4px_0_10px_-4px_rgba(0,0,0,0.05)] ${activeMenuId === contact._id ? 'z-40' : 'z-20'}`}>
+                      <td className="px-6 py-4 text-center bg-white group-hover:bg-slate-50 transition-colors border-l border-slate-100">
                         <div className="relative flex justify-center" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => setActiveMenuId(activeMenuId === contact._id ? null : contact._id)}

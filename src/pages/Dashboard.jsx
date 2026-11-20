@@ -223,19 +223,15 @@ const Dashboard = () => {
           {stats.map((stat, i) => (
             <div
               key={i}
-              onClick={() => setActiveMetric(stat.label)}
-              className={`group relative bg-white/60 backdrop-blur-xl rounded-[2.5rem] p-6 border transition-all duration-500 cursor-pointer overflow-hidden ${activeMetric === stat.label
-                  ? 'border-indigo-400 ring-2 ring-indigo-500/10 shadow-indigo-200/40 shadow-2xl translate-y-[-4px]'
-                  : 'border-white shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-indigo-100 hover:translate-y-[-4px]'
-                }`}
+              onClick={() => navigate(stat.path)}
+              className="group relative bg-white/60 backdrop-blur-xl rounded-[2.5rem] p-6 border border-white shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-indigo-100 hover:translate-y-[-4px] hover:border-indigo-300 transition-all duration-500 cursor-pointer overflow-hidden"
             >
               {/* Animated Background Glow */}
               <div className={`absolute -right-4 -bottom-4 w-24 h-24 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-10 blur-2xl transition-opacity duration-700`} />
 
               <div className="relative z-10">
                 <div className="flex justify-between items-start mb-6">
-                  <div className={`p-3.5 rounded-2xl bg-gradient-to-br ${stat.gradient} text-white shadow-lg ${activeMetric === stat.label ? 'scale-110 shadow-indigo-200' : 'shadow-slate-100 group-hover:scale-110'
-                    } transition-transform duration-500`}>
+                  <div className={`p-3.5 rounded-2xl bg-gradient-to-br ${stat.gradient} text-white shadow-lg shadow-slate-100 group-hover:scale-110 transition-transform duration-500`}>
                     <stat.icon className="w-5 h-5" />
                   </div>
                   <div className="flex items-center gap-2">
@@ -243,15 +239,13 @@ const Dashboard = () => {
                       {stat.isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                       {stat.trend}
                     </span>
-                    {/* Open the full list for this metric, without disturbing the card's own click-to-chart behavior */}
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); navigate(stat.path); }}
+                    {/* Open icon indicating direct navigation */}
+                    <div
                       title={`Open ${stat.label}`}
-                      className="w-7 h-7 shrink-0 rounded-xl bg-white/80 border border-slate-100 text-slate-400 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:text-indigo-600 hover:border-indigo-200 hover:bg-white transition-all shadow-sm"
+                      className="w-7 h-7 shrink-0 rounded-xl bg-white/80 border border-slate-100 text-slate-400 flex items-center justify-center opacity-70 group-hover:opacity-100 group-hover:text-indigo-600 group-hover:border-indigo-200 group-hover:bg-white group-hover:translate-x-0.5 transition-all shadow-sm"
                     >
                       <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                    </div>
                   </div>
                 </div>
                 <h3 className="text-slate-600 text-[11px] font-black uppercase tracking-[0.2em] mb-1 pl-1">{stat.label}</h3>
@@ -259,7 +253,7 @@ const Dashboard = () => {
                   <p className="text-3xl font-black text-slate-800 tracking-tight">
                     {loading ? "..." : stat.value}
                   </p>
-                  <div className={`transition-all duration-500 translate-x-2 group-hover:translate-x-0 ${activeMetric === stat.label ? 'opacity-100 translate-x-0 scale-110' : 'opacity-0 group-hover:opacity-100'}`}>
+                  <div className="transition-all duration-500 translate-x-2 group-hover:translate-x-0 opacity-0 group-hover:opacity-100">
                     <Sparkline color={stat.color} data={stat.data} />
                   </div>
                 </div>

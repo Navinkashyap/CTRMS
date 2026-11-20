@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { createContact, getClients, getContact, updateContact } from "../lib/salesApi";
 import { getDepartments } from "../../lib/departmentApi";
+import { getDesignations } from "../../lib/designationApi";
 import { countryCodes } from "../../lib/countryCodes";
 
 const byNameAsc = (a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" });
@@ -158,6 +159,7 @@ const ContactForm = () => {
 
   const [clients, setClients] = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [designations, setDesignations] = useState([]);
   const [form, setForm] = useState({ ...emptyContact, clientId: searchParams.get("clientId") || "" });
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
@@ -168,9 +170,11 @@ const ContactForm = () => {
     Promise.all([
       getClients().catch(() => []),
       getDepartments().catch(() => []),
-    ]).then(([clientsData, deptData]) => {
+      getDesignations().catch(() => []),
+    ]).then(([clientsData, deptData, desigsData]) => {
       setClients(clientsData || []);
       setDepartments(deptData || []);
+      setDesignations(desigsData || []);
 
       const paramClientId = searchParams.get("clientId");
       if (paramClientId && clientsData?.length) {
@@ -435,14 +439,31 @@ const ContactForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Designation */}
               <FormField label="Designation">
-                <input
-                  name="designation"
-                  type="text"
-                  className={inputClass}
-                  placeholder="e.g. Procurement Lead"
-                  value={form.designation}
-                  onChange={handleChange}
-                />
+                {designations.length > 0 ? (
+                  <SelectField
+                    value={form.designation}
+                    onChange={(e) => updateField("designation", e.target.value)}
+                  >
+                    <option value="">Select designation</option>
+                    {designations.map((d) => (
+                      <option key={d._id || d.name} value={d.name}>
+                        {d.name}
+                      </option>
+                    ))}
+                    {form.designation && !designations.some((d) => d.name === form.designation) && (
+                      <option value={form.designation}>{form.designation}</option>
+                    )}
+                  </SelectField>
+                ) : (
+                  <input
+                    name="designation"
+                    type="text"
+                    className={inputClass}
+                    placeholder="e.g. Software Developer"
+                    value={form.designation}
+                    onChange={handleChange}
+                  />
+                )}
               </FormField>
 
               {/* Department */}

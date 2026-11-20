@@ -135,39 +135,42 @@ export default function ViewContact() {
     '';
 
   return (
-    <div className="font-sans text-slate-900 pb-6 min-h-screen bg-[#fafbfc] p-4 sm:p-6 animate-in fade-in duration-700">
-      <div className="max-w-[1200px] mx-auto space-y-4">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/60 backdrop-blur-md py-3.5 px-5 sm:px-6 rounded-2xl border border-white/80 shadow-xs">
-          <div className="flex items-center gap-3.5">
-            <button
-              onClick={() => navigate('/contacts')}
-              className="p-2 bg-white text-slate-600 hover:text-indigo-600 rounded-xl shadow-xs hover:shadow-sm transition-all group shrink-0"
-            >
-              <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
-            </button>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2.5">
-                {contact.firstName} {contact.lastName}
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200">
-                  {contact.designation || 'Contact'}
-                </span>
-              </h1>
-              <p className="text-slate-500 text-xs font-medium tracking-wide">
-                Professional Contact Profile
-              </p>
+    <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8 animate-in fade-in duration-700">
+      <div className="max-w-[1400px] mx-auto space-y-4">
+        {/* Modern Header Section (Sticky / Non-scrollable) */}
+        <div className="sticky top-0 z-30 bg-[#fafbfc]/95 backdrop-blur-md py-2.5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:px-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+            <div className="flex items-center gap-3.5">
+              <button
+                onClick={() => navigate('/contacts')}
+                className="p-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-indigo-600 rounded-2xl border border-slate-200 transition-all group shrink-0"
+                title="Back to Contact List"
+              >
+                <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+              </button>
+              <div className="space-y-1">
+                <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent flex items-center gap-2.5">
+                  {contact.firstName} {contact.lastName}
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200">
+                    {contact.designation || 'Contact'}
+                  </span>
+                </h1>
+                <p className="text-slate-500 text-xs sm:text-sm font-medium tracking-wide">
+                  Professional Contact Profile
+                </p>
+              </div>
             </div>
+            <button
+              onClick={() => navigate('/contacts/add-contact', { state: { contact } })}
+              className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-semibold shadow-[0_4px_12px_-2px_rgba(79,70,229,0.3)] hover:bg-indigo-700 transition-all active:scale-95"
+            >
+              Edit Contact
+            </button>
           </div>
-          <button
-            onClick={() => navigate('/contacts/add-contact', { state: { contact } })}
-            className="px-5 py-2 bg-white border border-slate-200 text-slate-700 hover:border-indigo-600 hover:text-indigo-600 rounded-lg text-sm font-semibold transition-all shadow-xs flex items-center gap-2 justify-center"
-          >
-            Edit Contact
-          </button>
         </div>
 
         {/* Details Grid */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
           <div className="p-4 sm:p-6 lg:p-7 space-y-4 sm:space-y-5">
 
             {/* Section 1: Primary Info */}

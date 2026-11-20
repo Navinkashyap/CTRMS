@@ -167,41 +167,50 @@ export default function VendorUsers() {
   };
 
   return (
-    <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8">
-      <div className="max-w-[1400px] mx-auto space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 sm:px-8 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
-          <div className="space-y-1.5">
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Vendors</h1>
-            <p className="text-slate-500 text-sm font-medium">
-              Create vendor accounts that can log in to the Vendor portal.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative group w-full md:w-64">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search vendors..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500"
-              />
+    <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8 animate-in fade-in duration-700">
+      <div className="max-w-[1400px] mx-auto space-y-4">
+        {/* Modern Header Section (Sticky / Non-scrollable) */}
+        <div className="sticky top-0 z-30 bg-[#fafbfc]/95 backdrop-blur-md py-2.5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:px-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+            <div className="space-y-1.5">
+              <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent">
+                Vendors
+              </h1>
+              <p className="text-slate-500 text-sm font-medium tracking-wide flex items-center gap-3">
+                Create vendor accounts that can log in to the Vendor portal
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 font-semibold text-[10px] uppercase tracking-wider">
+                  {filtered.length} VENDORS
+                </span>
+              </p>
             </div>
-            <button
-              onClick={openAdd}
-              className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-all active:scale-95"
-            >
-              <Plus className="w-4 h-4" />
-              Add Vendor
-            </button>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative group w-full md:w-64">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Search vendors..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all focus:bg-white"
+                />
+              </div>
+              <button
+                onClick={openAdd}
+                className="group relative flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-semibold shadow-[0_4px_12px_-2px_rgba(79,70,229,0.3)] hover:bg-indigo-700 transition-all active:scale-95"
+              >
+                <Plus className="relative w-4 h-4" />
+                <span>Add Vendor</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-100 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-x-auto">
-          <table className="w-full text-left text-sm border-collapse min-w-[800px]">
-            <thead>
-              <tr className="bg-slate-50/80 border-b border-slate-100">
+        <div className="bg-white border border-slate-100 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative">
+          <div className="overflow-auto max-h-[calc(100vh-260px)] custom-scrollbar">
+            <table className="w-full text-left text-sm border-collapse min-w-[800px]">
+              <thead className="sticky top-0 z-20 bg-slate-50 border-b border-slate-100 shadow-xs">
+                <tr className="bg-slate-50 border-b border-slate-100">
                 <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">S.No.</th>
                 {[
                   { label: 'Name', key: 'name' },
@@ -292,6 +301,7 @@ export default function VendorUsers() {
                 ))}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, User, Phone, Mail, Calendar, MapPin, CheckCircle2, ChevronDown } from 'lucide-react';
 
@@ -6,6 +6,53 @@ const Header = ({ onToggleSidebar, onToggleMobileMenu }) => {
   const navigate = useNavigate();
   const [dropOpen, setDropOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const closeTimerRef = useRef(null);
+
+  const handleMouseEnter = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  const handleMouseLeave = () => {
+    // Keep dropdown card stable for ~2.5 seconds when mouse drifts away
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+    }
+    closeTimerRef.current = setTimeout(() => {
+      setDropOpen(false);
+    }, 2500);
+  };
+
+  const toggleDropdown = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setDropOpen((p) => !p);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        if (closeTimerRef.current) {
+          clearTimeout(closeTimerRef.current);
+          closeTimerRef.current = null;
+        }
+        setDropOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, []);
   const [profileData, setProfileData] = useState({
     mobile: '',
     email: 'piyush@perfectrans.com',
@@ -56,10 +103,17 @@ const Header = ({ onToggleSidebar, onToggleMobileMenu }) => {
         <div className="flex-1" />
 
         {/* User profile */}
-        <div className="relative" onMouseLeave={() => setDropOpen(false)}>
+        <div
+          ref={dropdownRef}
+          className="relative"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
           <button
-            onClick={() => setDropOpen((p) => !p)}
-            className="flex items-center gap-3 p-1.5 pr-4 rounded-full hover:bg-white transition-all border border-transparent hover:border-slate-200 hover:shadow-sm outline-none"
+            onClick={toggleDropdown}
+            className="flex items-center gap-3 p-1.5 pr-4 rounded-full hover:bg-white transition-all border border-transparent hover:border-slate-200 hover:shadow-sm outline-none cursor-pointer"
+            aria-label="User menu"
+            aria-expanded={dropOpen}
           >
             {/* Avatar placeholder */}
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white text-[13px] font-extrabold shadow-inner ring-2 ring-white">
@@ -72,24 +126,47 @@ const Header = ({ onToggleSidebar, onToggleMobileMenu }) => {
           </button>
 
           {dropOpen && (
-            <div className="absolute right-0 top-[calc(100%+8px)] bg-white/90 backdrop-blur-2xl border border-white rounded-2xl min-w-[200px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-[200] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 origin-top-right">
+            <div
+              className="absolute right-0 top-[calc(100%+8px)] before:content-[''] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 bg-white/95 backdrop-blur-2xl border border-slate-100 rounded-2xl min-w-[210px] shadow-[0_12px_36px_rgba(0,0,0,0.12)] z-[200] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 origin-top-right"
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
+              {/* User Quick Info Header */}
+              <div className="px-4 py-3 bg-slate-50/70 border-b border-slate-100">
+                <p className="text-[13px] font-extrabold text-slate-800 m-0 leading-tight">Piyush Kumar</p>
+                <p className="text-[11px] font-semibold text-indigo-600 m-0 mt-0.5">Super Admin</p>
+              </div>
+
               <div className="p-2 flex flex-col gap-1">
-                {["Profile", "Settings", "Logout"].map((item) => (
+                {[
+                  {
+                    name: "Profile",
+                    icon: "fa-regular fa-user",
+                    action: () => setIsProfileModalOpen(true),
+                  },
+                  {
+                    name: "Settings",
+                    icon: "fa-solid fa-gear",
+                    action: () => navigate("/menus"),
+                  },
+                  {
+                    name: "Logout",
+                    icon: "fa-solid fa-arrow-right-from-bracket",
+                    textClass: "text-rose-600 hover:bg-rose-50 hover:text-rose-700",
+                    action: () => navigate("/logout"),
+                  },
+                ].map((item) => (
                   <button
-                    key={item}
+                    key={item.name}
                     onClick={() => {
+                      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
                       setDropOpen(false);
-                      if (item === "Profile") {
-                        setIsProfileModalOpen(true);
-                      } else if (item === "Settings") {
-                        navigate("/menus");
-                      } else if (item === "Logout") {
-                        navigate("/logout");
-                      }
+                      item.action();
                     }}
-                    className="w-full text-left px-4 py-2.5 text-[14px] font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/50 rounded-xl transition-all outline-none"
+                    className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/60 rounded-xl transition-all outline-none border-none cursor-pointer text-left ${item.textClass || ''}`}
                   >
-                    {item}
+                    <i className={`${item.icon} w-4 text-center text-xs opacity-75`} />
+                    <span>{item.name}</span>
                   </button>
                 ))}
               </div>

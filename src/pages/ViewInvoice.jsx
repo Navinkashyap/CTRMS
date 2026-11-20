@@ -40,27 +40,47 @@ export default function ViewInvoice() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 text-slate-900 pb-20 animate-in fade-in duration-500">
-      <div className="max-w-5xl mx-auto p-4 md:p-8 space-y-6">
+    <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8 animate-in fade-in duration-500">
+      <div className="max-w-[1200px] mx-auto space-y-4">
         
-        {/* Header Actions */}
-        <div className="flex items-center justify-between print:hidden">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 font-bold transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back to Invoices
-          </button>
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all active:scale-95"
-          >
-            <Printer className="w-4 h-4" /> Print Invoice
-          </button>
+        {/* Modern Header Section (Sticky / Non-scrollable) */}
+        <div className="sticky top-0 z-30 bg-[#fafbfc]/95 backdrop-blur-md py-2.5 print:hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:px-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+            <div className="flex items-center gap-3.5">
+              <button
+                onClick={() => navigate(-1)}
+                className="p-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-indigo-600 rounded-2xl border border-slate-200 transition-all group shrink-0"
+                title="Back to Invoices"
+              >
+                <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+              </button>
+              <div className="space-y-1">
+                <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent flex items-center gap-2.5">
+                  Invoice Details
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200">
+                    {invoice.invoiceNumber}
+                  </span>
+                </h1>
+                <p className="text-slate-500 text-xs sm:text-sm font-medium tracking-wide">
+                  Invoice details, billing breakdown, and payment status
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => window.print()}
+                className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-semibold shadow-[0_4px_12px_-2px_rgba(79,70,229,0.3)] hover:bg-indigo-700 transition-all active:scale-95"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Print Invoice</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* INVOICE PAPER */}
-        <div className="bg-white border border-slate-200 rounded-[2rem] shadow-2xl shadow-slate-200/50 overflow-hidden print:shadow-none print:border-none print:rounded-none printable-invoice">
+        <div className="bg-white border border-slate-200 rounded-3xl shadow-2xl shadow-slate-200/50 overflow-hidden print:shadow-none print:border-none print:rounded-none printable-invoice">
           
           {/* Top Brand & Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 border-b border-slate-100">
@@ -125,9 +145,9 @@ export default function ViewInvoice() {
           </div>
 
           {/* Items Table */}
-          <div className="overflow-x-auto">
+          <div className="overflow-auto max-h-[400px] custom-scrollbar">
             <table className="w-full text-sm text-left">
-              <thead>
+              <thead className="sticky top-0 z-20 shadow-xs">
                 <tr className="bg-slate-900 text-white">
                   <th className="px-6 py-3 font-bold uppercase tracking-wider text-xs w-20 text-center">No.</th>
                   <th className="px-6 py-3 font-bold uppercase tracking-wider text-xs">Particulars</th>

@@ -7,6 +7,7 @@ import {
   CircleCheckBig,
 } from 'lucide-react';
 import { getDepartments } from '../lib/departmentApi';
+import { getDesignations } from '../lib/designationApi';
 import { createContact, updateContact } from '../lib/contactApi';
 import { getClients } from '../lib/clientApi';
 import { countryCodes } from '../lib/countryCodes';
@@ -427,6 +428,7 @@ export default function AddContact() {
 
   const [formData, setFormData] = useState(emptyContact);
   const [departments, setDepartments] = useState([]);
+  const [designations, setDesignations] = useState([]);
   const [clients, setClients] = useState([]);
 
   const [successMessage, setSuccessMessage] = useState('');
@@ -436,12 +438,14 @@ export default function AddContact() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [depsData, clientsData] = await Promise.all([
+        const [depsData, clientsData, desigsData] = await Promise.all([
           getDepartments().catch(() => []),
           getClients().catch(() => []),
+          getDesignations().catch(() => []),
         ]);
         setDepartments(depsData || []);
         setClients(clientsData || []);
+        setDesignations(desigsData || []);
       } catch (err) {
         console.error('Failed to fetch data', err);
       }
@@ -764,13 +768,30 @@ export default function AddContact() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Designation */}
               <FormField label="Designation">
-                <input
-                  type="text"
-                  className={inputClass}
-                  placeholder="e.g. Procurement Lead"
-                  value={formData.designation}
-                  onChange={(e) => updateField('designation', e.target.value)}
-                />
+                {designations.length > 0 ? (
+                  <SelectField
+                    value={formData.designation}
+                    onChange={(e) => updateField('designation', e.target.value)}
+                  >
+                    <option value="">Select designation</option>
+                    {designations.map((d) => (
+                      <option key={d._id || d.name} value={d.name}>
+                        {d.name}
+                      </option>
+                    ))}
+                    {formData.designation && !designations.some((d) => d.name === formData.designation) && (
+                      <option value={formData.designation}>{formData.designation}</option>
+                    )}
+                  </SelectField>
+                ) : (
+                  <input
+                    type="text"
+                    className={inputClass}
+                    placeholder="e.g. Software Developer"
+                    value={formData.designation}
+                    onChange={(e) => updateField('designation', e.target.value)}
+                  />
+                )}
               </FormField>
 
               {/* Department */}
