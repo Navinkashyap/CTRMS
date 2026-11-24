@@ -125,47 +125,51 @@ export default function RoleAction() {
     }, [actions, searchQuery, sortConfig]);
 
     return (
-        <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
-            <div className="max-w-[1200px] mx-auto space-y-8">
+        <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8 animate-in fade-in duration-700">
+            <div className="max-w-[1400px] mx-auto space-y-4">
 
-                {/* Modern Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/60 shadow-sm">
-                    <div className="space-y-1">
-                        <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent italic">
-                            Role Action Permission
-                        </h1>
-                        <p className="text-slate-500 font-medium tracking-wide flex items-center gap-2">
-                            <ShieldCheck className="w-4 h-4 text-blue-600" />
-                            Manage access control matrix for all system roles.
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <div className="relative group">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 group-focus-within:text-blue-500 transition-colors" />
-                            <input
-                                type="text"
-                                placeholder="Search actions..."
-                                className="pl-10 pr-4 py-2.5 bg-white/80 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm w-64"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
+                {/* Modern Header Section (Sticky / Non-scrollable) */}
+                <div className="sticky top-0 z-30 bg-[#fafbfc]/95 backdrop-blur-md py-2.5">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:px-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+                        <div className="space-y-1.5">
+                            <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent">
+                                Role Action Permission
+                            </h1>
+                            <p className="text-slate-500 text-sm font-medium tracking-wide flex items-center gap-3">
+                                Manage access control matrix for all system roles
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100 font-semibold text-[10px] uppercase tracking-wider">
+                                    {filteredActions.length} ACTIONS
+                                </span>
+                            </p>
                         </div>
-                        <button className="p-2.5 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 transition-all shadow-sm">
-                            <Filter className="w-5 h-5" />
-                        </button>
+
+                        <div className="flex items-center gap-3">
+                            <div className="relative group w-full md:w-64">
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                                <input
+                                    type="text"
+                                    placeholder="Search actions..."
+                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all focus:bg-white"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                            <button className="inline-flex items-center justify-center w-10 h-10 bg-white border border-slate-200 rounded-2xl text-slate-600 hover:bg-slate-50 transition-all shadow-xs" title="Filters">
+                                <Filter className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 {/* Permission Matrix Card */}
-                <div className="bg-white/80 backdrop-blur-xl border border-white rounded-[3rem] shadow-2xl shadow-slate-200/60 overflow-hidden relative border-t-4 border-t-blue-600">
-                    <div className="overflow-x-auto custom-scrollbar">
+                <div className="bg-white border border-slate-100 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative">
+                    <div className="overflow-auto max-h-[calc(100vh-260px)] custom-scrollbar">
                         <table className="w-full text-left text-[13px] border-collapse min-w-[1200px]">
-                            <thead className="sticky top-0 z-10">
-                                <tr className="bg-slate-50/80 backdrop-blur-md border-b border-slate-100">
+                            <thead className="sticky top-0 z-20 shadow-xs">
+                                <tr className="bg-slate-50 border-b border-slate-100">
                                     <th
                                         onClick={() => requestSort('name')}
-                                        className="px-8 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px] bg-slate-50/50 sticky left-0 z-20 w-[280px] cursor-pointer select-none group/th hover:text-blue-600 transition-colors"
+                                        className="px-8 py-6 font-black text-slate-600 uppercase tracking-[0.2em] text-[10px] bg-slate-50 sticky left-0 z-30 w-[280px] cursor-pointer select-none group/th hover:text-blue-600 transition-colors"
                                         title="Sort by Action"
                                     >
                                         <div className="inline-flex items-center gap-1.5">

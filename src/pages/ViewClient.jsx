@@ -119,48 +119,51 @@ export default function ViewClient() {
   );
 
   return (
-    <div className="font-sans text-slate-900 pb-6 min-h-screen bg-[#fafbfc] p-4 sm:p-6 animate-in fade-in duration-700">
+    <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8 animate-in fade-in duration-700">
       <div className="max-w-[1400px] mx-auto space-y-4">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/60 backdrop-blur-md py-3.5 px-5 sm:px-6 rounded-2xl border border-white/80 shadow-xs">
-          <div className="flex items-center gap-3.5">
-            <button
-              onClick={() => navigate('/clients')}
-              className="p-2 bg-white text-slate-600 hover:text-indigo-600 rounded-xl shadow-xs hover:shadow-sm transition-all group shrink-0"
-            >
-              <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
-            </button>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2.5">
-                {client.name}
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${['Active', 'Client'].includes(client.status)
-                    ? 'text-emerald-700 bg-emerald-50 border border-emerald-200'
-                    : ['Onboarding', 'Prospect Warm'].includes(client.status)
-                      ? 'text-amber-700 bg-amber-50 border border-amber-200'
-                      : client.status === 'Prospect Cold'
-                        ? 'text-blue-700 bg-blue-50 border border-blue-200'
-                        : 'text-slate-600 bg-slate-100 border border-slate-200'
-                    }`}
-                >
-                  {client.status}
-                </span>
-              </h1>
-              <p className="text-slate-500 text-xs font-medium tracking-wide">
-                Client Profile & Details
-              </p>
+        {/* Modern Header Section (Sticky / Non-scrollable) */}
+        <div className="sticky top-0 z-30 bg-[#fafbfc]/95 backdrop-blur-md py-2.5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:px-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+            <div className="flex items-center gap-3.5">
+              <button
+                onClick={() => navigate('/clients')}
+                className="p-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-indigo-600 rounded-2xl border border-slate-200 transition-all group shrink-0"
+                title="Back to Client List"
+              >
+                <ChevronLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+              </button>
+              <div className="space-y-1">
+                <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent flex items-center gap-2.5">
+                  {client.name}
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${['Active', 'Client'].includes(client.status)
+                      ? 'text-emerald-700 bg-emerald-50 border border-emerald-200'
+                      : ['Onboarding', 'Prospect Warm'].includes(client.status)
+                        ? 'text-amber-700 bg-amber-50 border border-amber-200'
+                        : client.status === 'Prospect Cold'
+                          ? 'text-blue-700 bg-blue-50 border border-blue-200'
+                          : 'text-slate-600 bg-slate-100 border border-slate-200'
+                      }`}
+                  >
+                    {client.status}
+                  </span>
+                </h1>
+                <p className="text-slate-500 text-xs sm:text-sm font-medium tracking-wide">
+                  Client Profile & Details
+                </p>
+              </div>
             </div>
+            <button
+              onClick={() => navigate('/clients/add-client', { state: { client } })}
+              className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-semibold shadow-[0_4px_12px_-2px_rgba(79,70,229,0.3)] hover:bg-indigo-700 transition-all active:scale-95"
+            >
+              Edit Profile
+            </button>
           </div>
-          <button
-            onClick={() => navigate('/clients/add-client', { state: { client } })}
-            className="px-5 py-2 bg-white border border-slate-200 text-slate-700 hover:border-indigo-600 hover:text-indigo-600 rounded-lg text-sm font-semibold transition-all shadow-xs flex items-center gap-2 justify-center"
-          >
-            Edit Profile
-          </button>
         </div>
 
         {/* Details Grid */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
           <div className="p-4 sm:p-6 lg:p-7">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4">
               <div className="space-y-4 sm:space-y-5">

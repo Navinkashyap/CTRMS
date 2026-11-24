@@ -16,7 +16,9 @@ import Deadline from "./pages/Deadline";
 import Typelist from "./pages/Typelist";
 import Membership from "./pages/Membership";
 import Department from "./pages/Department";
+import Designation from "./pages/Designation";
 import Unit from "./pages/Unit";
+import PayDuration from "./pages/PayDuration";
 import RoleAction from "./pages/RoleAction";
 import Action from "./pages/Action";
 import MangerRole from "./pages/MangerRole";
@@ -136,7 +138,9 @@ const App = () => {
           <Route path="master/type" element={<Typelist />} />
           <Route path="master/membership" element={<Membership />} />
           <Route path="master/department" element={<Department />} />
+          <Route path="master/designation" element={<Designation />} />
           <Route path="master/unit" element={<Unit />} />
+          <Route path="master/pay-duration" element={<PayDuration />} />
 
           <Route path="roles/manage-role" element={<MangerRole />} />
 

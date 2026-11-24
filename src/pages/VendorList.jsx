@@ -125,39 +125,41 @@ export default function VendorList() {
     <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8 animate-in fade-in duration-700">
       <div className="max-w-[1400px] mx-auto space-y-4">
 
-        {/* Modern Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:px-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
-          <div className="space-y-1.5">
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
-              Vendor Manger
-            </h1>
-            <p className="text-slate-500 text-sm font-medium tracking-wide flex items-center gap-3">
-              Global Resource Management
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 font-semibold text-[10px] uppercase tracking-wider">
-                {filteredVendors.length} ACTIVE VENDORS
-              </span>
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="relative group hidden lg:block">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
-              <input
-                type="text"
-                placeholder="Quick Search..."
-                className="w-72 pl-10 pr-4 py-2.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all focus:bg-white"
-                value={filters.name}
-                onChange={(e) => handleFilterChange('name', e.target.value)}
-              />
+        {/* Modern Header Section (Sticky / Non-scrollable) */}
+        <div className="sticky top-0 z-30 bg-[#fafbfc]/95 backdrop-blur-md py-2.5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:px-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+            <div className="space-y-1.5">
+              <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent">
+                Vendor Manger
+              </h1>
+              <p className="text-slate-500 text-sm font-medium tracking-wide flex items-center gap-3">
+                Global Resource Management
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 font-semibold text-[10px] uppercase tracking-wider">
+                  {filteredVendors.length} ACTIVE VENDORS
+                </span>
+              </p>
             </div>
 
-            <button
-              onClick={() => navigate('/vendors/add-vendor')}
-              className="group relative flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-semibold shadow-[0_4px_12px_-2px_rgba(79,70,229,0.3)] hover:bg-indigo-700 transition-all active:scale-95"
-            >
-              <Plus className="relative w-4 h-4" />
-              <span className="relative">Add Vendor Manger</span>
-            </button>
+            <div className="flex items-center gap-4">
+              <div className="relative group hidden lg:block">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Quick Search..."
+                  className="w-72 pl-10 pr-4 py-2.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all focus:bg-white"
+                  value={filters.name}
+                  onChange={(e) => handleFilterChange('name', e.target.value)}
+                />
+              </div>
+
+              <button
+                onClick={() => navigate('/vendors/add-vendor')}
+                className="group relative flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-semibold shadow-[0_4px_12px_-2px_rgba(79,70,229,0.3)] hover:bg-indigo-700 transition-all active:scale-95"
+              >
+                <Plus className="relative w-4 h-4" />
+                <span className="relative">Add Vendor Manger</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -203,10 +205,10 @@ export default function VendorList() {
 
         {/* Premium Vendor Table */}
         <div className="bg-white border border-slate-100 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative">
-          <div className="overflow-x-auto custom-scrollbarThin">
+          <div className="overflow-auto max-h-[calc(100vh-320px)] custom-scrollbarThin">
             <table className="w-full text-left text-sm border-collapse min-w-[900px]">
-              <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-100/80">
+              <thead className="sticky top-0 z-20 bg-slate-50 border-b border-slate-100 shadow-xs">
+                <tr className="bg-slate-50 border-b border-slate-100">
                   <th className="px-6 py-3 w-32">
                     <div className="flex flex-col gap-2">
                       <div

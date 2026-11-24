@@ -55,7 +55,9 @@ const navItems = [
       { label: "Domain", to: "/master/type" },
       { label: "Membership", to: "/master/membership" },
       { label: "Department", to: "/master/department" },
+      { label: "Designation", to: "/master/designation" },
       { label: "Unit", to: "/master/unit" },
+      { label: "Pay Duration", to: "/master/pay-duration" },
     ],
   },
   {

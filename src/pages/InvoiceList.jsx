@@ -140,34 +140,38 @@ export default function InvoiceList() {
   }, [invoices, filters, sortConfig]);
 
   return (
-    <div className="font-sans text-slate-900 pb-10 animate-in fade-in duration-700">
-      <div className="max-w-[1400px] mx-auto space-y-8">
+    <div className="font-sans text-slate-900 pb-10 min-h-screen bg-[#fafbfc] p-4 sm:p-8 animate-in fade-in duration-700">
+      <div className="max-w-[1400px] mx-auto space-y-4">
 
-        {/* Premium Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/40 backdrop-blur-md p-6 rounded-[2.5rem] border border-white/60 shadow-sm">
-          <div className="space-y-1">
-            <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent italic text-left">
-              Invoice List
-            </h1>
-            <p className="text-slate-500 font-medium tracking-wide flex items-center gap-2">
-              <FileText className="w-4 h-4 text-indigo-600" />
-              Manage and track all your client invoices and payments.
-            </p>
-          </div>
+        {/* Modern Header Section (Sticky / Non-scrollable) */}
+        <div className="sticky top-0 z-30 bg-[#fafbfc]/95 backdrop-blur-md py-2.5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:px-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+            <div className="space-y-1.5">
+              <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent">
+                Invoice List
+              </h1>
+              <p className="text-slate-500 text-sm font-medium tracking-wide flex items-center gap-3">
+                Manage and track all your client invoices and payments
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 font-semibold text-[10px] uppercase tracking-wider">
+                  {filteredInvoices.length} INVOICES
+                </span>
+              </p>
+            </div>
 
-          <div className="flex flex-wrap items-center gap-4 ml-auto md:ml-0">
-            <button
-              onClick={() => navigate('/invoice/add-invoice')}
-              className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:translate-y-[-2px] transition-all active:scale-95"
-            >
-              <Plus className="w-4 h-4" />
-              Create Invoice
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/invoice/add-invoice')}
+                className="group relative flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-semibold shadow-[0_4px_12px_-2px_rgba(79,70,229,0.3)] hover:bg-indigo-700 transition-all active:scale-95"
+              >
+                <Plus className="relative w-4 h-4" />
+                <span className="relative">Create Invoice</span>
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Invoice Table Card */}
-        <div className="bg-white/80 backdrop-blur-xl border border-white rounded-[2.5rem] shadow-2xl shadow-slate-200/60 overflow-hidden relative border-t-4 border-t-indigo-600">
+        <div className="bg-white border border-slate-100 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="flex flex-col items-center gap-3">
@@ -176,10 +180,10 @@ export default function InvoiceList() {
               </div>
             </div>
           ) : (
-            <div className="overflow-x-auto custom-scrollbarThin">
+            <div className="overflow-auto max-h-[calc(100vh-260px)] custom-scrollbarThin">
               <table className="w-full text-left text-[13px] border-collapse min-w-[1000px] table-fixed">
-                <thead className="sticky top-0 z-20">
-                  <tr className="bg-slate-50/50 border-b border-slate-100">
+                <thead className="sticky top-0 z-20 bg-slate-50 border-b border-slate-100 shadow-xs">
+                  <tr className="bg-slate-50 border-b border-slate-100">
                     <th style={colStyle('idx')} className="relative px-4 py-3 font-black text-slate-700 uppercase tracking-wider text-[11px] border-r border-slate-100 w-12 text-center">#<ResizeHandle colId="idx" /></th>
                     <th style={colStyle('invoiceNo')} className="relative px-4 py-3 border-r border-slate-100 min-w-[200px] text-left">
                       <div className="space-y-2">
