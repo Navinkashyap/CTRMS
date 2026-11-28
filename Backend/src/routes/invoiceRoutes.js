@@ -1,5 +1,5 @@
 import express from "express";
-import Invoice from "../models/Invoice.js";
+import Invoice, { nextInvoiceNumber } from "../models/Invoice.js";
 import Client from "../models/Client.js";
 import { isSameState, calcGst } from "../utils/gst.js";
 
@@ -53,12 +53,7 @@ async function applyGstSplit(data, existing = {}) {
 // Get next invoice number (for frontend preview)
 router.get("/next-number", async (_req, res) => {
   try {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const count = await Invoice.countDocuments();
-    const nextNumber = `${year}-${month}-${String(count + 1).padStart(3, "0")}`;
-    res.json({ invoiceNumber: nextNumber });
+    res.json({ invoiceNumber: await nextInvoiceNumber() });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -94,9 +89,24 @@ router.get("/:id", async (req, res) => {
 // Create invoice
 router.post("/", async (req, res) => {
   try {
-    const invoice = new Invoice(await applyGstSplit(sanitizeInvoiceBody(req.body)));
-    const newInvoice = await invoice.save();
-    res.status(201).json(newInvoice);
+    // The number is always issued here, in serial order. A number typed (or
+    // previewed) on the client may be stale by the time it is saved.
+    const body = await applyGstSplit(sanitizeInvoiceBody(req.body));
+    delete body.invoiceNumber;
+
+    // Two invoices created at the same moment can be handed the same serial;
+    // the unique index rejects the second, so take the next number and retry.
+    let lastError;
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      try {
+        const newInvoice = await new Invoice(body).save();
+        return res.status(201).json(newInvoice);
+      } catch (error) {
+        if (error?.code !== 11000 || !error.keyPattern?.invoiceNumber) throw error;
+        lastError = error;
+      }
+    }
+    throw lastError;
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -106,6 +116,7 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const body = sanitizeInvoiceBody(req.body);
+    delete body.invoiceNumber; // serial numbers are issued once and never edited
     const existing = Array.isArray(body.items)
       ? await Invoice.findById(req.params.id).lean()
       : null;

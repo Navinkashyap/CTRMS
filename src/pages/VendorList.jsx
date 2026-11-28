@@ -130,7 +130,7 @@ export default function VendorList() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 sm:px-6 rounded-3xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
             <div className="space-y-1.5">
               <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent">
-                Vendor Manger
+                Vendor Manager
               </h1>
               <p className="text-slate-500 text-sm font-medium tracking-wide flex items-center gap-3">
                 Global Resource Management
@@ -157,7 +157,7 @@ export default function VendorList() {
                 className="group relative flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-semibold shadow-[0_4px_12px_-2px_rgba(79,70,229,0.3)] hover:bg-indigo-700 transition-all active:scale-95"
               >
                 <Plus className="relative w-4 h-4" />
-                <span className="relative">Add Vendor Manger</span>
+                <span className="relative">Add Vendor Manager</span>
               </button>
             </div>
           </div>
@@ -209,7 +209,7 @@ export default function VendorList() {
             <table className="w-full text-left text-sm border-collapse min-w-[900px]">
               <thead className="sticky top-0 z-20 bg-slate-50 border-b border-slate-100 shadow-xs">
                 <tr className="bg-slate-50 border-b border-slate-100">
-                  <th className="px-6 py-3 w-32">
+                  <th className="px-6 py-3 w-32 align-top">
                     <div className="flex flex-col gap-2">
                       <div
                         onClick={() => requestSort('code')}
@@ -234,7 +234,7 @@ export default function VendorList() {
                       />
                     </div>
                   </th>
-                  <th className="px-6 py-3">
+                  <th className="px-6 py-3 align-top">
                     <div className="flex flex-col gap-2">
                       <div
                         onClick={() => requestSort('name')}
@@ -259,7 +259,7 @@ export default function VendorList() {
                       />
                     </div>
                   </th>
-                  <th className="px-6 py-3">
+                  <th className="px-6 py-3 align-top">
                     <div className="flex flex-col gap-2">
                       <div
                         onClick={() => requestSort('email')}
@@ -284,11 +284,11 @@ export default function VendorList() {
                       />
                     </div>
                   </th>
-                  <th className="px-6 py-3 w-40">
-                    <div className="flex flex-col gap-2 text-center h-[52px] justify-between">
+                  <th className="px-6 py-3 w-40 align-top">
+                    <div className="flex flex-col gap-2 text-center">
                       <div
                         onClick={() => requestSort('rating')}
-                        className="inline-flex items-center justify-center gap-1.5 cursor-pointer select-none group/th hover:text-indigo-600 transition-colors mt-1"
+                        className="inline-flex items-center justify-center gap-1.5 px-1 cursor-pointer select-none group/th hover:text-indigo-600 transition-colors"
                         title="Sort by Ratings"
                       >
                         <span className={`font-semibold text-xs uppercase tracking-wider ${sortConfig.key === 'rating' ? 'text-indigo-600' : 'text-slate-500 group-hover/th:text-indigo-600'}`}>Ratings</span>
@@ -302,14 +302,14 @@ export default function VendorList() {
                       </div>
                     </div>
                   </th>
-                  <th className="px-6 py-3 font-semibold text-slate-500 text-xs text-center uppercase tracking-wider flex-col justify-end pt-[28px]">Actions</th>
+                  <th className="px-6 py-3 w-32 align-top font-semibold text-slate-500 text-xs text-center uppercase tracking-wider"><span className="inline-block px-1">Actions</span></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100/80">
                 {filteredVendors.map((vendor, index) => (
-                  <tr key={vendor._id} className="group hover:bg-slate-50/50 transition-colors">
+                  <tr key={vendor._id} className="group hover:bg-slate-50/50 transition-colors align-middle">
                     <td className="px-6 py-4">
-                      <span className="px-2 py-1 rounded bg-slate-100 text-slate-600 font-mono text-[11px] font-semibold border border-slate-200 text-center">
+                      <span className="inline-block px-2 py-1 rounded bg-slate-100 text-slate-600 font-mono text-[11px] font-semibold border border-slate-200 text-center">
                         {vendor.code}
                       </span>
                     </td>

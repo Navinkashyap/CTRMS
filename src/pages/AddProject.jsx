@@ -10,6 +10,7 @@ import { getSpecializations } from '../lib/specializationApi';
 import { getUnits } from '../lib/unitApi';
 import { getServices } from '../lib/serviceApi';
 import { calcGst, isClientSameState } from '../lib/gst';
+import { sortAlpha } from '../lib/sortOptions';
 
 const DEFAULT_TRANSLATION_TASKS = [
   { taskName: 'Translation', rate: 1 },
@@ -52,9 +53,6 @@ const createDefaultTasks = (currency = 'INR', defaultUnit = 'word') =>
     status: 'Not Started',
   }));
 
-const sortDesc = (list, getKey) =>
-  [...list].sort((a, b) => (getKey(b) || '').localeCompare(getKey(a) || ''));
-
 export default function AddProject() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -76,6 +74,7 @@ export default function AddProject() {
 
   const [formData, setFormData] = useState({
     projectName: '',
+    projectId: '',
     projectCode: '',
     client: '',
     clientContact: '',
@@ -88,6 +87,7 @@ export default function AddProject() {
     startDate: '',
     dueDate: '',
     dueTime: '',
+    dueTimeZone: 'IST',
     description: '',
     translationTool: '',
     subjectMatter: '',
@@ -119,13 +119,13 @@ export default function AddProject() {
           getUnits(),
           getServices(),
         ]);
-        setClients(sortDesc(clientsRes, (c) => c.name));
-        setContacts(sortDesc(contactsRes, (c) => `${c.firstName || ''} ${c.lastName || ''}`.trim()));
-        setLanguages(sortDesc(langsRes, (l) => l.localeCode || l.name));
-        setTools(sortDesc(toolsRes.filter((t) => t.status === 'Active'), (t) => t.name));
-        setSpecializations(sortDesc(specsRes.filter((s) => s.status === 'Active'), (s) => s.name));
-        setUnitsList(sortDesc(unitsRes.filter((u) => u.status !== 'Inactive'), (u) => u.name));
-        setServices(sortDesc(servicesRes.filter((s) => s.status === 'Active'), (s) => s.name));
+        setClients(sortAlpha(clientsRes, (c) => c.name));
+        setContacts(sortAlpha(contactsRes, (c) => `${c.firstName || ''} ${c.lastName || ''}`.trim()));
+        setLanguages(sortAlpha(langsRes, (l) => l.localeCode || l.name));
+        setTools(sortAlpha(toolsRes.filter((t) => t.status === 'Active'), (t) => t.name));
+        setSpecializations(sortAlpha(specsRes.filter((s) => s.status === 'Active'), (s) => s.name));
+        setUnitsList(sortAlpha(unitsRes.filter((u) => u.status !== 'Inactive'), (u) => u.name));
+        setServices(sortAlpha(servicesRes.filter((s) => s.status === 'Active'), (s) => s.name));
 
         const names = [
           ...new Set(
@@ -150,6 +150,7 @@ export default function AddProject() {
             return {
               ...prev,
               projectName: editData.projectName || '',
+              projectId: editData.projectId || '',
               projectCode: editData.projectCode || '',
               client: editData.client?._id || editData.client || '',
               clientContact: editData.clientContact?._id || editData.clientContact || '',
@@ -162,6 +163,7 @@ export default function AddProject() {
               startDate: editData.startDate ? new Date(editData.startDate).toISOString().split('T')[0] : '',
               dueDate: editData.dueDate ? new Date(editData.dueDate).toISOString().split('T')[0] : '',
               dueTime: editData.dueTime || '',
+              dueTimeZone: editData.dueTimeZone || 'IST',
               description: editData.description || '',
               translationTool: editData.translationTool || '',
               subjectMatter: editData.subjectMatter || '',
@@ -238,7 +240,7 @@ export default function AddProject() {
           phone: quickForm.phone || '',
           membershipCode,
         });
-        setClients((prev) => [...prev, created]);
+        setClients((prev) => sortAlpha([...prev, created], (c) => c.name));
         handleInputChange('client', created._id);
       } else {
         const created = await createContact({
@@ -249,7 +251,7 @@ export default function AddProject() {
           company: selectedClient?.name || '',
           clientId: formData.client,
         });
-        setContacts((prev) => [...prev, created]);
+        setContacts((prev) => sortAlpha([...prev, created], (c) => `${c.firstName || ''} ${c.lastName || ''}`.trim()));
         handleInputChange('clientContact', created._id);
       }
       setQuickAdd(null);
@@ -595,6 +597,17 @@ export default function AddProject() {
 
           <div className="ap-card-body">
             <div className="ap-form-grid-2">
+              {/* Project ID */}
+              <div className="ap-field">
+                <label className="ap-label">Project ID</label>
+                <input
+                  type="text"
+                  value={formData.projectId || ''}
+                  onChange={(e) => handleInputChange('projectId', e.target.value)}
+                  className="ap-input"
+                  placeholder="Leave blank to auto-generate (e.g. PT25260050)"
+                />
+              </div>
               {/* Project Code */}
               <div className="ap-field">
                 <label className="ap-label">Project Code</label>
@@ -672,12 +685,25 @@ export default function AddProject() {
                 </div>
                 <div className="ap-field" style={{ flex: 1 }}>
                   <label className="ap-label">Due Time</label>
-                  <input
-                    type="time"
-                    value={formData.dueTime}
-                    onChange={(e) => handleInputChange('dueTime', e.target.value)}
-                    className="ap-input"
-                  />
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="time"
+                      value={formData.dueTime}
+                      onChange={(e) => handleInputChange('dueTime', e.target.value)}
+                      className="ap-input"
+                      style={{ flex: 1 }}
+                    />
+                    <select
+                      value={formData.dueTimeZone || 'IST'}
+                      onChange={(e) => handleInputChange('dueTimeZone', e.target.value)}
+                      className="ap-input"
+                      style={{ width: '90px', flex: 'none' }}
+                      aria-label="Due time zone"
+                    >
+                      <option value="IST">IST</option>
+                      <option value="EST">EST</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               {/* Client PO# */}
@@ -1015,7 +1041,7 @@ export default function AddProject() {
             <div className="ap-billing-layout">
               {/* Left — GST */}
               <div className="ap-billing-left">
-                <label className="ap-label" style={{ fontWeight: 700, fontSize: '14px' }}>GST</label>
+                <label className="ap-label" style={{ fontWeight: 700, fontSize: '14px' }}>GST Applicable</label>
                 <div className="ap-radio-group" style={{ marginTop: '8px' }}>
                   <label className="ap-radio-label">
                     <input

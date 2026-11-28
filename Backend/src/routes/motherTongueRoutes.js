@@ -1,5 +1,6 @@
 import express from "express";
 import MotherTongue from "../models/MotherTongue.js";
+import { syncMotherTongueToLanguage } from "../utils/languageSync.js";
 
 const router = express.Router();
 
@@ -17,6 +18,7 @@ router.get("/", async (_req, res, next) => {
 router.post("/", async (req, res, next) => {
   try {
     const motherTongue = await MotherTongue.create(req.body);
+    await syncMotherTongueToLanguage(motherTongue);
     res.status(201).json(motherTongue);
   } catch (error) {
     next(error);
@@ -26,6 +28,7 @@ router.post("/", async (req, res, next) => {
 // Update mother tongue
 router.put("/:id", async (req, res, next) => {
   try {
+    const before = await MotherTongue.findById(req.params.id).select("name").lean();
     const motherTongue = await MotherTongue.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -33,6 +36,7 @@ router.put("/:id", async (req, res, next) => {
     if (!motherTongue) {
       return res.status(404).json({ message: "Mother tongue not found" });
     }
+    await syncMotherTongueToLanguage(motherTongue, before?.name);
     res.json(motherTongue);
   } catch (error) {
     next(error);

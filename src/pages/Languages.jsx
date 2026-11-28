@@ -288,10 +288,10 @@ export default function Languages() {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[60] flex items-center justify-center p-6 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden border border-white/20 animate-in zoom-in-95 duration-400">
-            <div className="relative px-8 py-8">
-              <div className="flex justify-between items-start mb-6">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[60] flex items-start sm:items-center justify-center px-4 py-8 sm:py-10 overflow-y-auto animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm my-auto max-h-[calc(100vh-4rem)] overflow-y-auto border border-white/20 animate-in zoom-in-95 duration-400">
+            <div className="relative px-7 pt-7 pb-8">
+              <div className="flex justify-between items-start mb-5">
                 <div className="space-y-1">
                   <h2 className="text-2xl font-black text-slate-900 tracking-tight">
                     {editingLanguage ? 'Edit Language' : 'Add Language'}
@@ -303,13 +303,13 @@ export default function Languages() {
                 </button>
               </div>
 
-              <form onSubmit={handleSave} className="space-y-6">
-                <div className="grid grid-cols-1 gap-6">
+              <form onSubmit={handleSave} className="space-y-5">
+                <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-2 group">
                     <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">Language Name</label>
                     <input
                       required autoFocus type="text"
-                      className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
+                      className="w-full px-5 py-3 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
                       value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="e.g. French"
                     />
@@ -319,7 +319,7 @@ export default function Languages() {
                     <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">ISO639-1</label>
                     <input
                       type="text"
-                      className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
+                      className="w-full px-5 py-3 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
                       value={formData.iso639_1} onChange={(e) => setFormData({ ...formData, iso639_1: e.target.value })}
                       placeholder="e.g. fr"
                     />
@@ -329,7 +329,7 @@ export default function Languages() {
                     <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">Two Letter Code</label>
                     <input
                       type="text"
-                      className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
+                      className="w-full px-5 py-3 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
                       value={formData.twoLetterCode} onChange={(e) => setFormData({ ...formData, twoLetterCode: e.target.value })}
                       placeholder="e.g. FR"
                     />
@@ -339,7 +339,7 @@ export default function Languages() {
                     <label className="text-xs font-black text-slate-600 uppercase tracking-widest pl-1">Three Letter Code</label>
                     <input
                       type="text"
-                      className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
+                      className="w-full px-5 py-3 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
                       value={formData.threeLetterCode} onChange={(e) => setFormData({ ...formData, threeLetterCode: e.target.value })}
                       placeholder="e.g. FRA"
                     />
@@ -352,7 +352,7 @@ export default function Languages() {
                     </div>
                     <input
                       type="text"
-                      className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
+                      className="w-full px-5 py-3 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold"
                       value={formData.localeCode} onChange={(e) => setFormData({ ...formData, localeCode: e.target.value })}
                       placeholder="e.g. fr-FR"
                     />
@@ -361,7 +361,7 @@ export default function Languages() {
                   <div className="space-y-2 font-black text-slate-600 uppercase tracking-widest text-[11px]">
                     <label className="pl-1">Select Status</label>
                     <select
-                      className="w-full px-5 py-3.5 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold appearance-none cursor-pointer"
+                      className="w-full px-5 py-3 bg-slate-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-[15px] font-bold appearance-none cursor-pointer"
                       value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     >
                       <option value="Active">Active</option>
@@ -369,7 +369,7 @@ export default function Languages() {
                     </select>
                   </div>
                 </div>
-                <button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 rounded-2xl text-[15px] font-black transition-all shadow-lg active:scale-[0.98]">
+                <button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3.5 rounded-2xl text-[15px] font-black transition-all shadow-lg active:scale-[0.98]">
                   {editingLanguage ? 'Save Changes' : 'Create Language'}
                 </button>
               </form>

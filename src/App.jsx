@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter as Router, Routes, Route, Navigate, Link } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Country from "./pages/Country";
@@ -61,8 +61,11 @@ import SalesProjectView from "./Sales/pages/SalesProjectView";
 import SalesUsersList from "./Sales/pages/SalesUsersList";
 import SalesUserForm from "./Sales/pages/SalesUserForm";
 
-// Generic placeholder for other pages
-const PagePlaceholder = ({ title, icon }) => (
+// Generic placeholder for pages that have no screen of their own yet. It used to
+// carry a "Create New Record" button that did nothing on every one of them (Report,
+// Menu Configuration, Master Data…), so it now only shows one when a page passes a
+// real destination via `action`.
+const PagePlaceholder = ({ title, icon, description, action }) => (
   <div className="flex-1 flex flex-col items-center justify-center text-center bg-white rounded-2xl border border-zinc-200/60 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] min-h-[65vh] animate-in fade-in zoom-in-95 duration-500">
     <div className="relative mb-6">
       <div className="absolute inset-0 bg-[rgb(74,111,212)] blur-[30px] opacity-20 rounded-full"></div>
@@ -70,14 +73,18 @@ const PagePlaceholder = ({ title, icon }) => (
         <i className={`fa-solid ${icon} text-4xl text-[rgb(74,111,212)]`}></i>
       </div>
     </div>
-    <h1 className="text-3xl font-bold text-zinc-900 mb-3 tracking-tight">{title} Workspace</h1>
+    <h1 className="text-3xl font-bold text-zinc-900 mb-3 tracking-tight">{title}</h1>
     <p className="text-zinc-500 max-w-md text-sm leading-relaxed">
-      This is the dedicated management area for the {title} module. Tables, configurations, and analytical tools will be rendered here.
+      {description || `The ${title} module is not available yet.`}
     </p>
-    <button className="mt-8 px-6 py-2.5 bg-[rgb(74,111,212)] hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2 group">
-      <i className="fa-solid fa-plus group-hover:rotate-90 transition-transform duration-300"></i>
-      Create New Record
-    </button>
+    {action && (
+      <Link
+        to={action.to}
+        className="mt-8 px-6 py-2.5 bg-[rgb(74,111,212)] hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2"
+      >
+        {action.label}
+      </Link>
+    )}
   </div>
 );
 
@@ -122,11 +129,11 @@ const App = () => {
 
           <Route index element={<Dashboard />} />
           <Route path="add-admin" element={<AddAdmin />} />
-          <Route path="master" element={<PagePlaceholder title="Master Data" icon="fa-cart-shopping" />} />
+          <Route path="master" element={<PagePlaceholder title="Master Data" icon="fa-cart-shopping" description="Pick a master list (Country, Language, Currency…) from the Master menu on the left." />} />
           <Route path="master/country" element={<Country />} />
           <Route path="master/state" element={<State />} />
           <Route path="master/city" element={<City />} />
-          <Route path="master/district" element={<PagePlaceholder title="District Master" icon="fa-cube" />} />
+          <Route path="master/district" element={<PagePlaceholder title="District Master" icon="fa-cube" description="District management is coming soon." />} />
           <Route path="master/mother-tongue" element={<MotherTongue />} />
           <Route path="master/services" element={<Services />} />
           <Route path="master/tool" element={<Tools />} />
@@ -146,7 +153,7 @@ const App = () => {
 
           <Route path="roles/action" element={<Action />} />
           <Route path="roles/role-action-mapping" element={<RoleAction />} />
-          <Route path="menus" element={<PagePlaceholder title="Menu Configuration" icon="fa-bars-staggered" />} />
+          <Route path="menus" element={<PagePlaceholder title="Menu Configuration" icon="fa-bars-staggered" description="Menu permissions are managed under Role Menu Permission." action={{ label: "Open Role Menu Permission", to: "/menus/role-menu-permission" }} />} />
           <Route path="menus/role-menu-permission" element={<RoleMenuPermission />} />
           <Route path="users" element={<UsersList />} />
           <Route path="vendors" element={<VendorList />} />
@@ -174,9 +181,9 @@ const App = () => {
             <Route path="add-invoice" element={<AddInvoice />} />
             <Route path="view-invoice/:id" element={<ViewInvoice />} />
           </Route>
-          <Route path="report" element={<PagePlaceholder title="Analytics & Reports" icon="fa-chart-pie" />} />
+          <Route path="report" element={<PagePlaceholder title="Analytics & Reports" icon="fa-chart-pie" description="Reports are coming soon. Use the Clients, Projects and Invoice lists for now." />} />
           <Route path="logout" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<PagePlaceholder title="Page Not Found" icon="fa-circle-exclamation" />} />
+          <Route path="*" element={<PagePlaceholder title="Page Not Found" icon="fa-circle-exclamation" description="The page you are looking for does not exist." action={{ label: "Back to Dashboard", to: "/" }} />} />
         </Route>
 
         {/* Sales Portal — separate layout/sidebar, same login */}

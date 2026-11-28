@@ -6,6 +6,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import Project from "../models/Project.js";
 import VMSProject from "../VMS/models/VMSProject.js";
+import Job from "../models/Job.js";
 import { calcGst, isClientSameState } from "../utils/gst.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -187,6 +188,7 @@ export async function buildVmsPayload(projectId) {
       ? new Date(project.deadline).toISOString().slice(0, 10)
       : "",
     dueTime: project.dueTime || "",
+    dueTimeZone: project.dueTimeZone || "IST",
     description: project.description || "",
     instructions: project.description || "",
     isProgramGroup: !!project.isProgramGroup,
@@ -381,11 +383,45 @@ router.post("/", async (req, res) => {
 // Update project
 router.put("/:id", async (req, res) => {
   try {
-    const project = await Project.findByIdAndUpdate(req.params.id, sanitizeProjectBody(req.body), {
+    const body = sanitizeProjectBody(req.body);
+
+    // Project ID (e.g. PT25260050) is editable by Admin and Sales. It is the key
+    // that links this project to its PM copy (VMSProject) and its vendor jobs,
+    // so a change must be unique and must be carried across those records.
+    let renamedFrom = null;
+    if (body.projectId !== undefined) {
+      const requested = String(body.projectId || "").trim();
+      const current = await Project.findById(req.params.id).select("projectId").lean();
+      if (!current) return res.status(404).json({ message: "Project not found" });
+
+      if (!requested || requested === current.projectId) {
+        delete body.projectId; // blank or unchanged: leave the stored ID alone
+      } else {
+        const clash = await Project.exists({ projectId: requested, _id: { $ne: req.params.id } });
+        if (clash) {
+          return res.status(409).json({ message: `Project ID ${requested} is already used by another project.` });
+        }
+        body.projectId = requested;
+        renamedFrom = current.projectId;
+      }
+    }
+
+    const project = await Project.findByIdAndUpdate(req.params.id, body, {
       new: true,
       runValidators: true,
     });
     if (!project) return res.status(404).json({ message: "Project not found" });
+
+    if (renamedFrom && project.projectId !== renamedFrom) {
+      try {
+        await Promise.all([
+          VMSProject.updateMany({ projectId: renamedFrom }, { projectId: project.projectId }),
+          Job.updateMany({ projectId: renamedFrom }, { projectId: project.projectId }),
+        ]);
+      } catch (linkError) {
+        console.error("Failed to carry Project ID change to PM/jobs:", linkError.message);
+      }
+    }
     res.json(project);
 
     // Language pairs and files are usually filled in after creation, so keep the

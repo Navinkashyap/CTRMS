@@ -63,18 +63,8 @@ const Header = ({ onToggleSidebar, onToggleMobileMenu }) => {
     city: '',
     zipCode: '',
     address: 'Delhi',
-    active: true,
-    role: 'Super Admin'
+    active: true
   });
-
-  const roles = [
-    ['Super Admin', 'Admin'],
-    ['Project Head', 'Accountant'],
-    ['Project Manager', 'Project Executive'],
-    ['Sales Head', 'Sales Manager'],
-    ['Sales Executive', 'Accountant'],
-    ['Vendor Manager', 'Vendor']
-  ];
 
   const handleUpdate = (e) => {
     e.preventDefault();
@@ -361,35 +351,6 @@ const Header = ({ onToggleSidebar, onToggleMobileMenu }) => {
                 </div>
                 <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900">Active</span>
               </label>
-
-              {/* Roles Section */}
-              <div className="space-y-4">
-                <label className="text-[11px] font-bold text-slate-600 flex items-center gap-1 text-left">
-                  Assign Roles <span className="text-red-500 font-black">*</span>
-                </label>
-                <div className="grid grid-cols-2 gap-x-8 gap-y-3">
-                  {roles.map((row, idx) => (
-                    <React.Fragment key={idx}>
-                      {row.map((role) => (
-                        <label key={role} className="flex items-center gap-3 cursor-pointer group">
-                          <input
-                            type="radio"
-                            name="role"
-                            className="hidden"
-                            checked={profileData.role === role}
-                            onChange={() => setProfileData({ ...profileData, role })}
-                          />
-                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${profileData.role === role ? 'border-blue-600 bg-blue-600' : 'border-slate-200 bg-white hover:border-slate-300'
-                            }`}>
-                            {profileData.role === role && <div className="w-2 h-2 rounded-full bg-white animate-in zoom-in-50" />}
-                          </div>
-                          <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 text-left">{role}</span>
-                        </label>
-                      ))}
-                    </React.Fragment>
-                  ))}
-                </div>
-              </div>
 
               {/* Submit Button */}
               <div className="pt-6">

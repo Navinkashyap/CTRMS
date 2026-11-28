@@ -5,6 +5,7 @@ import { getClients } from '../lib/clientApi';
 import { getProjects } from '../lib/projectApi';
 import { createInvoice, updateInvoice, getInvoice, getNextInvoiceNumber } from '../lib/invoiceApi';
 import { isSameState, calcGst } from '../lib/gst';
+import { sortAlpha } from '../lib/sortOptions';
 
 const EMPTY_ITEMS = Array.from({ length: 10 }, (_, i) => ({
   sNo: i + 1,
@@ -77,7 +78,7 @@ export default function AddInvoice() {
       try {
         setLoading(true);
         const [clientsRes, projectsRes] = await Promise.all([getClients(), getProjects()]);
-        setClients(clientsRes);
+        setClients(sortAlpha(clientsRes, (c) => c.name));
         setProjects(projectsRes);
 
         if (isEditMode) {
@@ -371,8 +372,9 @@ export default function AddInvoice() {
                       <input
                         type="text"
                         value={formData.invoiceNumber}
-                        onChange={(e) => handleInputChange('invoiceNumber', e.target.value)}
-                        className={`${cellInput} font-bold text-slate-800`}
+                        readOnly
+                        title="Invoice numbers are issued automatically in serial order"
+                        className={`${cellInput} font-bold text-slate-800 bg-slate-50 cursor-not-allowed`}
                       />
                     </td>
                   </tr>
@@ -481,8 +483,10 @@ export default function AddInvoice() {
                     className="w-full px-3 py-2 text-sm bg-indigo-50 border border-indigo-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
                   >
                     <option value="">Select a Project to add...</option>
-                    {projects
-                      .filter((p) => p.client === formData.client || p.client?._id === formData.client)
+                    {sortAlpha(
+                      projects.filter((p) => p.client === formData.client || p.client?._id === formData.client),
+                      (p) => (p.isProgramGroup ? p.programName : p.projectName)
+                    )
                       .map((p) => (
                         <option key={p._id} value={p._id}>
                           {p.isProgramGroup ? p.programName : p.projectName} {p.clientPO ? `(PO: ${p.clientPO})` : ''}
@@ -616,7 +620,7 @@ export default function AddInvoice() {
           <div className="flex flex-col lg:flex-row border-b border-slate-300">
             {/* Left: GST Toggle */}
             <div className="flex-1 p-4 border-b lg:border-b-0 lg:border-r border-slate-300 space-y-3">
-              <label className="block text-sm font-bold text-slate-700">GST</label>
+              <label className="block text-sm font-bold text-slate-700">GST Applicable</label>
               <div className="flex items-center gap-6">
                 <label className="flex items-center gap-2">
                   <input

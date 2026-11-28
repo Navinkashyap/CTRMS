@@ -31,7 +31,7 @@ const generateNextVendorCode = async (prefix) => {
   return `${prefix}${maxNumber + 1}`;
 };
 
-// ─── POST /api/vms/auth/login ─── Unified login for VM & PM ─────────────────
+// ─── POST /api/vms/auth/login ─── Unified login: VM, PM, Accounts & Vendor ───
 router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -45,7 +45,10 @@ router.post("/login", async (req, res, next) => {
     // Find user in VMSUser collection (Vendor Manager / Project Manager)
     const user = await VMSUser.findOne({ email: email.toLowerCase() });
     if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      // Not a VM / PM / Accounts user — it may be a self-registered vendor.
+      // One login page serves every role, so hand over to the vendor lookup
+      // (which also answers 401 "Invalid email or password" when nothing matches).
+      return vendorLogin(req, res, next);
     }
 
     if (!user.isActive) {
@@ -83,7 +86,7 @@ router.post("/login", async (req, res, next) => {
 
 // ─── POST /api/vms/auth/vendor/login ─── Vendor email+password login ────────
 // Checks both: Vendor collection (self-registered) AND VMSUser collection (created by Vendor Manager)
-router.post("/vendor/login", async (req, res, next) => {
+async function vendorLogin(req, res, next) {
   try {
     const { email, password } = req.body;
 
@@ -173,7 +176,8 @@ router.post("/vendor/login", async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-});
+}
+router.post("/vendor/login", vendorLogin);
 
 // ─── POST /api/vms/auth/vendor/google ─── Vendor Google login ───────────────
 router.post("/vendor/google", async (req, res, next) => {

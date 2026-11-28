@@ -10,6 +10,7 @@ import { getSpecializations } from '../lib/specializationApi';
 import { getUnits } from '../lib/unitApi';
 import { getServices } from '../lib/serviceApi';
 import { calcGst, isClientSameState } from '../lib/gst';
+import { sortAlpha } from '../lib/sortOptions';
 
 const DEFAULT_TRANSLATION_TASKS = [
   { taskName: 'Translation', rate: 1 },
@@ -68,9 +69,6 @@ const cellInput =
 const cellSelect =
   'w-full min-w-0 px-2 py-1.5 bg-white border-0 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400 cursor-pointer';
 
-const sortDesc = (list, getKey) =>
-  [...list].sort((a, b) => (getKey(b) || '').localeCompare(getKey(a) || ''));
-
 export default function ViewProject() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -92,6 +90,7 @@ export default function ViewProject() {
 
   const [formData, setFormData] = useState({
     projectName: '',
+    projectId: '',
     projectCode: '',
     jobType: '',
     projectManager: '',
@@ -102,6 +101,7 @@ export default function ViewProject() {
     startDate: '',
     dueDate: '',
     dueTime: '',
+    dueTimeZone: 'IST',
     dateOfDelivery: '',
     client: '',
     clientContact: '',
@@ -158,13 +158,13 @@ export default function ViewProject() {
         ]);
 
         setProject(projRes);
-        setClients(sortDesc(clientsRes, (c) => c.name));
-        setContacts(sortDesc(contactsRes, (c) => `${c.firstName || ''} ${c.lastName || ''}`.trim()));
-        setLanguages(sortDesc(langsRes, (l) => l.localeCode || l.name));
-        setTools(sortDesc(toolsRes.filter((t) => t.status === 'Active'), (t) => t.name));
-        setSpecializations(sortDesc(specsRes.filter((s) => s.status === 'Active'), (s) => s.name));
-        setUnitsList(sortDesc(unitsRes.filter((u) => u.status !== 'Inactive'), (u) => u.name));
-        setServices(sortDesc(servicesRes.filter((s) => s.status === 'Active'), (s) => s.name));
+        setClients(sortAlpha(clientsRes, (c) => c.name));
+        setContacts(sortAlpha(contactsRes, (c) => `${c.firstName || ''} ${c.lastName || ''}`.trim()));
+        setLanguages(sortAlpha(langsRes, (l) => l.localeCode || l.name));
+        setTools(sortAlpha(toolsRes.filter((t) => t.status === 'Active'), (t) => t.name));
+        setSpecializations(sortAlpha(specsRes.filter((s) => s.status === 'Active'), (s) => s.name));
+        setUnitsList(sortAlpha(unitsRes.filter((u) => u.status !== 'Inactive'), (u) => u.name));
+        setServices(sortAlpha(servicesRes.filter((s) => s.status === 'Active'), (s) => s.name));
 
         const names = [
           ...new Set(
@@ -183,6 +183,7 @@ export default function ViewProject() {
 
         setFormData({
           projectName: projRes.projectName || '',
+          projectId: projRes.projectId || '',
           projectCode: projRes.projectCode || '',
           jobType: projRes.jobType || '',
           projectManager: projRes.projectManager?._id || projRes.projectManager || '',
@@ -193,6 +194,7 @@ export default function ViewProject() {
           startDate: projRes.startDate ? new Date(projRes.startDate).toISOString().slice(0, 10) : '',
           dueDate: toDatetimeLocal(projRes.dueDate),
           dueTime: projRes.dueTime || '',
+          dueTimeZone: projRes.dueTimeZone || 'IST',
           dateOfDelivery: toDatetimeLocal(projRes.dateOfDelivery),
           client: projRes.client?._id || projRes.client || '',
           clientContact: projRes.clientContact?._id || projRes.clientContact || '',
@@ -721,7 +723,7 @@ export default function ViewProject() {
         {/* Totals footer */}
         <div className="flex flex-col lg:flex-row gap-8 justify-between items-start pt-4 border-t border-slate-200">
           <div className="space-y-3">
-            <label className="block text-sm font-bold text-slate-700">GST (Yes/No),</label>
+            <label className="block text-sm font-bold text-slate-700">GST Applicable</label>
             <div className="flex items-center gap-6">
               <label className="flex items-center gap-2">
                 <input
@@ -881,6 +883,16 @@ export default function ViewProject() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 w-full py-4">
           <div className="space-y-2">
+            <label className="block text-sm font-bold text-slate-700">Project ID</label>
+            <input
+              type="text"
+              value={formData.projectId || ''}
+              onChange={(e) => handleInputChange('projectId', e.target.value)}
+              placeholder="e.g. PT25260050"
+              className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20 font-semibold"
+            />
+          </div>
+          <div className="space-y-2">
             <label className="block text-sm font-bold text-slate-700">Project Code</label>
             <input
               type="text"
@@ -946,12 +958,23 @@ export default function ViewProject() {
             </div>
             <div className="space-y-2">
               <label className="block text-sm font-bold text-slate-700">Due Time</label>
-              <input
-                type="time"
-                value={formData.dueTime || ''}
-                onChange={(e) => handleInputChange('dueTime', e.target.value)}
-                className="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="time"
+                  value={formData.dueTime || ''}
+                  onChange={(e) => handleInputChange('dueTime', e.target.value)}
+                  className="flex-1 min-w-0 px-3 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
+                />
+                <select
+                  value={formData.dueTimeZone || 'IST'}
+                  onChange={(e) => handleInputChange('dueTimeZone', e.target.value)}
+                  className="w-[84px] px-2 py-2 text-sm bg-white border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500/20"
+                  aria-label="Due time zone"
+                >
+                  <option value="IST">IST</option>
+                  <option value="EST">EST</option>
+                </select>
+              </div>
             </div>
           </div>
           <div className="space-y-2">

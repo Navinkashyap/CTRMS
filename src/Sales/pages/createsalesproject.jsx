@@ -16,6 +16,7 @@ import {
   uploadProjectFiles,
 } from '../lib/salesApi';
 import { calcGst, isClientSameState } from '../../lib/gst';
+import { sortAlpha } from '../../lib/sortOptions';
 
 const DEFAULT_TRANSLATION_TASKS = [
   { taskName: 'Translation', rate: 1 },
@@ -49,9 +50,6 @@ const createDefaultTasks = (currency = 'INR', defaultUnit = 'Words') =>
     status: 'Not Started',
   }));
 
-const sortAsc = (list, getKey) =>
-  [...list].sort((a, b) => (getKey(a) || '').localeCompare(getKey(b) || '', undefined, { sensitivity: 'base' }));
-
 export default function CreateSalesProject() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -70,6 +68,7 @@ export default function CreateSalesProject() {
 
   const [formData, setFormData] = useState({
     projectName: '',
+    projectId: '',
     projectCode: '',
     client: searchParams.get('clientId') || '',
     clientContact: '',
@@ -82,6 +81,7 @@ export default function CreateSalesProject() {
     startDate: '',
     dueDate: '',
     dueTime: '',
+    dueTimeZone: 'IST',
     description: '',
     translationTool: '',
     subjectMatter: '',
@@ -113,13 +113,13 @@ export default function CreateSalesProject() {
           getUnits(),
           getServices(),
         ]);
-        setClients(sortAsc(clientsRes, (c) => c.name));
-        setContacts(sortAsc(contactsRes, (c) => `${c.firstName || ''} ${c.lastName || ''}`.trim()));
-        setLanguages(sortAsc(langsRes, (l) => l.name));
-        setTools(sortAsc(toolsRes.filter((t) => t.status === 'Active'), (t) => t.name));
-        setSpecializations(sortAsc(specsRes.filter((s) => s.status === 'Active'), (s) => s.name));
-        setUnitsList(sortAsc(unitsRes.filter((u) => u.status !== 'Inactive'), (u) => u.name));
-        setServices(sortAsc(servicesRes.filter((s) => s.status === 'Active'), (s) => s.name));
+        setClients(sortAlpha(clientsRes, (c) => c.name));
+        setContacts(sortAlpha(contactsRes, (c) => `${c.firstName || ''} ${c.lastName || ''}`.trim()));
+        setLanguages(sortAlpha(langsRes, (l) => l.name));
+        setTools(sortAlpha(toolsRes.filter((t) => t.status === 'Active'), (t) => t.name));
+        setSpecializations(sortAlpha(specsRes.filter((s) => s.status === 'Active'), (s) => s.name));
+        setUnitsList(sortAlpha(unitsRes.filter((u) => u.status !== 'Inactive'), (u) => u.name));
+        setServices(sortAlpha(servicesRes.filter((s) => s.status === 'Active'), (s) => s.name));
 
         const names = [
           ...new Set(
@@ -428,6 +428,17 @@ export default function CreateSalesProject() {
 
             <div className="ap-card-body">
               <div className="ap-form-grid-2">
+                {/* Project ID */}
+                <div className="ap-field">
+                  <label className="ap-label">Project ID</label>
+                  <input
+                    type="text"
+                    value={formData.projectId || ''}
+                    onChange={(e) => handleInputChange('projectId', e.target.value)}
+                    className="ap-input"
+                    placeholder="Leave blank to auto-generate (e.g. PT25260050)"
+                  />
+                </div>
                 {/* Project Code */}
                 <div className="ap-field">
                   <label className="ap-label">Project Code</label>
@@ -504,12 +515,25 @@ export default function CreateSalesProject() {
                   </div>
                   <div className="ap-field" style={{ flex: 1 }}>
                     <label className="ap-label">Due Time</label>
-                    <input
-                      type="time"
-                      value={formData.dueTime}
-                      onChange={(e) => handleInputChange('dueTime', e.target.value)}
-                      className="ap-input"
-                    />
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input
+                        type="time"
+                        value={formData.dueTime}
+                        onChange={(e) => handleInputChange('dueTime', e.target.value)}
+                        className="ap-input"
+                        style={{ flex: 1 }}
+                      />
+                      <select
+                        value={formData.dueTimeZone || 'IST'}
+                        onChange={(e) => handleInputChange('dueTimeZone', e.target.value)}
+                        className="ap-input"
+                        style={{ width: '90px', flex: 'none' }}
+                        aria-label="Due time zone"
+                      >
+                        <option value="IST">IST</option>
+                        <option value="EST">EST</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
                 {/* Client PO# */}
@@ -834,7 +858,7 @@ export default function CreateSalesProject() {
               <div className="ap-billing-layout">
                 {/* Left — GST */}
                 <div className="ap-billing-left">
-                  <label className="ap-label" style={{ fontWeight: 700, fontSize: '14px' }}>GST</label>
+                  <label className="ap-label" style={{ fontWeight: 700, fontSize: '14px' }}>GST Applicable</label>
                   <div className="ap-radio-group" style={{ marginTop: '8px' }}>
                     <label className="ap-radio-label">
                       <input

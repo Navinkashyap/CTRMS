@@ -44,6 +44,7 @@ const ProjectSchema = new mongoose.Schema(
     startDate: { type: Date },
     dueDate: { type: Date },
     dueTime: { type: String, trim: true },
+    dueTimeZone: { type: String, enum: ["IST", "EST"], default: "IST" },
     dateOfDelivery: { type: Date },
 
     // ViewProject - Company Tab

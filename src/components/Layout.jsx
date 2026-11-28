@@ -23,7 +23,7 @@ const Layout = () => {
       <div className={`fixed inset-y-0 left-0 z-[70] lg:relative lg:z-auto transition-transform duration-300 lg:translate-x-0 ${
         mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
-        <Sidebar isCollapsed={!sidebarOpen} />
+        <Sidebar isCollapsed={!sidebarOpen} onExpand={() => setSidebarOpen(true)} />
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden bg-[#f1f5f9] relative">

@@ -94,16 +94,36 @@ const InvoiceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Auto-generate invoiceNumber: YYYY-MM-NNN
+// Invoice numbers are YYYY-MM-NNN where NNN is one running serial across every
+// invoice (it does not restart each month). The next serial is the highest one
+// already issued + 1 — NOT the document count, which repeats a number as soon as
+// any invoice is deleted and then collides with the unique index.
+const SERIAL_RE = /-(\d+)$/;
+
+export async function nextInvoiceNumber(now = new Date()) {
+  const rows = await mongoose
+    .model("Invoice")
+    .find({ invoiceNumber: { $regex: /^\d{4}-\d{2}-\d+$/ } })
+    .select("invoiceNumber")
+    .lean();
+  const highest = rows.reduce((max, row) => {
+    const n = parseInt(SERIAL_RE.exec(row.invoiceNumber)?.[1], 10);
+    return Number.isFinite(n) && n > max ? n : max;
+  }, 0);
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  return `${year}-${month}-${String(highest + 1).padStart(3, "0")}`;
+}
+
 InvoiceSchema.pre("save", async function (next) {
-  if (!this.invoiceNumber) {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const count = await mongoose.model("Invoice").countDocuments();
-    this.invoiceNumber = `${year}-${month}-${String(count + 1).padStart(3, "0")}`;
+  try {
+    if (!this.invoiceNumber) {
+      this.invoiceNumber = await nextInvoiceNumber();
+    }
+    next();
+  } catch (error) {
+    next(error);
   }
-  next();
 });
 
 export default mongoose.model("Invoice", InvoiceSchema);

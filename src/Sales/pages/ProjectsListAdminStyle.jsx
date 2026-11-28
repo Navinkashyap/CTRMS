@@ -44,7 +44,6 @@ const allColumns = [
   { id: 'client', label: 'Client' },
   { id: 'service', label: 'Service' },
   { id: 'manager', label: 'Manager' },
-  { id: 'budget', label: 'Budget' },
   { id: 'cgst', label: 'CGST' },
   { id: 'sgst', label: 'SGST' },
   { id: 'igst', label: 'IGST' },
@@ -244,7 +243,6 @@ export default function SalesProjectsListAdminStyle() {
                   {visibleColumns.includes('client') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Client</th>}
                   {visibleColumns.includes('service') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Service</th>}
                   {visibleColumns.includes('manager') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Manager</th>}
-                  {visibleColumns.includes('budget') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">Budget</th>}
                   {visibleColumns.includes('cgst') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">CGST</th>}
                   {visibleColumns.includes('sgst') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">SGST</th>}
                   {visibleColumns.includes('igst') && <th className="px-6 py-4 font-semibold text-slate-500 text-xs uppercase tracking-wider">IGST</th>}
@@ -332,12 +330,6 @@ export default function SalesProjectsListAdminStyle() {
                           <User className="w-4 h-4" />
                           {project.manager}
                         </div>
-                      </td>
-                    )}
-
-                    {visibleColumns.includes('budget') && (
-                      <td className="px-6 py-4 font-semibold text-emerald-600">
-                        {project.budget}
                       </td>
                     )}
 

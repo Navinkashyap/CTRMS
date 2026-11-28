@@ -1,6 +1,12 @@
 import express from "express";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import { keyFromUrl, presignedUrl } from "../utils/s3Upload.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const UPLOAD_DIR = path.join(__dirname, "../../uploads");
 
 const router = express.Router();
 
@@ -32,6 +38,20 @@ router.get("/view", async (req, res, next) => {
     const { url } = req.query;
     if (!url) {
       return res.status(400).json({ message: "url is required" });
+    }
+
+    // Documents saved on the API server's own disk (vendor profile documents,
+    // project reference files) are stored as a relative /uploads/<file> path.
+    // Serve those directly, and say so plainly when the file is gone (e.g. wiped
+    // by a redeploy) instead of opening a blank tab.
+    if (typeof url === "string" && url.startsWith("/uploads/")) {
+      const filePath = path.join(UPLOAD_DIR, path.basename(url));
+      if (!fs.existsSync(filePath)) {
+        return res
+          .status(404)
+          .json({ message: "File not found on the server. Please re-upload it." });
+      }
+      return res.sendFile(filePath);
     }
 
     const key = keyFromUrl(url);

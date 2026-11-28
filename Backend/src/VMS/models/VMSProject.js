@@ -61,6 +61,7 @@ const VMSProjectSchema = new mongoose.Schema(
     amount: { type: String, trim: true, default: "" },
     currency: { type: String, trim: true, default: "INR" },
     dueTime: { type: String, trim: true, default: "" },
+    dueTimeZone: { type: String, trim: true, default: "IST" },
     isProgramGroup: { type: Boolean, default: false },
     programName: { type: String, trim: true, default: "" },
     translationTool: { type: String, trim: true, default: "" },

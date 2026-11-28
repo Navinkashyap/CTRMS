@@ -1,5 +1,6 @@
 import express from "express";
 import Language from "../models/Language.js";
+import { syncLanguageToMotherTongue, removeMotherTongueFor } from "../utils/languageSync.js";
 
 const router = express.Router();
 
@@ -17,6 +18,7 @@ router.get("/", async (_req, res, next) => {
 router.post("/", async (req, res, next) => {
   try {
     const language = await Language.create(req.body);
+    await syncLanguageToMotherTongue(language);
     res.status(201).json(language);
   } catch (error) {
     next(error);
@@ -26,6 +28,7 @@ router.post("/", async (req, res, next) => {
 // Update language
 router.put("/:id", async (req, res, next) => {
   try {
+    const before = await Language.findById(req.params.id).select("name").lean();
     const language = await Language.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -33,6 +36,7 @@ router.put("/:id", async (req, res, next) => {
     if (!language) {
       return res.status(404).json({ message: "Language not found" });
     }
+    await syncLanguageToMotherTongue(language, before?.name);
     res.json(language);
   } catch (error) {
     next(error);
@@ -46,6 +50,7 @@ router.delete("/:id", async (req, res, next) => {
     if (!language) {
       return res.status(404).json({ message: "Language not found" });
     }
+    await removeMotherTongueFor(language.name);
     res.json({ message: "Language deleted successfully" });
   } catch (error) {
     next(error);

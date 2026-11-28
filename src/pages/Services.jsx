@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, SquarePen, X, Search, Filter, MoreHorizontal, ChevronLeft, ChevronRight, Layers, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { getServices, createService, updateService, deleteService } from '../lib/serviceApi';
+import { sortAlpha } from '../lib/sortOptions';
 
 export default function Services() {
   const [services, setServices] = useState([]);
@@ -331,7 +332,7 @@ export default function Services() {
                         value={formData.parentService} onChange={(e) => setFormData({ ...formData, parentService: e.target.value })}
                       >
                         <option value="Root">Root</option>
-                        {services.map(service => (
+                        {sortAlpha(services, (service) => service.name).map(service => (
                           <option key={service._id} value={service.name}>{service.name}</option>
                         ))}
                       </select>

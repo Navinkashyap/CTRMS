@@ -27,9 +27,7 @@ import { getContacts } from '../lib/contactApi';
 import { getClients } from '../lib/clientApi';
 import { getServices } from '../lib/serviceApi';
 import { isClientSameState } from '../lib/gst';
-
-const sortDesc = (list, getKey) =>
-  [...list].sort((a, b) => (getKey(b) || '').localeCompare(getKey(a) || ''));
+import { sortAlpha } from '../lib/sortOptions';
 
 const OVERRIDE_ELIGIBLE_PROJECT_IDS = ['PT25260002'];
 
@@ -59,7 +57,6 @@ const allColumns = [
   { id: 'client', label: 'Client' },
   { id: 'service', label: 'Service' },
   { id: 'manager', label: 'Manager' },
-  { id: 'budget', label: 'Budget' },
   { id: 'cgst', label: 'CGST' },
   { id: 'sgst', label: 'SGST' },
   { id: 'igst', label: 'IGST' },
@@ -146,15 +143,15 @@ export default function ProjectsList() {
           getServices(),
           getContacts(),
         ]);
-        setClients(sortDesc(clientsData, (c) => c.name));
+        setClients(sortAlpha(clientsData, (c) => c.name));
         setServices(
-          sortDesc(
+          sortAlpha(
             servicesData.filter((s) => s.status === 'Active'),
             (s) => s.name
           )
         );
         setContacts(
-          sortDesc(contactsData, (c) => `${c.firstName || ''} ${c.lastName || ''}`.trim())
+          sortAlpha(contactsData, (c) => `${c.firstName || ''} ${c.lastName || ''}`.trim())
         );
       } catch (error) {
         console.error('Failed to load master data:', error);
@@ -421,7 +418,6 @@ export default function ProjectsList() {
                   {visibleColumns.includes('client') && renderSortableHeader('client', 'Client')}
                   {visibleColumns.includes('service') && renderSortableHeader('service', 'Service')}
                   {visibleColumns.includes('manager') && renderSortableHeader('manager', 'Manager')}
-                  {visibleColumns.includes('budget') && renderSortableHeader('budget', 'Budget')}
                   {visibleColumns.includes('cgst') && renderSortableHeader('cgst', 'CGST')}
                   {visibleColumns.includes('sgst') && renderSortableHeader('sgst', 'SGST')}
                   {visibleColumns.includes('igst') && renderSortableHeader('igst', 'IGST')}
@@ -513,12 +509,6 @@ export default function ProjectsList() {
                           <User className="w-4 h-4" />
                           {project.manager}
                         </div>
-                      </td>
-                    )}
-
-                    {visibleColumns.includes('budget') && (
-                      <td className="px-6 py-4 font-semibold text-emerald-600">
-                        {project.budget}
                       </td>
                     )}
 
@@ -763,16 +753,6 @@ export default function ProjectsList() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Budget</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
-                    value={overrideForm.budget}
-                    onChange={(e) => setOverrideForm({ ...overrideForm, budget: e.target.value })}
-                  />
-                </div>
-
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Priority</label>
                   <select

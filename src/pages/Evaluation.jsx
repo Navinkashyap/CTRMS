@@ -15,6 +15,7 @@ import { getLanguages } from '../lib/languageApi';
 import { getServices } from '../lib/serviceApi';
 import { getQualities } from '../lib/qualityApi';
 import { getDeadlines } from '../lib/deadlineApi';
+import { sortAlpha } from '../lib/sortOptions';
 
 export default function Evaluation() {
   const [formData, setFormData] = useState({
@@ -53,8 +54,8 @@ export default function Evaluation() {
           getDeadlines(),
         ]);
         setProjects(projectData);
-        setLanguages(languageData);
-        setServices(serviceData);
+        setLanguages(sortAlpha(languageData, (l) => l.name));
+        setServices(sortAlpha(serviceData, (s) => s.name));
         setQualities(qualityData.filter((q) => q.status === 'Active'));
         setDeadlines(deadlineData.filter((d) => d.status === 'Active'));
       } catch (error) {
@@ -173,9 +174,9 @@ export default function Evaluation() {
     setMessage({ type: '', text: '' });
   };
 
-  const projectCodes = projects
-    .map((project) => project.projectCode || project.projectId)
-    .filter(Boolean);
+  const projectCodes = sortAlpha(
+    projects.map((project) => project.projectCode || project.projectId).filter(Boolean)
+  );
 
   const qualityOptions = qualities.length > 0
     ? qualities.map((q) => q.type)

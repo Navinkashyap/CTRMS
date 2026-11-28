@@ -49,6 +49,7 @@ import actionRoutes from "./src/routes/actionRoutes.js";
 import rolePermissionRoutes from "./src/routes/rolePermissionRoutes.js";
 import systemUserRoutes from "./src/routes/systemUserRoutes.js";
 import adminRoutes from "./src/routes/adminRoutes.js";
+import { backfillLanguageMasters } from "./src/utils/languageSync.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -172,6 +173,9 @@ const startServer = async () => {
   await mongoose.connect(MONGODB_URI, {
     dbName: process.env.MONGODB_DB_NAME || "sadminperfectras",
   });
+
+  // Keep Language and Mother Tongue masters in step (only ever adds missing rows).
+  await backfillLanguageMasters();
 
   app.listen(PORT, () => {
     console.log(`Backend running on http://localhost:${PORT}`);

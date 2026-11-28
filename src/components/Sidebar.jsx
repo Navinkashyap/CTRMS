@@ -2,106 +2,14 @@ import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import brandLogo from "../assets/logo.jpeg";
 import { logout } from "../lib/authApi";
+import GlobalSearch from "./GlobalSearch";
 import {
-  LayoutDashboard,
-  Database,
-  Shield,
-  Menu as MenuIcon,
-  Users,
-  User,
-  Store,
-  Building2,
-  BookUser,
-  Layers,
-  FileText,
-  PieChart,
-  Search,
   ChevronRight,
   Settings,
-  Command,
   LogOut,
   Bell
 } from "lucide-react";
-
-// --- Configuration ---
-
-const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, to: "/", sub: [] },
-  {
-    label: "Add Admin",
-    icon: User,
-    to: null,
-    sub: [
-      { label: "Add Admin", to: "/add-admin" },
-    ],
-  },
-  {
-    label: "Master",
-    icon: Database,
-    to: null,
-    sub: [
-      { label: "Country", to: "/master/country" },
-      { label: "State", to: "/master/state" },
-      { label: "District", to: "/master/district" },
-      { label: "City", to: "/master/city" },
-      { label: "Mother Tongue", to: "/master/mother-tongue" },
-      { label: "Services", to: "/master/services" },
-      { label: "Tool", to: "/master/tool" },
-      { label: "Currency", to: "/master/currency" },
-      { label: "Language", to: "/master/language" },
-      { label: "Specialization", to: "/master/specialization" },
-      { label: "Quality", to: "/master/quality" },
-      { label: "Deadline", to: "/master/deadline" },
-      { label: "Domain", to: "/master/type" },
-      { label: "Membership", to: "/master/membership" },
-      { label: "Department", to: "/master/department" },
-      { label: "Designation", to: "/master/designation" },
-      { label: "Unit", to: "/master/unit" },
-      { label: "Pay Duration", to: "/master/pay-duration" },
-    ],
-  },
-  {
-    label: "Role",
-    icon: Shield,
-    to: null,
-    sub: [
-      { label: "Manage Role", to: "/roles/manage-role" },
-      { label: "Action", to: "/roles/action" },
-      { label: "Role Action Mapping", to: "/roles/role-action-mapping" },
-    ],
-  },
-  {
-    label: "Menu",
-    icon: MenuIcon,
-    to: null,
-    sub: [
-      { label: "Manage Menus", to: "/menus" },
-      { label: "Role Menu Permission", to: "/menus/role-menu-permission" },
-    ],
-  },
-  { label: "Manage Users", icon: Users, to: "/users", sub: [] },
-  {
-    label: "Vendor",
-    icon: Store,
-    to: null,
-    sub: [
-      { label: "Vendor Manager", to: "/vendors" },
-      { label: "Vendors", to: "/vendors/vendor-users" },
-      { label: "Evaluation", to: "/vendors/evaluation" },
-    ],
-  },
-  { label: "Project Manager", icon: User, to: "/project-managers", sub: [] },
-  { label: "Clients", icon: Building2, to: "/clients", sub: [] },
-  { label: "Contacts", icon: BookUser, to: "/contacts", sub: [] },
-  { label: "Projects", icon: Layers, to: "/projects", sub: [] },
-  {
-    label: "Invoice",
-    icon: FileText,
-    to: "/invoice",
-    sub: [],
-  },
-  { label: "Report", icon: PieChart, to: "/report", sub: [] },
-];
+import { navItems } from "./navItems";
 
 // --- Helpers ---
 
@@ -117,7 +25,7 @@ const toSubmenuId = (label) => `submenu-${label.toLowerCase().replace(/\s+/g, "-
 
 // --- Sidebar Component ---
 
-const Sidebar = ({ isCollapsed = false }) => {
+const Sidebar = ({ isCollapsed = false, onExpand }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [openMenus, setOpenMenus] = useState(() => getActiveParentMenus(location.pathname));
@@ -173,26 +81,9 @@ const Sidebar = ({ isCollapsed = false }) => {
         </NavLink>
       </div>
 
-      {/* Search Section */}
+      {/* Search Section — searches pages and records across the admin */}
       <div className={`relative z-10 mb-6 ${isCollapsed ? "px-3" : "px-5"}`}>
-        {isCollapsed ? (
-          <button className="w-full h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-slate-500 hover:text-white hover:bg-white/10 transition-all duration-300">
-            <Search size={16} />
-          </button>
-        ) : (
-          <div className="relative group">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="w-full h-10 pl-10 pr-4 bg-white/[0.03] border border-white/5 rounded-xl text-sm font-medium text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:bg-white/[0.07] focus:border-indigo-500/30 transition-all duration-300"
-            />
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-indigo-400 transition-colors" />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-focus-within:opacity-100 transition-opacity">
-              <Command size={10} className="text-slate-600" />
-              <span className="text-[8px] font-bold text-slate-600">K</span>
-            </div>
-          </div>
-        )}
+        <GlobalSearch navItems={navItems} collapsed={isCollapsed} onExpand={onExpand} />
       </div>
 
       {/* Navigation Menu */}
