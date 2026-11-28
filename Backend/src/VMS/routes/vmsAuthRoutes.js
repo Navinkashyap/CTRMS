@@ -251,7 +251,7 @@ router.post("/vendor/google", async (req, res, next) => {
 // ─── POST /api/vms/auth/vendor/register ─── Vendor manual registration ──────
 router.post("/vendor/register", async (req, res, next) => {
   try {
-    const { name, email, password, mobile, country } = req.body;
+    const { name, email, password, mobile, mobileCode, country } = req.body;
 
     if (!name || !email || !password) {
       return res
@@ -291,6 +291,7 @@ router.post("/vendor/register", async (req, res, next) => {
       email: email.toLowerCase(),
       password,
       mobile: mobile || "",
+      ...(mobileCode ? { mobileCode } : {}),
       country: country || "",
     });
 
@@ -308,6 +309,8 @@ router.post("/vendor/register", async (req, res, next) => {
         id: vendor._id,
         name: vendor.name,
         email: vendor.email,
+        mobileCode: vendor.mobileCode,
+        mobile: vendor.mobile,
         role: "vendor",
         code: vendor.code,
       },
